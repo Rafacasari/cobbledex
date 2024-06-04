@@ -1,0 +1,78 @@
+name: Upload Tag v2
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: setup jdk
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+          cache: gradle
+      - name: gradle setup
+        uses: gradle/actions/setup-gradle@v3
+      - name: gradle build
+        run: ./gradlew build --no-daemon
+      - name: set params
+        run: |
+          cat $GITHUB_WORKSPACE/gradle.properties | grep ^archives_base_name= >> $GITHUB_ENV
+          cat $GITHUB_WORKSPACE/gradle.properties | grep ^minecraft_version= >> $GITHUB_ENV
+          cat $GITHUB_WORKSPACE/gradle.properties | grep ^mod_version= >> $GITHUB_ENV
+      - name: set package name
+        run: echo "pkg_file=$archives_base_name-$mod_version.jar" >> $GITHUB_ENV
+      - name: create release
+        id: create_release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const release = await github.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: `v${{ env.mod_version }}`,
+              name: `Release ${{ env.mod_version }}`,
+              draft: false,
+              prerelease: false,
+            });
+            return release.data.upload_url;
+          result-encoding: string
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: upload release asset
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const uploadUrl = '${{ steps.create_release.outputs.result }}';
+            
+            const uploadFile = async (filePath) => {
+              if (!fs.existsSync(filePath)) return;
+              const content = fs.readFileSync(filePath);
+              await github.repos.uploadReleaseAsset({
+                url: uploadUrl,
+                headers: {
+                  'content-length': content.length,
+                  'content-type': 'application/java-archive'
+                },
+                name: require('path').basename(filePath),
+                data: content
+              });
+            };
+
+            const paths = [
+              'forge/build/libs/*.jar',
+              'fabric/build/libs/*.jar'
+            ];
+
+            for (const path of paths) {
+              const files = require('glob').sync(path);
+              for (const file of files) {
+                if (!file.endsWith('-dev.jar') && !file.endsWith('-shadow.jar') && !file.endsWith('-transformProduction.jar')) {
+                  await uploadFile(file);
+                }
+              }
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
