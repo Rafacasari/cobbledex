@@ -1,0 +1,103 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+
+      - name: Set Gradle User Home
+        run: echo "GRADLE_USER_HOME=$(pwd)/.gradle" >> $GITHUB_ENV
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            forge/build/libs
+            fabric/build/libs
+          key: ${{ runner.os }}-gradle-${{ github.ref }}
+
+      - name: Build with Gradle
+        run: |
+          export GRADLE_OPTS="-Xmx4G -Xms4G"
+          chmod +x ./gradlew
+          ./gradlew build
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+
+      - name: Set Gradle User Home
+        run: echo "GRADLE_USER_HOME=$(pwd)/.gradle" >> $GITHUB_ENV
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            forge/build/libs
+            fabric/build/libs
+          key: ${{ runner.os }}-gradle-${{ github.ref }}
+
+      - name: Publish with Gradle
+        run: |
+          export GRADLE_OPTS="-Xmx4G -Xms4G"
+          chmod +x ./gradlew
+          ./gradlew publish
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+
+      - name: Set Gradle User Home
+        run: echo "GRADLE_USER_HOME=$(pwd)/.gradle" >> $GITHUB_ENV
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            forge/build/libs
+            fabric/build/libs
+          key: ${{ runner.os }}-gradle-${{ github.ref }}
+
+      - name: Collect Artifacts
+        run: |
+          echo "Collecting artifacts..."
+          mv forge/build/libs/*+*.jar ./
+          mv fabric/build/libs/*+*.jar ./
+          for f in *.jar; do mv "$f" "$(echo "$f" | sed s/+/b${{ github.run_id }}+/)"; done
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-artifacts
+          path: ./*.jar
+          retention-days: 28
