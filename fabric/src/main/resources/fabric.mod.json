@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "name": "Cobbledex",
+  "id": "cobbledex",
+  "version":  "1.0.0",
+  "description": "A cool mod!",
+  "authors": ["Rafa"],
+  "contact": {"repo": "https://github.com/rafacasari/cobbledex"},
+  "license": "",
+  "icon": "assets/cobbledex/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["rafacasari.cobbledex.fabric.CobbledexFabric"]
+  },
+  "depends": {
+    "fabricloader": "*",
+    "fabric": "*",
+    "minecraft": "1.20.1",
+    "cobblemon": ">=1.5.0",
+    "architectury": ">=9.0.0"
+  }
+}

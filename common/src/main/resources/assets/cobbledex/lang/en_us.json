@@ -1,0 +1,8 @@
+{
+  "cobbledex.errors.NotAPokemon": "That's not a Pokémon!",
+  "item.cobbledex.cobbledex_item": "Cobbledex",
+  "texts.title.cobbledex_gui": "Cobbledex",
+  "cobbledex.texts.weakness": "Is weak against",
+  "cobbledex.texts.resistant": "Resistant against:",
+  "cobbledex.texts.immune": "Immune against:"
+}
