@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - master
+      - branches@cable-mc/cobblemon
 
 jobs:
   build:
@@ -16,6 +16,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
+          distribution: 'adopt'
           java-version: '11'
 
       - name: Set Gradle User Home
@@ -46,6 +47,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
+          distribution: 'adopt'
           java-version: '11'
 
       - name: Set Gradle User Home
@@ -76,6 +78,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
+          distribution: 'adopt'
           java-version: '11'
 
       - name: Set Gradle User Home
