@@ -1,3 +1,4 @@
+name: manual release
 on: workflow_dispatch
 
 jobs:
