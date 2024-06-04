@@ -16,8 +16,10 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt'
           java-version: '11'
+          distribution: temurin
+          cache: gradle
+
 
       - name: Set Gradle User Home
         run: echo "GRADLE_USER_HOME=$(pwd)/.gradle" >> $GITHUB_ENV
