@@ -1,36 +1,24 @@
+@file:Suppress("DEPRECATION")
+
 package rafacasari.cobbledex
 
 import com.cobblemon.mod.common.Cobblemon
 import com.cobblemon.mod.common.api.Priority
 import com.cobblemon.mod.common.api.events.CobblemonEvents
 import com.cobblemon.mod.common.pokemon.Species
-import com.mojang.brigadier.CommandDispatcher
-import com.mojang.brigadier.arguments.IntegerArgumentType
-import com.mojang.brigadier.builder.ArgumentBuilder
-import com.mojang.brigadier.builder.LiteralArgumentBuilder
-import com.mojang.brigadier.builder.RequiredArgumentBuilder
-import com.mojang.brigadier.context.CommandContext
-import dev.architectury.event.events.client.ClientCommandRegistrationEvent
-import dev.architectury.event.events.common.CommandRegistrationEvent
 import dev.architectury.event.events.common.LifecycleEvent
 import dev.architectury.registry.registries.Registrar
 import dev.architectury.registry.registries.RegistrarManager
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
-import net.minecraft.command.CommandRegistryAccess
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
-import net.minecraft.server.command.CommandManager
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Identifier
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import rafacasari.cobbledex.client.gui.CobbledexGUI
 import rafacasari.cobbledex.cobblemon.extensions.CobbledexDataExtension
 import java.util.function.Supplier
 
@@ -133,7 +121,6 @@ object CobbledexMod {
         if (!cobbledexData.caughtSpecies.contains(species.nationalPokedexNumber)) {
             cobbledexData.caughtSpecies.add(species.nationalPokedexNumber)
 
-            val clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "")
             player.sendMessage(Text.literal("You've discovered a new Pokémon: §a" + species.name + "§r"))
         }
 
