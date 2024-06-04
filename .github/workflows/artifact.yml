@@ -29,3 +29,6 @@ jobs:
           path: |
             forge/build/libs/*.jar
             fabric/build/libs/*.jar
+            !**/*-dev.jar
+            !**/*-shadow.jar
+            !**/*-transformProduction*.jar
