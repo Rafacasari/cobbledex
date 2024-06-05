@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import rafacasari.cobbledex.CobbledexMod
 
-class CobbledexDataExtension(val caughtSpecies: MutableSet<Int> = hashSetOf()
+class PlayerDiscovery(val caughtSpecies: MutableSet<Int> = hashSetOf()
 ): PlayerDataExtension {
 
     companion object {
@@ -27,6 +27,6 @@ class CobbledexDataExtension(val caughtSpecies: MutableSet<Int> = hashSetOf()
     }
 
     override fun deserialize(json: JsonObject): PlayerDataExtension {
-        return GSON.fromJson(json, CobbledexDataExtension::class.java)
+        return GSON.fromJson(json, PlayerDiscovery::class.java)
     }
 }

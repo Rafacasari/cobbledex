@@ -5,6 +5,7 @@ package rafacasari.cobbledex
 import com.cobblemon.mod.common.Cobblemon
 import com.cobblemon.mod.common.api.Priority
 import com.cobblemon.mod.common.api.events.CobblemonEvents
+import com.cobblemon.mod.common.api.storage.player.PlayerDataExtensionRegistry
 import com.cobblemon.mod.common.pokemon.Species
 import dev.architectury.event.events.common.LifecycleEvent
 import dev.architectury.registry.registries.Registrar
@@ -13,13 +14,12 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
-import net.minecraft.text.ClickEvent
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Identifier
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import rafacasari.cobbledex.cobblemon.extensions.CobbledexDataExtension
+import rafacasari.cobbledex.cobblemon.extensions.PlayerDiscovery
 import java.util.function.Supplier
 
 
@@ -48,75 +48,55 @@ object CobbledexMod {
 
     }
 
+    private var eventsCreated: Boolean = false
     fun init() {
         LOGGER.info("Initializing Cobbledex...")
 
         CobbledexRegistries.registerItems()
 
-        LifecycleEvent.SERVER_STARTED.register { server ->
-            CobblemonEvents.STARTER_CHOSEN.subscribe(Priority.LOW) {
-                registerPlayerDiscovery(it.player, it.pokemon.species)
+        LifecycleEvent.SERVER_STARTED.register { _ ->
+            LOGGER.info("Cobbledex: Server initialized...")
+            PlayerDataExtensionRegistry.register(PlayerDiscovery.NAME_KEY, PlayerDiscovery::class.java)
 
+            if (!eventsCreated) {
+                CobblemonEvents.STARTER_CHOSEN.subscribe(Priority.LOW) {
+                    registerPlayerDiscovery(it.player, it.pokemon.species)
 
-                val itemStack = ItemStack(CobbledexConstants.Cobbledex_Item, 1)
-                it.player.giveItemStack(itemStack)
+                    val itemStack = ItemStack(CobbledexConstants.Cobbledex_Item, 1)
+                    it.player.giveItemStack(itemStack)
 
-            }
-
-            CobblemonEvents.POKEMON_CAPTURED.subscribe(Priority.LOW) {
-                registerPlayerDiscovery(it.player, it.pokemon.species)
-            }
-
-            CobblemonEvents.EVOLUTION_COMPLETE.subscribe(Priority.LOW) {
-                val player = it.pokemon.getOwnerPlayer()
-                if (player != null) {
-                    registerPlayerDiscovery(player, it.pokemon.species)
                 }
+
+                CobblemonEvents.POKEMON_CAPTURED.subscribe(Priority.LOW) {
+                    registerPlayerDiscovery(it.player, it.pokemon.species)
+                }
+
+                CobblemonEvents.EVOLUTION_COMPLETE.subscribe(Priority.LOW) {
+                    val player = it.pokemon.getOwnerPlayer()
+                    if (player != null) {
+                        registerPlayerDiscovery(player, it.pokemon.species)
+                    }
+                }
+
+                // This should prevent events from being added more than once
+                eventsCreated = true
             }
-
-
         }
 
-
-
-
-
-//        ClientCommandRegistrationEvent.EVENT.register { dispatcher, _ ->
-//            dispatcher.register(LiteralArgumentBuilder.literal<ClientCommandRegistrationEvent.ClientCommandSourceStack>("opencobbledex")
-//                .then(RequiredArgumentBuilder.argument("id", IntegerArgumentType.integer()))
-//                .executes { ctx ->
-//                    val arg = IntegerArgumentType.getInteger(ctx, "id")
-//                    CobbledexGUI.openCobbledexScreen(null)
-//                    1
-//                }
-//            )
-//        }
 
     }
 
     fun registerPlayerDiscovery(player: PlayerEntity?, species: Species?): ActionResult
     {
-//        val isClient = MinecraftClient.getInstance().world?.isClient
-//        if (isClient != null && isClient)
-//        {
-//            LOGGER.error("Tried to register a player discovery on Client")
-//            return ActionResult.FAIL
-//        }
-
         if (player == null || species == null)
-        {
             return ActionResult.PASS
-        }
 
         val playerData = Cobblemon.playerData.get(player)
-        var cobbledexData = playerData.extraData[CobbledexDataExtension.NAME_KEY] as? CobbledexDataExtension
+        val cobbledexData = playerData.extraData.getOrPut(PlayerDiscovery.NAME_KEY) {
+            // TODO: Maybe add the player PC/party pokemon in the first discover?
+            PlayerDiscovery()
+        } as PlayerDiscovery
 
-        // Create data if it doesn't exist yet
-        if (cobbledexData == null)
-        {
-            // TODO: Register all Pokemon from Cobblemon PC into Cobbledex
-            cobbledexData = CobbledexDataExtension()
-        }
 
         if (!cobbledexData.caughtSpecies.contains(species.nationalPokedexNumber)) {
             cobbledexData.caughtSpecies.add(species.nationalPokedexNumber)
@@ -124,7 +104,6 @@ object CobbledexMod {
             player.sendMessage(Text.literal("You've discovered a new Pokémon: §a" + species.name + "§r"))
         }
 
-        playerData.extraData[CobbledexDataExtension.NAME_KEY] = cobbledexData
         Cobblemon.playerData.saveSingle(playerData)
 
         return ActionResult.SUCCESS

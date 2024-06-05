@@ -1,9 +1,10 @@
 package rafacasari.cobbledex.client.gui
 
-import com.cobblemon.mod.common.CobblemonBuildDetails
 import com.cobblemon.mod.common.CobblemonSounds
 import com.cobblemon.mod.common.api.gui.blitk
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
+import com.cobblemon.mod.common.api.spawning.CobblemonSpawnPools
+import com.cobblemon.mod.common.api.spawning.detail.SpawnDetail
 import com.cobblemon.mod.common.api.text.add
 import com.cobblemon.mod.common.api.text.bold
 import com.cobblemon.mod.common.api.text.text
@@ -47,7 +48,7 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
         private val TYPE_SPACER: Identifier = Identifier(CobbledexMod.MOD_ID, "textures/gui/type_spacer.png")
         private val TYPE_SPACER_DOUBLE: Identifier = Identifier(CobbledexMod.MOD_ID, "textures/gui/type_spacer_double.png")
 
-        var Instance : CobbledexGUI? = null;
+        var Instance : CobbledexGUI? = null
 
         fun openCobbledexScreen(pokemon: Pokemon?) {
             playSound(CobblemonSounds.PC_ON)
@@ -270,23 +271,32 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
         super.close()
     }
 
+    fun getSpawnDetails(pokemon: Pokemon) : List<SpawnDetail> {
+
+        val spawnDetails = CobblemonSpawnPools.WORLD_SPAWN_POOL.filter {
+            x -> x.id.startsWith("${pokemon.species.resourceIdentifier.path}-")
+        }
+
+        return spawnDetails
+    }
+
     fun setPreviewPokemon(pokemon: Pokemon?)
     {
         longTextDisplay?.clear()
 
         if (pokemon != null)
         {
+//            val spawnDetails = getSpawnDetails(pokemon)
+//            spawnDetails.forEach { spawnDetail ->
+//                spawnDetail.conditions.forEach {
+//                }
+//            }
+
             pokemon.form.pokedex.forEach {
                 pokedex -> longTextDisplay?.add(pokedex.asTranslated())
             }
 
-//            val weaknessList = ElementalTypes.all().filter {
-//                t -> TypeChart.getEffectiveness(t, pokemon.types) == 1
-//            }
 
-//            val resistantList = ElementalTypes.all().filter {
-//                    t -> TypeChart.getEffectiveness(t, pokemon.types) < 0
-//            }
 
             val weaknessList = ElementalTypes.all().map {
                     t -> t to TypeChart.getEffectiveness(t, pokemon.types)
@@ -305,6 +315,7 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
             }.filter { (_, isImmune) ->
                 !isImmune
             }
+
 
             // Break a line
             if (weaknessList.isNotEmpty() || resistantList.isNotEmpty())
@@ -360,7 +371,7 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
                 remove(evolutionDisplay)
             }
 
-            evolutionDisplay = null;
+            evolutionDisplay = null
         }
 
         if (pokemon != null) {
