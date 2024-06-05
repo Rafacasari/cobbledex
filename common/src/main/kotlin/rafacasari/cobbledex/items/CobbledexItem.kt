@@ -1,25 +1,17 @@
 package rafacasari.cobbledex.items
 
-import com.cobblemon.mod.common.api.interaction.PokemonEntityInteraction.Ownership
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
-import com.cobblemon.mod.common.pokemon.Pokemon
-import com.cobblemon.mod.common.util.ifServer
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 
 import net.minecraft.item.*
-import javax.swing.Action
 
-import net.minecraft.client.MinecraftClient
 import net.minecraft.client.item.TooltipContext
-import net.minecraft.inventory.StackReference
-import net.minecraft.screen.slot.Slot
-import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.*
 import net.minecraft.world.World
 import rafacasari.cobbledex.CobbledexConstants
-import rafacasari.cobbledex.CobbledexMod
+import rafacasari.cobbledex.Cobbledex
 import rafacasari.cobbledex.client.gui.CobbledexGUI
 
 class CobbledexItem(settings: Settings) : Item(settings) {
@@ -42,9 +34,7 @@ class CobbledexItem(settings: Settings) : Item(settings) {
         }
 
         if (player.world.isClient) {
-
             CobbledexGUI.openCobbledexScreen(target.pokemon)
-
             return ActionResult.PASS
         }
 
@@ -63,7 +53,7 @@ class CobbledexItem(settings: Settings) : Item(settings) {
 //            return InteractionResult.FAIL
 //        }
 
-        return CobbledexMod.registerPlayerDiscovery(player, target.pokemon.species)
+        return Cobbledex.registerPlayerDiscovery(player, target.pokemon.species)
     }
 
 
@@ -74,7 +64,7 @@ class CobbledexItem(settings: Settings) : Item(settings) {
         context: TooltipContext?
     )
     {
-        tooltip?.add(Text.literal("Discovered: §a0§r/100"));
+        tooltip?.add(Text.literal("Discovered: §a0§r/100"))
 
         super.appendTooltip(stack, world, tooltip, context)
     }

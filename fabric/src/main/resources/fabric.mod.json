@@ -7,10 +7,12 @@
   "authors": ["Rafa"],
   "contact": {"repo": "https://github.com/rafacasari/cobbledex"},
   "license": "",
-  "icon": "assets/cobbledex/icon.png",
+  "icon": "",
   "environment": "*",
   "entrypoints": {
-    "main": ["rafacasari.cobbledex.fabric.CobbledexFabric"]
+    "main": [
+      "rafacasari.cobbledex.fabric.CobbledexFabric"
+    ]
   },
   "depends": {
     "fabricloader": "*",

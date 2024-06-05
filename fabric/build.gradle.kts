@@ -25,7 +25,7 @@ loom {
 }
 
 dependencies {
-    minecraft("net.minecraft:minecraft:1.20.1")
+    minecraft("net.minecraft:minecraft:${property("minecraft_version")}")
     mappings("net.fabricmc:yarn:${property("yarn_mappings")}:v2")
     modApi("dev.architectury:architectury-fabric:${property("architectury_version")}")
     modApi("teamreborn:energy:3.0.0")

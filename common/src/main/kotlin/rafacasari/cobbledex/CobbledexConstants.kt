@@ -6,8 +6,9 @@ import rafacasari.cobbledex.items.CobbledexItem
 
 object CobbledexConstants {
 
+    @Suppress("SameParameterValue")
     private fun buildErrorMessage(name: String): String {
-        return "${CobbledexMod.MOD_ID}.errors.$name"
+        return "${Cobbledex.MOD_ID}.errors.$name"
     }
 
     val NotAPokemon by lazy { buildErrorMessage("NotAPokemon") }

@@ -26,11 +26,11 @@ loom {
 }
 
 dependencies {
-    minecraft("net.minecraft:minecraft:1.20.1")
+    minecraft("net.minecraft:minecraft:${property("minecraft_version")}")
     mappings("net.fabricmc:yarn:${property("yarn_mappings")}:v2")
-    modApi("dev.architectury:architectury-forge:9.1.12")
+    modApi("dev.architectury:architectury-forge:${property("architectury_version")}")
 
-    forge("net.minecraftforge:forge:1.20.1-47.2.0")
+    forge("net.minecraftforge:forge:${property("forge_version")}")
 
 
     "common"(project(":common", "namedElements")) { isTransitive = false }

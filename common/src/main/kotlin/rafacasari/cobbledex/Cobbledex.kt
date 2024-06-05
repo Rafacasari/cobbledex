@@ -1,5 +1,3 @@
-@file:Suppress("DEPRECATION")
-
 package rafacasari.cobbledex
 
 import com.cobblemon.mod.common.Cobblemon
@@ -22,11 +20,11 @@ import org.slf4j.LoggerFactory
 import rafacasari.cobbledex.cobblemon.extensions.PlayerDiscovery
 import java.util.function.Supplier
 
-
-object CobbledexMod {
+object Cobbledex {
     const val MOD_ID : String = "cobbledex"
 
     val LOGGER: Logger = LoggerFactory.getLogger("Cobbledex")
+    private lateinit var implementation: CobbledexImplementation
 
     object CobbledexRegistries {
         private val manager: Supplier<RegistrarManager> = Supplier<RegistrarManager> {
@@ -42,15 +40,13 @@ object CobbledexMod {
             items.register(Identifier(MOD_ID, "cobbledex_item")) {
                 CobbledexConstants.Cobbledex_Item
             }
-
-
         }
-
     }
 
     private var eventsCreated: Boolean = false
-    fun init() {
+    fun init(implementation: CobbledexImplementation) {
         LOGGER.info("Initializing Cobbledex...")
+        this.implementation = implementation
 
         CobbledexRegistries.registerItems()
 
@@ -84,6 +80,14 @@ object CobbledexMod {
         }
 
 
+    }
+
+    fun isClient() : Boolean {
+        return implementation.environment() == Environment.CLIENT
+    }
+
+    fun isServer() : Boolean {
+        return implementation.environment() == Environment.SERVER
     }
 
     fun registerPlayerDiscovery(player: PlayerEntity?, species: Species?): ActionResult

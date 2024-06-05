@@ -3,13 +3,13 @@ package rafacasari.cobbledex.cobblemon.extensions
 import com.cobblemon.mod.common.api.storage.player.PlayerDataExtension
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
-import rafacasari.cobbledex.CobbledexMod
+import rafacasari.cobbledex.Cobbledex
 
 class PlayerDiscovery(val caughtSpecies: MutableSet<Int> = hashSetOf()
 ): PlayerDataExtension {
 
     companion object {
-        const val NAME_KEY = CobbledexMod.MOD_ID
+        const val NAME_KEY = Cobbledex.MOD_ID
 
         private val GSON = GsonBuilder()
             .disableHtmlEscaping()

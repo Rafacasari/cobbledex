@@ -1,7 +1,7 @@
 package rafacasari.cobbledex.utils
 
 import com.cobblemon.mod.common.api.types.ElementalType
-import rafacasari.cobbledex.CobbledexMod
+import rafacasari.cobbledex.Cobbledex
 
 data class Type(val damageTaken: Map<String, Int>)
 
@@ -181,7 +181,7 @@ object TypeChart {
             is ElementalType -> getFormatedName(target.name)
             is Iterable<*> -> target.map { value -> if(value is ElementalType) getFormatedName(value.name) else value }.toList()
             else -> {
-                CobbledexMod.LOGGER.error("Invalid target for TypeChart.getEffectiveness")
+                Cobbledex.LOGGER.error("Invalid target for TypeChart.getEffectiveness")
                 target
             }
         }

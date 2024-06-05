@@ -20,17 +20,19 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.sound.PositionedSoundInstance
+import net.minecraft.client.world.ClientWorld
 import net.minecraft.sound.SoundEvent
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
-import rafacasari.cobbledex.CobbledexMod
+import net.minecraft.world.World
+import rafacasari.cobbledex.Cobbledex
 import rafacasari.cobbledex.client.widget.LongTextDisplay
 import rafacasari.cobbledex.client.widget.PokemonEvolutionDisplay
+import rafacasari.cobbledex.utils.BiomeUtils
 import rafacasari.cobbledex.utils.TypeChart
 import rafacasari.cobbledex.utils.cobbledexTranslation
-
 
 class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTranslation("texts.title.cobbledex_gui")) {
 
@@ -42,11 +44,11 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
 
         const val PORTRAIT_SIZE = 66
 
-        private val MAIN_BACKGROUND: Identifier = Identifier(CobbledexMod.MOD_ID, "textures/gui/cobbledex_background.png")
-        private val PORTRAIT_BACKGROUND: Identifier = Identifier(CobbledexMod.MOD_ID, "textures/gui/portrait_background.png")
+        private val MAIN_BACKGROUND: Identifier = Identifier(Cobbledex.MOD_ID, "textures/gui/cobbledex_background.png")
+        private val PORTRAIT_BACKGROUND: Identifier = Identifier(Cobbledex.MOD_ID, "textures/gui/portrait_background.png")
 
-        private val TYPE_SPACER: Identifier = Identifier(CobbledexMod.MOD_ID, "textures/gui/type_spacer.png")
-        private val TYPE_SPACER_DOUBLE: Identifier = Identifier(CobbledexMod.MOD_ID, "textures/gui/type_spacer_double.png")
+        private val TYPE_SPACER: Identifier = Identifier(Cobbledex.MOD_ID, "textures/gui/type_spacer.png")
+        private val TYPE_SPACER_DOUBLE: Identifier = Identifier(Cobbledex.MOD_ID, "textures/gui/type_spacer_double.png")
 
         var Instance : CobbledexGUI? = null
 
@@ -286,16 +288,11 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
 
         if (pokemon != null)
         {
-//            val spawnDetails = getSpawnDetails(pokemon)
-//            spawnDetails.forEach { spawnDetail ->
-//                spawnDetail.conditions.forEach {
-//                }
-//            }
+
 
             pokemon.form.pokedex.forEach {
                 pokedex -> longTextDisplay?.add(pokedex.asTranslated())
             }
-
 
 
             val weaknessList = ElementalTypes.all().map {
@@ -361,6 +358,29 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
                         .withColor(elementalType.first.hue)))
                 }
                 longTextDisplay?.add(mutableText, false)
+            }
+
+            val world: ClientWorld? = MinecraftClient.getInstance().world
+
+            if (world != null) {
+
+                val biomes = BiomeUtils.getAllBiomes(world as World)
+
+
+
+                val validBiomes = biomes.filter { biome ->
+                    getSpawnDetails(pokemon).any() { s ->
+                        s.conditions.any { c ->
+                            BiomeUtils.canSpawnAt(biome.biome, world, c)
+                        }
+                    }
+                }
+
+
+                longTextDisplay?.add("Where to find".text().bold(), true)
+                validBiomes.forEach { biome ->
+                    longTextDisplay?.add("biome.${biome.identifier.toTranslationKey()}".asTranslated(), false)
+                }
             }
         }
 
