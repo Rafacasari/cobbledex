@@ -28,7 +28,7 @@ loom {
 dependencies {
     minecraft("net.minecraft:minecraft:${property("minecraft_version")}")
     mappings("net.fabricmc:yarn:${property("yarn_mappings")}:v2")
-    modApi("dev.architectury:architectury-forge:${property("architectury_version")}")
+    //modApi("dev.architectury:architectury-forge:${property("architectury_version")}")
 
     forge("net.minecraftforge:forge:${property("forge_version")}")
 

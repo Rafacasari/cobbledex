@@ -5,7 +5,7 @@ package rafacasari.cobbledex
 interface CobbledexImplementation {
     val modAPI: ModAPI
     fun environment(): Environment
-
+    fun registerItems()
 //    fun getAllRegisteredBiomes() : List<Biome>
 }
 

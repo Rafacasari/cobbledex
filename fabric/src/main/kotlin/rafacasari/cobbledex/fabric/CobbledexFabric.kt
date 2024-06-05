@@ -3,10 +3,11 @@ package rafacasari.cobbledex.fabric
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.loader.api.FabricLoader
+import net.minecraft.registry.Registries
+import net.minecraft.registry.Registry
+import net.minecraft.util.Identifier
+import rafacasari.cobbledex.*
 import rafacasari.cobbledex.Cobbledex.init
-import rafacasari.cobbledex.CobbledexImplementation
-import rafacasari.cobbledex.Environment
-import rafacasari.cobbledex.ModAPI
 
 
 class CobbledexFabric : ModInitializer, CobbledexImplementation {
@@ -24,6 +25,7 @@ class CobbledexFabric : ModInitializer, CobbledexImplementation {
         }
     }
 
-
-
+    override fun registerItems() {
+        Registry.register(Registries.ITEM, Identifier(Cobbledex.MOD_ID, "cobbledex_item"), CobbledexConstants.Cobbledex_Item)
+    }
 }

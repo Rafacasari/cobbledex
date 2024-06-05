@@ -17,7 +17,7 @@ dependencies {
     // alL fabric dependencies:
     modCompileOnly("net.fabricmc:fabric-loader:${property("fabric_loader_version")}")
     modCompileOnly("net.fabricmc.fabric-api:fabric-api:${property("fabric_version")}")
-    modCompileOnly("dev.architectury:architectury-fabric:${property("architectury_version")}")
+    //modCompileOnly("dev.architectury:architectury-fabric:${property("architectury_version")}")
 
 
 }

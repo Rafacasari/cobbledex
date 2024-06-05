@@ -4,21 +4,15 @@ import com.cobblemon.mod.common.Cobblemon
 import com.cobblemon.mod.common.api.Priority
 import com.cobblemon.mod.common.api.events.CobblemonEvents
 import com.cobblemon.mod.common.api.storage.player.PlayerDataExtensionRegistry
+import com.cobblemon.mod.common.platform.events.PlatformEvents
 import com.cobblemon.mod.common.pokemon.Species
-import dev.architectury.event.events.common.LifecycleEvent
-import dev.architectury.registry.registries.Registrar
-import dev.architectury.registry.registries.RegistrarManager
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
-import net.minecraft.util.Identifier
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import rafacasari.cobbledex.cobblemon.extensions.PlayerDiscovery
-import java.util.function.Supplier
 
 object Cobbledex {
     const val MOD_ID : String = "cobbledex"
@@ -26,31 +20,16 @@ object Cobbledex {
     val LOGGER: Logger = LoggerFactory.getLogger("Cobbledex")
     private lateinit var implementation: CobbledexImplementation
 
-    object CobbledexRegistries {
-        private val manager: Supplier<RegistrarManager> = Supplier<RegistrarManager> {
-            RegistrarManager.get(
-                MOD_ID
-            )
-        }
-
-        private val items: Registrar<Item> = manager.get().get(Registries.ITEM)
-
-        fun registerItems() {
-            LOGGER.info("Cobbledex: Registering items...")
-            items.register(Identifier(MOD_ID, "cobbledex_item")) {
-                CobbledexConstants.Cobbledex_Item
-            }
-        }
-    }
 
     private var eventsCreated: Boolean = false
     fun init(implementation: CobbledexImplementation) {
         LOGGER.info("Initializing Cobbledex...")
         this.implementation = implementation
 
-        CobbledexRegistries.registerItems()
+        implementation.registerItems()
 
-        LifecycleEvent.SERVER_STARTED.register { _ ->
+        // TODO: Make our own event so we don't need to depend on Cobblemon PlatformEvents
+        PlatformEvents.SERVER_STARTED.subscribe { _ ->
             LOGGER.info("Cobbledex: Server initialized...")
             PlayerDataExtensionRegistry.register(PlayerDiscovery.NAME_KEY, PlayerDiscovery::class.java)
 
@@ -112,5 +91,4 @@ object Cobbledex {
 
         return ActionResult.SUCCESS
     }
-
 }

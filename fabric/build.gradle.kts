@@ -27,8 +27,8 @@ loom {
 dependencies {
     minecraft("net.minecraft:minecraft:${property("minecraft_version")}")
     mappings("net.fabricmc:yarn:${property("yarn_mappings")}:v2")
-    modApi("dev.architectury:architectury-fabric:${property("architectury_version")}")
-    modApi("teamreborn:energy:3.0.0")
+    //modApi("dev.architectury:architectury-fabric:${property("architectury_version")}")
+    //modApi("teamreborn:energy:3.0.0")
 
     modImplementation("com.cobblemon:fabric:${property("cobblemon_version")}")
     modImplementation("net.fabricmc:fabric-loader:${property("fabric_loader_version")}")
