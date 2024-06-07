@@ -1,16 +1,19 @@
 {
   "schemaVersion": 1,
   "name": "${mod_name}",
-  "id": "${mod_id}",
+  "id": "cobbledex",
   "version":  "${mod_version}",
   "description": "${mod_description}",
   "authors": ["Rafa"],
   "contact": {"repo": "https://github.com/rafacasari/cobbledex"},
   "license": "",
   "environment": "*",
+  "mixins": [
+    "cobbledex-common.mixins.json"
+  ],
   "entrypoints": {
     "main": [
-      "rafacasari.cobbledex.fabric.CobbledexFabric"
+      "com.rafacasari.mod.cobbledex.fabric.CobbledexFabric"
     ]
   },
   "depends": {

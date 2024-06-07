@@ -1,1 +1,12 @@
-{}
+{
+  "required": true,
+  "package": "com.rafacasari.mod.cobbledex.mixins",
+  "compatibilityLevel": "JAVA_17",
+  "minVersion": "0.8",
+  "client": [
+    "TextHandlerAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

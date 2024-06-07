@@ -4,5 +4,6 @@
   "texts.title.cobbledex_gui": "Cobbledex",
   "cobbledex.texts.weakness": "Is weak against",
   "cobbledex.texts.resistant": "Resistant against:",
-  "cobbledex.texts.immune": "Immune against:"
+  "cobbledex.texts.immune": "Immune against:",
+  "cobbledex.texts.biomes": "Where to find:"
 }
