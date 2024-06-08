@@ -4,9 +4,10 @@ import com.cobblemon.mod.common.CobblemonSounds
 import com.cobblemon.mod.common.api.gui.blitk
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.api.spawning.CobblemonSpawnPools
-import com.cobblemon.mod.common.api.spawning.detail.SpawnDetail
+import com.cobblemon.mod.common.api.spawning.detail.PokemonSpawnDetail
 import com.cobblemon.mod.common.api.text.add
 import com.cobblemon.mod.common.api.text.bold
+import com.cobblemon.mod.common.api.text.darkGreen
 import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.api.types.ElementalTypes
 import com.cobblemon.mod.common.client.CobblemonResources
@@ -15,7 +16,9 @@ import com.cobblemon.mod.common.client.gui.TypeIcon
 import com.cobblemon.mod.common.client.gui.summary.widgets.ModelWidget
 import com.cobblemon.mod.common.client.render.drawScaledText
 import com.cobblemon.mod.common.pokemon.Pokemon
+import com.cobblemon.mod.common.registry.BiomeTagCondition
 import com.cobblemon.mod.common.util.asTranslated
+import com.mojang.datafixers.util.Either
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -28,9 +31,10 @@ import net.minecraft.world.World
 import com.rafacasari.mod.cobbledex.Cobbledex
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.client.widget.PokemonEvolutionDisplay
-import com.rafacasari.mod.cobbledex.utils.BiomeUtils
-import com.rafacasari.mod.cobbledex.utils.TypeChart
-import com.rafacasari.mod.cobbledex.utils.cobbledexTranslation
+import com.rafacasari.mod.cobbledex.utils.*
+import net.minecraft.registry.tag.TagKey
+import net.minecraft.text.HoverEvent
+import net.minecraft.world.gen.structure.Structure
 
 class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTranslation("texts.title.cobbledex_gui")) {
 
@@ -77,9 +81,13 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
 
         this.addDrawableChild(ExitButton(pX = x + 315, pY = y + 172) { this.close() })
 
+        evolutionDisplay = PokemonEvolutionDisplay(x + 260, y + 37)
+        addDrawableChild(evolutionDisplay)
+
 
         longTextDisplay = LongTextDisplay(x + 79, y + 18, 179, 158, 2)
         addDrawableChild(longTextDisplay)
+
 
 
         super.init()
@@ -93,10 +101,15 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
         {
             this.setPreviewPokemon(selectedPokemon)
         }
+
+
     }
 
+    var renderContext: DrawContext? = null
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+
+        this.renderContext = context
 
         val matrices = context.matrices
         renderBackground(context)
@@ -114,7 +127,6 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
         )
 
         modelWidget?.render(context, mouseX, mouseY, delta)
-
 
         // Render Background
         blitk(
@@ -271,23 +283,12 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
                         mouseX,
                         mouseY)
                 }
-
-
             }
         }
-
-
     }
 
-
-
-    override fun shouldPause(): Boolean {
-        return false
-    }
-
-    override fun shouldCloseOnEsc(): Boolean {
-        return true
-    }
+    override fun shouldPause(): Boolean = false
+    override fun shouldCloseOnEsc(): Boolean = true
 
     override fun close() {
         Instance = null
@@ -295,11 +296,10 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
         super.close()
     }
 
-    fun getSpawnDetails(pokemon: Pokemon) : List<SpawnDetail> {
-
+    private fun getSpawnDetails(pokemon: Pokemon) : List<PokemonSpawnDetail> {
         val spawnDetails = CobblemonSpawnPools.WORLD_SPAWN_POOL.filter {
-                x -> x.id.startsWith("${pokemon.species.resourceIdentifier.path}-")
-        }
+            x ->  x is PokemonSpawnDetail && x.pokemon.species != null && x.pokemon.species == pokemon.species.resourceIdentifier.path
+        }.map { x -> x as PokemonSpawnDetail }
 
         return spawnDetails
     }
@@ -379,18 +379,69 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
             val world: ClientWorld? = MinecraftClient.getInstance().world
             if (world != null) {
 
-                val biomes = BiomeUtils.getAllBiomes(world as World)
-                val validBiomes = biomes.filter { biome ->
-                    getSpawnDetails(pokemon).any() { s ->
-                        s.conditions.any { c ->
-                            BiomeUtils.canSpawnAt(biome.biome, world, c)
+                val biomeRegistry = BiomeUtils.getBiomesRegistry(world)
+
+                val biomeCheckList = getSpawnDetails(pokemon)
+                    .flatMap { spawnDetail ->
+                        spawnDetail.conditions.mapNotNull { y -> y.biomes }.flatten().map { condition ->
+                            val antiConditions = spawnDetail.anticonditions.mapNotNull { y -> y.biomes }.flatten()
+
+                            BiomeChecker(spawnDetail, condition, BiomeUtils.getAllBiomes(world as World).filter {
+                                b -> condition.fits(b.biome, biomeRegistry) && !antiConditions.any { anti -> anti.fits(b.biome, biomeRegistry) }
+                            }.map {
+                                    b -> "biome.${b.identifier.toTranslationKey()}".asTranslated()
+                            })
                         }
                     }
-                }
 
-                longTextDisplay?.add(cobbledexTranslation("cobbledex.texts.biomes").bold(), true)
-                validBiomes.forEach { biome ->
-                    longTextDisplay?.add("biome.${biome.identifier.toTranslationKey()}".asTranslated(), false)
+
+                if (biomeCheckList.isNotEmpty()) {
+                    longTextDisplay?.add(cobbledexTranslation("cobbledex.texts.biomes").bold(), true)
+                    biomeCheckList.forEach { el ->
+
+                        if (el.biomeCondition is BiomeTagCondition) {
+                            val condition = el.biomeCondition.tag.id.path
+                            val conditionMutableText = condition.asTranslated()
+                            val tooltipText = condition.asTranslated().bold().add("\n".text())
+                            tooltipText.add("Weight: ${el.spawnDetail.weight}\n".text().setStyle(Style.EMPTY.withBold(false)))
+
+                            if (condition != "is_overworld") {
+                                el.biomeList.forEach { biome ->
+                                    tooltipText.add("\n".text())
+                                    tooltipText.add(biome.setStyle(Style.EMPTY.withBold(false)))
+                                }
+                            }
+
+                            val structureConditions: List<Either<Identifier, TagKey<Structure>>> = el.spawnDetail.conditions.mapNotNull {
+                                structureCondition -> structureCondition.structures
+                            }.flatten()
+
+                            if (structureConditions.isNotEmpty()) {
+                                tooltipText.add("\nNeed structure:".text().bold().darkGreen())
+                                structureConditions.forEach { structure ->
+
+                                    val structureName = structure.fold(
+                                        { left -> left.toShortTranslationKey() },
+                                        { right -> right.id.toShortTranslationKey() }
+                                    )
+
+                                    if (structureName.isNotEmpty()) {
+                                        tooltipText.add("\n".text())
+                                        tooltipText.add(
+                                            "feature.$structureName".asTranslated()
+                                                .setStyle(Style.EMPTY.withBold(false))
+                                        )
+                                    }
+                                }
+                            }
+
+                            val hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltipText)
+
+                            longTextDisplay?.add(
+                                conditionMutableText.setStyle(Style.EMPTY.withHoverEvent(hoverEvent)), false
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -398,11 +449,7 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
         val x = (width - BASE_WIDTH) / 2
         val y = (height - BASE_HEIGHT) / 2
 
-        // re-initialize
-        if (evolutionDisplay == null) {
-            evolutionDisplay = PokemonEvolutionDisplay(x + 260, y + 37)
-            addDrawableChild(evolutionDisplay)
-        }
+
         evolutionDisplay?.selectPokemon(pokemon)
 
 
@@ -433,10 +480,6 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
                 small = false,
                 centeredX = true
             )
-
-
-
-
 
         } else {
             previewPokemon = null

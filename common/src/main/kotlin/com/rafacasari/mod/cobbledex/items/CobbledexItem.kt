@@ -19,8 +19,7 @@ class CobbledexItem(settings: Settings) : Item(settings) {
 
 
     override fun useOnEntity(
-        itemStack: ItemStack?, player: PlayerEntity?, target: LivingEntity?, hand: Hand?
-    ): ActionResult {
+        itemStack: ItemStack?, player: PlayerEntity?, target: LivingEntity?, hand: Hand?): ActionResult {
 
         if (player == null || target == null || player.world == null) {
             return ActionResult.FAIL
@@ -38,31 +37,11 @@ class CobbledexItem(settings: Settings) : Item(settings) {
             return ActionResult.PASS
         }
 
-
-
-//        val pokemon = target.pokemon
-//        val storeCoordinates = pokemon.storeCoordinates.get()
-//        val ownership = when {
-//            storeCoordinates == null -> Ownership.WILD
-//            storeCoordinates.store.uuid == player.uuid -> Ownership.OWNER
-//            else -> Ownership.OWNED_ANOTHER
-//        }
-
-//        if (ownership != Ownership.OWNER) {
-//            player.sendSystemMessage(Component.translatable(CobbledexReferences.NotYourPokemon))
-//            return InteractionResult.FAIL
-//        }
-
         return Cobbledex.registerPlayerDiscovery(player, target.pokemon.species)
     }
 
 
-    override fun appendTooltip(
-        stack: ItemStack?,
-        world: World?,
-        tooltip: MutableList<Text>?,
-        context: TooltipContext?
-    )
+    override fun appendTooltip(stack: ItemStack?, world: World?, tooltip: MutableList<Text>?, context: TooltipContext?)
     {
         tooltip?.add(Text.literal("Discovered: §a0§r/100"))
 

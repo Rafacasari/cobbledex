@@ -1,7 +1,5 @@
 package com.rafacasari.mod.cobbledex.client.widget
 
-
-
 import com.cobblemon.mod.common.api.text.text
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
@@ -19,7 +17,8 @@ class LongTextDisplay (
     private val y: Int = 0,
     private val frameWidth: Int,
     private val frameHeight: Int,
-    private val padding : Int = 3
+    private val padding : Int = 3,
+    private val scrollbarSize: Int = 2
 ): AlwaysSelectedEntryListWidget<LongTextDisplay.DialogueLine>(
     MinecraftClient.getInstance(),
     frameWidth,
@@ -74,7 +73,7 @@ class LongTextDisplay (
     }
 
     override fun getScrollbarPositionX(): Int {
-        return left + width - 5
+        return left + width - padding - scrollbarSize
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, partialTicks: Float) {
@@ -90,7 +89,10 @@ class LongTextDisplay (
         super.render(context, mouseX, mouseY, partialTicks)
         context.disableScissor()
 
-
+        if (hoveredEntry?.pendingHover != null) {
+            val textRenderer = MinecraftClient.getInstance().textRenderer
+            context.drawHoverEvent(textRenderer, hoveredEntry?.pendingHover, mouseX, mouseY)
+        }
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
@@ -173,16 +175,23 @@ class LongTextDisplay (
                 }
 
                 hoveredStyle?.let {
-                    context.drawHoverEvent(textRenderer, it, pMouseX!!, pMouseY!!)
+                    newHover = it
+                    //context.drawHoverEvent(textRenderer, it, pMouseX!!, pMouseY!!)
                 }
             }
-
         }
 
+        private var newHover: Style? = null
+        var pendingHover: Style? = null
+
         override fun render(context: DrawContext, index: Int, rowTop: Int, rowLeft: Int, rowWidth: Int, rowHeight: Int, mouseX: Int, mouseY: Int, isHovered: Boolean, partialTicks: Float) {
+            newHover = null
+
             line?.let {
                 drawOrderedText(context, it, rowLeft, rowTop, pMouseX = mouseX, pMouseY = mouseY)
             }
+
+            pendingHover = newHover
         }
     }
 }
