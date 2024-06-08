@@ -421,14 +421,14 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
                                 structureConditions.forEach { structure ->
 
                                     val structureName = structure.fold(
-                                        { left -> left.toShortTranslationKey() },
-                                        { right -> right.id.toShortTranslationKey() }
+                                        { left -> left.toTranslationKey() },
+                                        { right -> right.id.toTranslationKey() }
                                     )
 
                                     if (structureName.isNotEmpty()) {
                                         tooltipText.add("\n".text())
                                         tooltipText.add(
-                                            "feature.$structureName".asTranslated()
+                                            "structure.$structureName".asTranslated()
                                                 .setStyle(Style.EMPTY.withBold(false))
                                         )
                                     }
