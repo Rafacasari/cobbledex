@@ -1,14 +1,12 @@
 package com.rafacasari.mod.cobbledex.client.gui
 
 import com.cobblemon.mod.common.CobblemonSounds
+import com.cobblemon.mod.common.api.conditional.RegistryLikeTagCondition
 import com.cobblemon.mod.common.api.gui.blitk
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.api.spawning.CobblemonSpawnPools
 import com.cobblemon.mod.common.api.spawning.detail.PokemonSpawnDetail
-import com.cobblemon.mod.common.api.text.add
-import com.cobblemon.mod.common.api.text.bold
-import com.cobblemon.mod.common.api.text.darkGreen
-import com.cobblemon.mod.common.api.text.text
+import com.cobblemon.mod.common.api.text.*
 import com.cobblemon.mod.common.api.types.ElementalTypes
 import com.cobblemon.mod.common.client.CobblemonResources
 import com.cobblemon.mod.common.client.gui.ExitButton
@@ -18,7 +16,6 @@ import com.cobblemon.mod.common.client.render.drawScaledText
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.cobblemon.mod.common.registry.BiomeTagCondition
 import com.cobblemon.mod.common.util.asTranslated
-import com.mojang.datafixers.util.Either
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -32,9 +29,8 @@ import com.rafacasari.mod.cobbledex.Cobbledex
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.client.widget.PokemonEvolutionDisplay
 import com.rafacasari.mod.cobbledex.utils.*
-import net.minecraft.registry.tag.TagKey
 import net.minecraft.text.HoverEvent
-import net.minecraft.world.gen.structure.Structure
+import net.minecraft.world.biome.Biome
 
 class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTranslation("texts.title.cobbledex_gui")) {
 
@@ -176,6 +172,18 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
             scale = 0.8F
         )
 
+        drawScaledText(
+            context = context,
+            font = CobblemonResources.DEFAULT_LARGE,
+            text = "Cobbledex".text().bold(),
+            x = x + 169.5F,
+            y = y + 7.5F,
+            shadow = false,
+            centered = true,
+            scale = 1.04f
+        )
+
+
         val pokemon = previewPokemon
         if (pokemon != null) {
             // Level
@@ -186,18 +194,7 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
 //                x = x + 6,
 //                y = y + 1.5,
 //                shadow = true
-//            )
-
-            drawScaledText(
-                context = context,
-                font = CobblemonResources.DEFAULT_LARGE,
-                text = "Cobbledex".text().bold(),
-                x = x + 167,
-                y = y + 7,
-                shadow = false,
-                centered = true
-            )
-
+//            )s
 
 
 
@@ -206,7 +203,7 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
                 font = CobblemonResources.DEFAULT_LARGE,
                 text = pokemon.species.name.text().bold(),
                 x = x + 13,
-                y = y + 29,
+                y = y + 28.3F,
                 shadow = false
             )
 
@@ -397,43 +394,68 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
 
                 if (biomeCheckList.isNotEmpty()) {
                     longTextDisplay?.add(cobbledexTranslation("cobbledex.texts.biomes").bold(), true)
-                    biomeCheckList.forEach { el ->
+                    biomeCheckList.forEach { checker ->
 
-                        if (el.biomeCondition is BiomeTagCondition) {
-                            val condition = el.biomeCondition.tag.id.path
+                        if (checker.biomeCondition is BiomeTagCondition) {
+                            val condition = checker.biomeCondition.tag.id.toTranslationKey()
                             val conditionMutableText = condition.asTranslated()
                             val tooltipText = condition.asTranslated().bold().add("\n".text())
-                            tooltipText.add("Weight: ${el.spawnDetail.weight}\n".text().setStyle(Style.EMPTY.withBold(false)))
+                            tooltipText.add("Weight: ${checker.spawnDetail.weight}\n".text().setStyle(Style.EMPTY.withBold(false)))
 
-                            if (condition != "is_overworld") {
-                                el.biomeList.forEach { biome ->
-                                    tooltipText.add("\n".text())
-                                    tooltipText.add(biome.setStyle(Style.EMPTY.withBold(false)))
-                                }
-                            }
 
-                            val structureConditions: List<Either<Identifier, TagKey<Structure>>> = el.spawnDetail.conditions.mapNotNull {
-                                structureCondition -> structureCondition.structures
+                            val structureConditions = checker.spawnDetail.conditions.mapNotNull {
+                                    structureCondition -> structureCondition.structures
                             }.flatten()
 
                             if (structureConditions.isNotEmpty()) {
                                 tooltipText.add("\nNeed structure:".text().bold().darkGreen())
                                 structureConditions.forEach { structure ->
 
-                                    val structureName = structure.fold(
-                                        { left -> left.toTranslationKey() },
-                                        { right -> right.id.toTranslationKey() }
-                                    )
-
-                                    if (structureName.isNotEmpty()) {
-                                        tooltipText.add("\n".text())
-                                        tooltipText.add(
-                                            "structure.$structureName".asTranslated()
-                                                .setStyle(Style.EMPTY.withBold(false))
+                                    try {
+                                        val structureName = structure.fold(
+                                            { left -> left.toTranslationKey() },
+                                            { right -> right.id.toTranslationKey() }
                                         )
+
+                                        if (structureName.isNotEmpty()) {
+                                            tooltipText.add("\n".text())
+                                            tooltipText.add(
+                                                "structure.$structureName".asTranslated()
+                                                    .setStyle(Style.EMPTY.withBold(false))
+                                            )
+                                        }
+                                    } catch (e: Exception)
+                                    {
+                                        logError(e.toString())
                                     }
                                 }
                             }
+
+                            // Too much stuff to write, we can skip it!
+                            if (!condition.endsWith("is_overworld") && !condition.endsWith("is_nether"))
+                            {
+                                checker.biomeList.forEach { biome ->
+                                    tooltipText.add("\n".text())
+                                    tooltipText.add(biome.setStyle(Style.EMPTY.withBold(false)))
+                                }
+                            } else {
+                                val antiConditionBiomes = checker.spawnDetail.anticonditions.mapNotNull { x -> x.biomes}.flatten().filterIsInstance<RegistryLikeTagCondition<Biome>>()
+                                if (antiConditionBiomes.isNotEmpty()) {
+                                    tooltipText.add("\nBlacklisted Biomes:".text().bold().darkRed())
+                                    antiConditionBiomes.forEach { b ->
+
+                                        tooltipText.add("\n".text())
+                                        tooltipText.add(
+                                            b.tag.id.toTranslationKey().asTranslated().darkRed()
+                                                .setStyle(Style.EMPTY.withBold(false))
+                                        )
+
+                                    }
+                                }
+                            }
+
+
+
 
                             val hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltipText)
 
