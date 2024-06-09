@@ -10,7 +10,7 @@ fun cobbledexTranslation(key: String) = Text.translatable(key)
 fun logInfo(text: String) = Cobbledex.LOGGER.info(text)
 fun logWarn(text: String) = Cobbledex.LOGGER.warn(text)
 fun logError(text: String) = Cobbledex.LOGGER.error(text)
-
+fun logDebug(text: String) = Cobbledex.LOGGER.debug(text)
 
 fun <L, R> Either<L, R>.fold(ifLeft: (L) -> String, ifRight: (R) -> String): String {
     return if (this.left().isPresent) {

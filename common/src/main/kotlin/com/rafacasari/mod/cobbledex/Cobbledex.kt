@@ -39,7 +39,6 @@ object Cobbledex {
 
                     val itemStack = ItemStack(CobbledexConstants.Cobbledex_Item, 1)
                     it.player.giveItemStack(itemStack)
-
                 }
 
                 CobblemonEvents.POKEMON_CAPTURED.subscribe(Priority.LOW) {
@@ -53,13 +52,10 @@ object Cobbledex {
                     }
                 }
 
-                CobblemonEvents.BATTLE_VICTORY
                 // This should prevent events from being added more than once
                 eventsCreated = true
             }
         }
-
-
     }
 
     fun isClient() : Boolean {

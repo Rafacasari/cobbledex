@@ -28,6 +28,7 @@ import net.minecraft.world.World
 import com.rafacasari.mod.cobbledex.Cobbledex
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.client.widget.PokemonEvolutionDisplay
+import com.rafacasari.mod.cobbledex.utils.TypeChartUtils
 import com.rafacasari.mod.cobbledex.utils.*
 import net.minecraft.text.HoverEvent
 import net.minecraft.world.biome.Biome
@@ -311,67 +312,100 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
                 pokedex -> longTextDisplay?.add(pokedex.asTranslated())
             }
 
-            val weaknessList = ElementalTypes.all().map {
-                    t -> t to TypeChart.getEffectiveness(t, pokemon.types)
-            }.filter { (_, effectiveness) ->
-                effectiveness > 0
-            }
+            val elementalTypes = ElementalTypes.all().map {
+                t -> t to TypeChartUtils.getModifier(t, pokemon.primaryType, pokemon.secondaryType)
+            }.groupBy {
+                t -> t.second
+            }.toList().sortedByDescending { it.first }
 
-            val resistantList = ElementalTypes.all().map {
-                    t -> t to TypeChart.getEffectiveness(t, pokemon.types)
-            }.filter { (_, effectiveness) ->
-                effectiveness < 0
-            }
+            if (elementalTypes.isNotEmpty())
+            {
 
-            val immuneList = ElementalTypes.all().map {
-                    t -> t to TypeChart.getImmunity(t, pokemon.types)
-            }.filter { (_, isImmune) ->
-                !isImmune
-            }
+                elementalTypes.forEach { elementalKey ->
+                    val mutableText = "Receive ${elementalKey.first}x damage from\n".text()
+                    var isFirst = true
+                    elementalKey.second.forEach {
+                        if (!isFirst)
+                            mutableText.add(" ".text())
 
+                        isFirst = false
 
-            // Break a line
-            if (weaknessList.isNotEmpty() || resistantList.isNotEmpty())
-                longTextDisplay?.add("".text())
+                        mutableText.add(
+                            it.first.displayName.setStyle(
+                                Style.EMPTY
+                                    .withBold(true)
+                                    .withColor(it.first.hue)
+                            )
+                        )
+                    }
 
-
-            if (weaknessList.isNotEmpty()) {
-                val mutableText =  cobbledexTranslation("cobbledex.texts.weakness")
-                for (elementalType in weaknessList)
-                {
-                    mutableText.add(" ".text())
-                    mutableText.add(elementalType.first.displayName.setStyle(Style.EMPTY
-                        .withBold(true)
-                        .withColor(elementalType.first.hue)))
-//                    mutableText.add("(${elementalType.second}x)")
+                    longTextDisplay?.add(mutableText, true)
                 }
-                longTextDisplay?.add(mutableText, false)
+
+
             }
 
-            if (resistantList.isNotEmpty()) {
-                val mutableText = cobbledexTranslation("cobbledex.texts.resistant")
-                for (elementalType in resistantList)
-                {
-                    mutableText.add(" ".text())
-                    mutableText.add(elementalType.first.displayName.setStyle(Style.EMPTY
-                        .withBold(true)
-                        .withColor(elementalType.first.hue)))
-//                    mutableText.add("(${elementalType.second}x)")
-                }
-                longTextDisplay?.add(mutableText, false)
-            }
-
-            if (immuneList.isNotEmpty()) {
-                val mutableText = cobbledexTranslation("cobbledex.texts.immune")
-                for (elementalType in immuneList)
-                {
-                    mutableText.add(" ".text())
-                    mutableText.add(elementalType.first.displayName.setStyle(Style.EMPTY
-                        .withBold(true)
-                        .withColor(elementalType.first.hue)))
-                }
-                longTextDisplay?.add(mutableText, false)
-            }
+//            val weaknessList = ElementalTypes.all().map {
+//                    t -> t to TypeChart.getEffectiveness(t, pokemon.types)
+//            }.filter { (_, effectiveness) ->
+//                effectiveness > 0
+//            }
+//
+//            val resistantList = ElementalTypes.all().map {
+//                    t -> t to TypeChart.getEffectiveness(t, pokemon.types)
+//            }.filter { (_, effectiveness) ->
+//                effectiveness < 0
+//            }
+//
+//            val immuneList = ElementalTypes.all().map {
+//                    t -> t to TypeChart.getImmunity(t, pokemon.types)
+//            }.filter { (_, isImmune) ->
+//                !isImmune
+//            }
+//
+//
+//            // Break a line
+//            if (weaknessList.isNotEmpty() || resistantList.isNotEmpty())
+//                longTextDisplay?.add("".text())
+//
+//
+//            if (weaknessList.isNotEmpty()) {
+//                val mutableText =  cobbledexTranslation("cobbledex.texts.weakness")
+//                for (elementalType in weaknessList)
+//                {
+//                    mutableText.add(" ".text())
+//                    mutableText.add(elementalType.first.displayName.setStyle(Style.EMPTY
+//                        .withBold(true)
+//                        .withColor(elementalType.first.hue)))
+////                    mutableText.add("(${elementalType.second}x)")
+//                }
+//                longTextDisplay?.add(mutableText, false)
+//            }
+//
+//            if (resistantList.isNotEmpty()) {
+//                val mutableText = cobbledexTranslation("cobbledex.texts.resistant")
+//                for (elementalType in resistantList)
+//                {
+//                    mutableText.add(" ".text())
+//                    mutableText.add(elementalType.first.displayName.setStyle(Style.EMPTY
+//                        .withBold(true)
+//                        .withColor(elementalType.first.hue)))
+////                    mutableText.add("(${elementalType.second}x)")
+//                }
+//                longTextDisplay?.add(mutableText, false)
+//            }
+//
+//            if (immuneList.isNotEmpty()) {
+//                val mutableText = cobbledexTranslation("cobbledex.texts.immune")
+//                for (elementalType in immuneList)
+//                {
+//                    mutableText.add(" ".text())
+//                    mutableText.add(elementalType.first.displayName.setStyle(Style.EMPTY
+//                        .withBold(true)
+//                        .withColor(elementalType.first.hue)))
+//                }
+//                longTextDisplay?.add(mutableText, false)
+//            }
 
             val world: ClientWorld? = MinecraftClient.getInstance().world
             if (world != null) {
