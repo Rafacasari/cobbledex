@@ -8,6 +8,7 @@ import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
+import net.minecraft.client.MinecraftClient
 import net.minecraft.command.CommandSource
 
 object OpenCobbledexCommand : IClientCommandInterface {
@@ -36,15 +37,18 @@ object OpenCobbledexCommand : IClientCommandInterface {
             throw NO_POKEMON_EXCEPTION.create()
         }
 
-        CobbledexGUI.openCobbledexScreen(properties.create())
+        MinecraftClient.getInstance().send {
+            CobbledexGUI.openCobbledexScreen(properties.create())
+        }
+
 
         return Command.SINGLE_SUCCESS
     }
 
     private fun execute(): Int {
-
-        CobbledexGUI.openCobbledexScreen()
-
+        MinecraftClient.getInstance().send {
+            CobbledexGUI.openCobbledexScreen()
+        }
         return Command.SINGLE_SUCCESS
     }
 
