@@ -51,12 +51,14 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
 
         var Instance : CobbledexGUI? = null
 
-        fun openCobbledexScreen(pokemon: Pokemon?) {
+        fun openCobbledexScreen(pokemon: Pokemon? = null) {
             playSound(CobblemonSounds.PC_ON)
 
             Instance = CobbledexGUI(pokemon)
+            //MinecraftClient.getInstance().setScreenAndRender(Instance)
             MinecraftClient.getInstance().setScreen(Instance)
         }
+
 
         fun playSound(soundEvent: SoundEvent) {
             MinecraftClient.getInstance().soundManager.play(PositionedSoundInstance.master(soundEvent, 1f))
