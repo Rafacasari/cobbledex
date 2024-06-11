@@ -52,7 +52,7 @@ class LongTextDisplay (
         return super.addEntry(entry)
     }
 
-    fun add(entry: MutableText, breakLine: Boolean = true) {
+    fun add(entry: MutableText, breakLine: Boolean = true, shadow: Boolean = false) {
 
         if (breakLine && super.getEntryCount() > 0) {
             super.addEntry(DialogueLine(null))
@@ -60,7 +60,7 @@ class LongTextDisplay (
 
         val textRenderer = MinecraftClient.getInstance().textRenderer
         Language.getInstance().reorder(textRenderer.textHandler.wrapLines(entry, rowWidth - SCROLLBAR_PADDING, entry.style)).forEach {
-            add(DialogueLine(it))
+            add(DialogueLine(it, shadow))
         }
     }
 
@@ -124,7 +124,7 @@ class LongTextDisplay (
                 && mouseY < bottom
     }
 
-    class DialogueLine(private val line: OrderedText?) : Entry<DialogueLine>() {
+    class DialogueLine(private val line: OrderedText?, val shadow: Boolean = false) : Entry<DialogueLine>() {
         override fun getNarration() = "".text()
 
         private fun drawText(context: DrawContext, text: OrderedText, x: Number, y: Number, colour: Int, shadow: Boolean = true, pMouseX: Int? = null, pMouseY: Int? = null): Boolean {
@@ -188,7 +188,7 @@ class LongTextDisplay (
             newHover = null
 
             line?.let {
-                drawOrderedText(context, it, rowLeft, rowTop, pMouseX = mouseX, pMouseY = mouseY)
+                drawOrderedText(context, it, rowLeft, rowTop, pMouseX = mouseX, pMouseY = mouseY, shadow = shadow)
             }
 
             pendingHover = newHover

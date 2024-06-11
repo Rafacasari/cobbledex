@@ -14,7 +14,8 @@ import net.minecraft.command.CommandSource
 object OpenCobbledexCommand : IClientCommandInterface {
     override fun <A: CommandSource, T: CommandDispatcher<A>> register(dispatcher: T) {
 
-        val pokemonProperty = createArgument(dispatcher,"properties", PokemonPropertiesArgumentType.properties())
+        val pokemonProperty = dispatcher.createArgument("properties", PokemonPropertiesArgumentType.properties())
+
 
         val command = createLiteralArgument<A>("cobbledex")
             .executes {
@@ -41,7 +42,6 @@ object OpenCobbledexCommand : IClientCommandInterface {
             CobbledexGUI.openCobbledexScreen(properties.create())
         }
 
-
         return Command.SINGLE_SUCCESS
     }
 
@@ -49,6 +49,7 @@ object OpenCobbledexCommand : IClientCommandInterface {
         MinecraftClient.getInstance().send {
             CobbledexGUI.openCobbledexScreen()
         }
+        
         return Command.SINGLE_SUCCESS
     }
 

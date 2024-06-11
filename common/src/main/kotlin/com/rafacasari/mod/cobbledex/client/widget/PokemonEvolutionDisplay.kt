@@ -27,15 +27,28 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
         private val buttonResource = cobbledexResource("textures/gui/evolution_button.png")
     }
 
-
     public override fun addEntry(entry: EvolveSlot): Int {
         return super.addEntry(entry)
     }
 
-    fun selectPokemon(pokemon: Pokemon?) {
+//    fun selectPokemon(pokemon: Pokemon?) {
+//        clearEntries()
+//
+//        pokemon?.form?.evolutions?.map {
+//            EvolveSlot(it.result.create()) }?.forEach { entry ->
+//            this.addEntry(entry)
+//        }
+//    }
+
+    fun clearEvolutions() = clearEntries()
+
+
+    fun selectEvolutions(pokemonList: List<Pokemon>?) {
         clearEntries()
 
-        pokemon?.evolutions?.map { EvolveSlot(it.result.create()) }?.forEach { entry ->
+        pokemonList?.map {
+            EvolveSlot(it)
+        }?.forEach { entry ->
             this.addEntry(entry)
         }
     }

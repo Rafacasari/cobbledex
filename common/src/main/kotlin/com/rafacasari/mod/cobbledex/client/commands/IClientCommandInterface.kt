@@ -8,14 +8,14 @@ import net.minecraft.command.CommandSource
 
 interface IClientCommandInterface {
 
+    // Interface methods
+    fun <A: CommandSource, T: CommandDispatcher<A>> register(dispatcher: T)
+
     fun <S: CommandSource> createLiteralArgument(literal: String?): LiteralArgumentBuilder<S> {
         return LiteralArgumentBuilder.literal(literal)
     }
 
-    fun <A: CommandSource, T> createArgument(dispatcher: CommandDispatcher<A>, name: String?, type: ArgumentType<T>?): RequiredArgumentBuilder<A, T> {
+    fun <A: CommandSource, T> CommandDispatcher<A>.createArgument(name: String?, type: ArgumentType<T>?) : RequiredArgumentBuilder<A, T> {
         return RequiredArgumentBuilder.argument(name, type)
     }
-
-    fun <A: CommandSource, T: CommandDispatcher<A>> register(dispatcher: T)
-
 }

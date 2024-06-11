@@ -18,11 +18,11 @@ object Cobbledex {
     const val MOD_ID : String = "cobbledex"
 
     val LOGGER: Logger = LoggerFactory.getLogger("Cobbledex")
-    private lateinit var implementation: CobbledexImplementation
+    lateinit var implementation: CobbledexImplementation
 
 
     private var eventsCreated: Boolean = false
-    fun init(implementation: CobbledexImplementation) {
+    fun preInitialize(implementation: CobbledexImplementation) {
         LOGGER.info("Initializing Cobbledex...")
         Cobbledex.implementation = implementation
 
