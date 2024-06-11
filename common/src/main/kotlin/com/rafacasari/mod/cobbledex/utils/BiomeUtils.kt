@@ -20,6 +20,10 @@ object BiomeUtils {
 
     fun getAllBiomes(world: World) : List<CobbledexBiome> {
         val registry: Registry<Biome> = world.registryManager.get(RegistryKeys.BIOME)
+        return getAllBiomes(registry)
+    }
+
+    fun getAllBiomes(registry: Registry<Biome>) : List<CobbledexBiome> {
         return registry.entrySet.map { entry ->  CobbledexBiome(entry.key.value, entry.value) }
     }
 }

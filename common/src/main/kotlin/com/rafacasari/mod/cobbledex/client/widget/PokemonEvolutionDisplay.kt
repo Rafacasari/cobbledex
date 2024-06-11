@@ -7,7 +7,7 @@ import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.client.CobblemonResources
 import com.cobblemon.mod.common.client.gui.summary.SummaryButton
 import com.cobblemon.mod.common.client.render.drawScaledText
-import com.cobblemon.mod.common.pokemon.Pokemon
+import com.cobblemon.mod.common.pokemon.Species
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
@@ -43,7 +43,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
     fun clearEvolutions() = clearEntries()
 
 
-    fun selectEvolutions(pokemonList: List<Pokemon>?) {
+    fun selectEvolutions(pokemonList: List<Species>?) {
         clearEntries()
 
         pokemonList?.map {
@@ -53,7 +53,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
         }
     }
 
-    class EvolveSlot(private val evolution: Pokemon) : Entry<EvolveSlot>() {
+    class EvolveSlot(private val evolution: Species) : Entry<EvolveSlot>() {
         val client: MinecraftClient = MinecraftClient.getInstance()
 
         private val selectButton: SummaryButton = SummaryButton(
@@ -71,7 +71,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
             textScale = 0.5F
         )
 
-        override fun getNarration() = evolution.species.translatedName
+        override fun getNarration() = evolution.translatedName
 
         override fun render(
             context: DrawContext,
@@ -140,7 +140,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
                 0.0
             )
 
-            drawPortraitPokemon(this.evolution.species, this.evolution.aspects, matrices, partialTicks = partialTicks, reversed = true)
+            drawPortraitPokemon(evolution, evolution.standardForm.aspects.toSet(), matrices, partialTicks = partialTicks, reversed = true)
 
             matrices.pop()
             context.disableScissor()
@@ -161,7 +161,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
             drawScaledText(
                 context = context,
                 font = CobblemonResources.DEFAULT_LARGE,
-                text = evolution.species.translatedName.bold(),
+                text = evolution.translatedName.bold(),
                 x = x + 3.7f,
                 y = y + 1f,
                 shadow = true,

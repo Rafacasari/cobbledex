@@ -1,5 +1,6 @@
 package com.rafacasari.mod.cobbledex.client.commands
 
+import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.api.text.red
 import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.command.argument.PokemonPropertiesArgumentType
@@ -39,7 +40,7 @@ object OpenCobbledexCommand : IClientCommandInterface {
         }
 
         MinecraftClient.getInstance().send {
-            CobbledexGUI.openCobbledexScreen(properties.create())
+            CobbledexGUI.openCobbledexScreen(PokemonSpecies.getByName(properties.species!!))
         }
 
         return Command.SINGLE_SUCCESS

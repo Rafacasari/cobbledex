@@ -1,6 +1,6 @@
 package com.rafacasari.mod.cobbledex
 
-import com.cobblemon.mod.common.Cobblemon
+import com.cobblemon.mod.common.Cobblemon.playerData as CobblemonPlayerData
 import com.cobblemon.mod.common.api.Priority
 import com.cobblemon.mod.common.api.events.CobblemonEvents
 import com.cobblemon.mod.common.api.storage.player.PlayerDataExtensionRegistry
@@ -71,7 +71,7 @@ object Cobbledex {
         if (player == null || species == null)
             return ActionResult.PASS
 
-        val playerData = Cobblemon.playerData.get(player)
+        val playerData = CobblemonPlayerData.get(player)
         val cobbledexData = playerData.extraData.getOrPut(PlayerDiscovery.NAME_KEY) {
             // TODO: Maybe add the player PC/party pokemon in the first discover?
             PlayerDiscovery()
@@ -84,7 +84,7 @@ object Cobbledex {
             player.sendMessage(Text.literal("You've discovered a new Pokémon: §a" + species.name + "§r"))
         }
 
-        Cobblemon.playerData.saveSingle(playerData)
+        CobblemonPlayerData.saveSingle(playerData)
 
         return ActionResult.SUCCESS
     }

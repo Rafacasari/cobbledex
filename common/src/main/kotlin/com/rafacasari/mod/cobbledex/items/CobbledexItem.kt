@@ -33,7 +33,7 @@ class CobbledexItem(settings: Settings) : Item(settings) {
         }
 
         if (player.world.isClient) {
-            CobbledexGUI.openCobbledexScreen(target.pokemon)
+            CobbledexGUI.openCobbledexScreen(target.pokemon.species)
             return ActionResult.PASS
         }
 

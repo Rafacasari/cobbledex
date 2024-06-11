@@ -1,6 +1,5 @@
 package com.rafacasari.mod.cobbledex.forge
 
-
 import com.rafacasari.mod.cobbledex.INetworkManager
 import com.rafacasari.mod.cobbledex.network.CobbledexNetworkManager
 import com.rafacasari.mod.cobbledex.network.server.IClientNetworkPacketHandler
@@ -74,7 +73,6 @@ object ForgeNetworkManager : INetworkManager {
         this.channel.sendToServer(packet)
     }
 
-    @Suppress("UNCHECKED_CAST")
     override fun <T : INetworkPacket<*>> asVanillaClientBound(packet: T): Packet<ClientPlayPacketListener> {
         return this.channel.toVanillaPacket(packet, NetworkDirection.PLAY_TO_CLIENT) as Packet<ClientPlayPacketListener>
     }

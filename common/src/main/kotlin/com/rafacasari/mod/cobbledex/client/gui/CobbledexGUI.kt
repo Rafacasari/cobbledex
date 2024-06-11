@@ -4,8 +4,6 @@ import com.cobblemon.mod.common.CobblemonSounds
 import com.cobblemon.mod.common.api.conditional.RegistryLikeTagCondition
 import com.cobblemon.mod.common.api.gui.blitk
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
-import com.cobblemon.mod.common.api.spawning.CobblemonSpawnPools
-import com.cobblemon.mod.common.api.spawning.detail.PokemonSpawnDetail
 import com.cobblemon.mod.common.api.text.*
 import com.cobblemon.mod.common.api.types.ElementalTypes
 import com.cobblemon.mod.common.client.CobblemonResources
@@ -13,7 +11,8 @@ import com.cobblemon.mod.common.client.gui.ExitButton
 import com.cobblemon.mod.common.client.gui.TypeIcon
 import com.cobblemon.mod.common.client.gui.summary.widgets.ModelWidget
 import com.cobblemon.mod.common.client.render.drawScaledText
-import com.cobblemon.mod.common.pokemon.Pokemon
+import com.cobblemon.mod.common.pokemon.RenderablePokemon
+import com.cobblemon.mod.common.pokemon.Species
 import com.cobblemon.mod.common.registry.BiomeTagCondition
 import com.cobblemon.mod.common.util.asTranslated
 import net.minecraft.client.MinecraftClient
@@ -34,7 +33,7 @@ import com.rafacasari.mod.cobbledex.utils.*
 import net.minecraft.text.HoverEvent
 import net.minecraft.world.biome.Biome
 
-class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTranslation("texts.title.cobbledex_gui")) {
+class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTranslation("texts.title.cobbledex_gui")) {
 
     companion object
     {
@@ -52,7 +51,7 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
 
         var Instance : CobbledexGUI? = null
 
-        fun openCobbledexScreen(pokemon: Pokemon? = null) {
+        fun openCobbledexScreen(pokemon: Species? = null) {
             playSound(CobblemonSounds.PC_ON)
 
             Instance = CobbledexGUI(pokemon)
@@ -65,8 +64,7 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
             MinecraftClient.getInstance().soundManager.play(PositionedSoundInstance.master(soundEvent, 1f))
         }
 
-        var previewPokemon: Pokemon? = null
-
+        var previewPokemon: Species? = null
     }
 
     private var modelWidget: ModelWidget? = null
@@ -88,31 +86,21 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
         longTextDisplay = LongTextDisplay(x + 79, y + 18, 179, 158, 2)
         addDrawableChild(longTextDisplay)
 
-
-
         super.init()
 
         // Should be the last thing to do.
         if (selectedPokemon == null)
         {
             if (previewPokemon == null)
-                previewPokemon = PokemonSpecies.getByPokedexNumber(1)?.create()
+                previewPokemon = PokemonSpecies.getByPokedexNumber(1)
 
             this.setPreviewPokemon(previewPokemon)
         }
         else
-        {
             this.setPreviewPokemon(selectedPokemon)
-        }
-
-
     }
 
-    var renderContext: DrawContext? = null
-
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-
-        this.renderContext = context
 
         val matrices = context.matrices
         renderBackground(context)
@@ -193,28 +181,15 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
 
         val pokemon = previewPokemon
         if (pokemon != null) {
-            // Level
-//            drawScaledText(
-//                context = context,
-//                font = CobblemonResources.DEFAULT_LARGE,
-//                text = "N°".text().bold(),
-//                x = x + 6,
-//                y = y + 1.5,
-//                shadow = true
-//            )s
-
-
 
             drawScaledText(
                 context = context,
                 font = CobblemonResources.DEFAULT_LARGE,
-                text = pokemon.species.name.text().bold(),
+                text = pokemon.name.text().bold(),
                 x = x + 13,
                 y = y + 28.3F,
                 shadow = false
             )
-
-
 
             blitk(
                 matrixStack = matrices,
@@ -232,7 +207,7 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
             drawScaledText(
                 context = context,
 //                font = CobblemonResources.DEFAULT_LARGE,
-                text = pokemon.species.nationalPokedexNumber.toString().text(),
+                text = pokemon.nationalPokedexNumber.toString().text(),
                 x = x + 12,
                 y = y + 143.5f,
                 shadow = false,
@@ -241,7 +216,7 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
 
             drawScaledText(
                 context = context,
-                text = ((pokemon.species.height / 10).toString() + "m").text(),
+                text = ((pokemon.height / 10).toString() + "m").text(),
                 x = x + 12,
                 y = y + 165.5f,
                 centered = false,
@@ -250,7 +225,7 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
 
             drawScaledText(
                 context = context,
-                text = ((pokemon.species.weight / 10).toString() + "kg").text(),
+                text = ((pokemon.weight / 10).toString() + "kg").text(),
                 x = x + 12,
                 y = y + 187.5f,
                 centered = false,
@@ -272,10 +247,10 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
 
 
                     val stringBuilder = "".text()
-                    val primaryType = pokemon.form.primaryType
+                    val primaryType = pokemon.standardForm.primaryType
                     stringBuilder.append(primaryType.displayName.setStyle(Style.EMPTY.withBold(true).withColor(primaryType.hue)))
 
-                    val secondType = pokemon.form.secondaryType
+                    val secondType = pokemon.standardForm.secondaryType
                     if (secondType != null) {
                         stringBuilder.append(" & ".text().setStyle(Style.EMPTY.withBold(true)))
                         stringBuilder.append(secondType.displayName.setStyle(Style.EMPTY.withBold(true).withColor(secondType.hue)))
@@ -296,21 +271,14 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
         super.close()
     }
 
-    private fun getSpawnDetails(pokemon: Pokemon) : List<PokemonSpawnDetail> {
-        val spawnDetails = CobblemonSpawnPools.WORLD_SPAWN_POOL.filter {
-            x ->  x is PokemonSpawnDetail && x.pokemon.species != null && x.pokemon.species == pokemon.species.resourceIdentifier.path
-        }.map { x -> x as PokemonSpawnDetail }
 
-        return spawnDetails
-    }
-
-    fun setPreviewPokemon(pokemon: Pokemon?)
+    fun setPreviewPokemon(pokemon: Species?)
     {
         longTextDisplay?.clear()
 
         if (pokemon != null)
         {
-            pokemon.form.pokedex.forEach {
+            pokemon.standardForm.pokedex.forEach {
                 pokedex -> longTextDisplay?.add(pokedex.asTranslated())
             }
 
@@ -320,46 +288,45 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
                 t -> t.second
             }.toList().sortedByDescending { it.first }
 
-            if (elementalTypes.isNotEmpty())
-            {
-                elementalTypes.forEach { elementalKey ->
-                    if (elementalKey.first < 1 || elementalKey.first > 1) {
-                        longTextDisplay?.add("${elementalKey.first}x damage from".text())
-                        val mutableText = "".text()
-                        var isFirst = true
-                        elementalKey.second.forEach {
-                            if (!isFirst)
-                                mutableText.add(" ".text())
 
-                            isFirst = false
+            elementalTypes.forEach { elementalKey ->
+                if (elementalKey.first < 1 || elementalKey.first > 1) {
+                    longTextDisplay?.add("${elementalKey.first}x damage from".text())
+                    val mutableText = "".text()
+                    var isFirst = true
+                    elementalKey.second.forEach {
+                        if (!isFirst)
+                            mutableText.add(" ".text())
 
-                            mutableText.add(
-                                it.first.displayName.setStyle(
-                                    Style.EMPTY
-                                        .withBold(true)
-                                        .withColor(it.first.hue)
-                                )
+                        isFirst = false
+
+                        mutableText.add(
+                            it.first.displayName.setStyle(
+                                Style.EMPTY
+                                    .withBold(true)
+                                    .withColor(it.first.hue)
                             )
-                        }
-
-                        longTextDisplay?.add(mutableText, false)
+                        )
                     }
+
+                    longTextDisplay?.add(mutableText, false)
                 }
             }
+
 
             val world: ClientWorld? = MinecraftClient.getInstance().world
             if (world != null) {
                 val biomeRegistry = BiomeUtils.getBiomesRegistry(world)
 
-                val spawnDetails = getSpawnDetails(pokemon)
+                val spawnDetails =  CobblemonUtils.getSpawnDetails(pokemon)
                     .flatMap { spawnDetail ->
                         spawnDetail.conditions.mapNotNull { y -> y.biomes }.flatten().map { condition ->
                             val antiConditions = spawnDetail.anticonditions.mapNotNull { y -> y.biomes }.flatten()
 
-                            BiomeChecker(spawnDetail, condition, BiomeUtils.getAllBiomes(world as World).filter {
-                                b -> condition.fits(b.biome, biomeRegistry) && !antiConditions.any { anti -> anti.fits(b.biome, biomeRegistry) }
-                            }.map {
-                                    b -> "biome.${b.identifier.toTranslationKey()}".asTranslated()
+                            BiomeChecker(spawnDetail, condition, BiomeUtils.getAllBiomes(world as World).filter { b ->
+                                condition.fits(b.biome, biomeRegistry) && !antiConditions.any { anti -> anti.fits(b.biome, biomeRegistry) }
+                            }.map { b ->
+                                "biome.${b.identifier.toTranslationKey()}".asTranslated()
                             })
                         }
                     }
@@ -441,7 +408,7 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
 
         evolutionDisplay?.clearEvolutions()
         if (pokemon != null) {
-            RequestCobbledexPacket(pokemon.species.resourceIdentifier).sendToServer()
+            RequestCobbledexPacket(pokemon.resourceIdentifier).sendToServer()
         }
 
 
@@ -454,7 +421,8 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
                 pY = y + 41,
                 pWidth = PORTRAIT_SIZE,
                 pHeight = PORTRAIT_SIZE,
-                pokemon = pokemon.asRenderablePokemon(),
+                //pokemon = pokemon.asRenderablePokemon(),
+                pokemon = RenderablePokemon(pokemon, pokemon.standardForm.aspects.toSet()),
                 baseScale = 1.8F,
                 rotationY = 345F,
                 offsetY = -10.0
@@ -480,7 +448,7 @@ class CobbledexGUI(private val selectedPokemon: Pokemon?) : Screen(cobbledexTran
         }
     }
 
-    fun setEvolutions(evolutions: List<Pokemon>?) {
+    fun setEvolutions(evolutions: List<Species>) {
         evolutionDisplay?.selectEvolutions(evolutions)
     }
 }

@@ -6,6 +6,7 @@ import net.minecraft.util.Identifier
 
 class ReceiveCobbledexPacket internal constructor(val evolutionList: List<Identifier>):
     INetworkPacket<ReceiveCobbledexPacket> {
+
     override val id = ID
 
     override fun encode(buffer: PacketByteBuf) {
@@ -13,7 +14,6 @@ class ReceiveCobbledexPacket internal constructor(val evolutionList: List<Identi
             buff, value -> buff.writeIdentifier(value)
         }
     }
-
 
     companion object{
         val ID = Identifier("cobbledex", "receive_cobbledex")

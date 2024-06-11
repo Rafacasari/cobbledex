@@ -13,8 +13,23 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
 
         if (pokemon != null ) {
             val evolutions = pokemon.evolutions.map { it.result.create().species.resourceIdentifier }
-            if (evolutions.isNotEmpty())
-                ReceiveCobbledexPacket(evolutions).sendToPlayer(player)
+//            val biomeRegistry = server.registryManager.get(RegistryKeys.BIOME)
+//            val allBiomes = BiomeUtils.getAllBiomes(biomeRegistry)
+//
+//            val spawnDetails = CobblemonUtils.getSpawnDetails(pokemon)
+//                .flatMap { spawnDetail ->
+//                    spawnDetail.conditions.mapNotNull { y -> y.biomes }.flatten().map { condition ->
+//                        val antiConditions = spawnDetail.anticonditions.mapNotNull { y -> y.biomes }.flatten()
+//
+//                        BiomeChecker(spawnDetail, condition,allBiomes.filter {
+//                                b -> condition.fits(b.biome, biomeRegistry) && !antiConditions.any { anti -> anti.fits(b.biome, biomeRegistry) }
+//                        }.map {
+//                                b -> "biome.${b.identifier.toTranslationKey()}".asTranslated()
+//                        })
+//                    }
+//                }
+
+            ReceiveCobbledexPacket(evolutions).sendToPlayer(player)
         }
     }
 }

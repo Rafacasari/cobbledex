@@ -10,9 +10,8 @@ import net.minecraft.client.MinecraftClient
 object ReceiveCobbledexPacketHandler : IClientNetworkPacketHandler<ReceiveCobbledexPacket> {
     override fun handle(packet: ReceiveCobbledexPacket, client: MinecraftClient) {
         try {
-
             val evolutions = packet.evolutionList.mapNotNull {
-                PokemonSpecies.getByIdentifier(it)?.create(1)
+                 PokemonSpecies.getByIdentifier(it)
             }
 
             CobbledexGUI.Instance?.setEvolutions(evolutions)
@@ -21,5 +20,4 @@ object ReceiveCobbledexPacketHandler : IClientNetworkPacketHandler<ReceiveCobble
             logError(e.toString())
         }
     }
-
 }
