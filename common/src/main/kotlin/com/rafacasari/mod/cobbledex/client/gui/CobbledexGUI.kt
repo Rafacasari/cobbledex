@@ -422,7 +422,7 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
                     } else {
                         val antiConditionBiomes = spawn.antiConditions?.mapNotNull { x -> x.biomes }?.flatten()?.filterIsInstance<RegistryLikeTagCondition<Biome>>()
                         if (!antiConditionBiomes.isNullOrEmpty()) {
-                            tooltipText.add("\nBlacklisted Biomes:".text().bold().darkRed())
+                            tooltipText.add("\n\nBlacklisted Biomes:".text().bold().darkRed())
                             antiConditionBiomes.forEach { b ->
 
                                 tooltipText.add("\n".text())
