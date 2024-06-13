@@ -13,7 +13,10 @@
   ],
   "entrypoints": {
     "main": [
-      "com.rafacasari.mod.cobbledex.fabric.CobbledexFabric"
+      "com.rafacasari.mod.cobbledex.fabric.CobbledexFabricCommon"
+    ],
+    "client": [
+      "com.rafacasari.mod.cobbledex.fabric.CobbledexFabricClient"
     ]
   },
   "depends": {

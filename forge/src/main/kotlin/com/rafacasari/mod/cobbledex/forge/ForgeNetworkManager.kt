@@ -1,7 +1,7 @@
 package com.rafacasari.mod.cobbledex.forge
 
 import com.rafacasari.mod.cobbledex.INetworkManager
-import com.rafacasari.mod.cobbledex.network.CobbledexNetworkManager
+import com.rafacasari.mod.cobbledex.network.CobbledexNetwork
 import com.rafacasari.mod.cobbledex.network.server.IClientNetworkPacketHandler
 import com.rafacasari.mod.cobbledex.network.server.INetworkPacket
 import com.rafacasari.mod.cobbledex.network.server.IServerNetworkPacketHandler
@@ -28,11 +28,11 @@ object ForgeNetworkManager : INetworkManager {
     )
 
     override fun registerClientBound() {
-        CobbledexNetworkManager.registerClientBound()
+        CobbledexNetwork.registerClientBound()
     }
 
     override fun registerServerBound() {
-        CobbledexNetworkManager.registerServerBound()
+        CobbledexNetwork.registerServerBound()
     }
 
     @Suppress("INACCESSIBLE_TYPE")

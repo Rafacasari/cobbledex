@@ -3,7 +3,6 @@ package com.rafacasari.mod.cobbledex.fabric
 import com.mojang.brigadier.CommandDispatcher
 import com.rafacasari.mod.cobbledex.*
 import net.fabricmc.api.EnvType
-import net.fabricmc.api.ModInitializer
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
@@ -18,16 +17,16 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.minecraft.client.MinecraftClient
 import net.minecraft.server.MinecraftServer
 
-object CobbledexFabric : ModInitializer, CobbledexImplementation {
+object CobbledexFabric : CobbledexImplementation {
 
     override val networkManager: INetworkManager = FabricNetworkManager
     private var server: MinecraftServer? = null
     override fun server(): MinecraftServer? = if (this.environment() == Environment.CLIENT) MinecraftClient.getInstance().server else this.server
 
 
-    override fun onInitialize() {
+    fun initFabric() {
         preInitialize(this)
-        networkManager.registerClientBound()
+        networkManager.registerServerBound()
 
         // Register commands
         //CommandRegistrationCallback.EVENT.register(CobbledexCommands::registerServer)

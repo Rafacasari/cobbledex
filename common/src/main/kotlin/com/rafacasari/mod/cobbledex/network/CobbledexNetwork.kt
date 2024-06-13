@@ -13,15 +13,11 @@ import net.minecraft.network.PacketByteBuf
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Identifier
 
-object CobbledexNetworkManager {
-    fun ServerPlayerEntity.sendPacket(packet: INetworkPacket<*>) = sendPacketToPlayer(this, packet)
-    fun sendToServer(packet: INetworkPacket<*>) = this.sendPacketToServer(packet)
+object CobbledexNetwork {
     fun sendToAllPlayers(packet: INetworkPacket<*>) = sendPacketToPlayers(Cobbledex.implementation.server()!!.playerManager.playerList, packet)
     fun sendPacketToPlayers(players: Iterable<ServerPlayerEntity>, packet: INetworkPacket<*>) = players.forEach { sendPacketToPlayer(it, packet) }
     fun sendPacketToPlayer(player: ServerPlayerEntity, packet: INetworkPacket<*>) = Cobbledex.implementation.networkManager.sendPacketToPlayer(player, packet)
     fun sendPacketToServer(packet: INetworkPacket<*>) = Cobbledex.implementation.networkManager.sendPacketToServer(packet)
-
-
 
     fun registerClientBound() {
        createClientBound(ReceiveCobbledexPacket.ID, ReceiveCobbledexPacket::decode, ReceiveCobbledexPacketHandler)

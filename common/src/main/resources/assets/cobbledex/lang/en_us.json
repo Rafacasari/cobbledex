@@ -1,12 +1,15 @@
 {
   "cobbledex.errors.NotAPokemon": "That's not a Pokémon!",
   "item.cobbledex.cobbledex_item": "Cobbledex",
-  "texts.title.cobbledex_gui": "Cobbledex",
+  "cobbledex.texts.cobbledex": "Cobbledex",
   "cobbledex.texts.weakness": "Is weak against",
   "cobbledex.texts.resistant": "Resistant against:",
   "cobbledex.texts.immune": "Immune against:",
   "cobbledex.texts.biomes": "Where to find:",
-
+  "cobbledex.texts.pokedex_number": "Pokedex Number",
+  "cobbledex.texts.evolution": "Evolutions",
+  "cobbledex.texts.weight": "Weight",
+  "cobbledex.texts.height": "Height",
 
   "structure.minecraft.endcity": "End City",
   "structure.minecraft.fortress": "Nether Fortress",

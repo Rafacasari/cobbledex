@@ -13,7 +13,6 @@ import com.cobblemon.mod.common.client.gui.summary.widgets.ModelWidget
 import com.cobblemon.mod.common.client.render.drawScaledText
 import com.cobblemon.mod.common.pokemon.RenderablePokemon
 import com.cobblemon.mod.common.pokemon.Species
-import com.cobblemon.mod.common.registry.BiomeTagCondition
 import com.cobblemon.mod.common.util.asTranslated
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
@@ -23,17 +22,17 @@ import net.minecraft.client.world.ClientWorld
 import net.minecraft.sound.SoundEvent
 import net.minecraft.text.Style
 import net.minecraft.util.Identifier
-import net.minecraft.world.World
 import com.rafacasari.mod.cobbledex.Cobbledex
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.client.widget.PokemonEvolutionDisplay
 import com.rafacasari.mod.cobbledex.network.server.packets.RequestCobbledexPacket
+import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonSpawnDetail
 import com.rafacasari.mod.cobbledex.utils.TypeChartUtils
 import com.rafacasari.mod.cobbledex.utils.*
 import net.minecraft.text.HoverEvent
 import net.minecraft.world.biome.Biome
 
-class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTranslation("texts.title.cobbledex_gui")) {
+class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTranslation("cobbledex.texts.cobbledex")) {
 
     companion object
     {
@@ -132,7 +131,7 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
 
         drawScaledText(
             context = context,
-            text = "Pokedex Number".text().bold(),
+            text = cobbledexTranslation("cobbledex.texts.pokedex_number").bold(),
             x = x + 12F,
             y = y + 134.5f,
             centered = false,
@@ -142,7 +141,7 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
 
         drawScaledText(
             context = context,
-            text = "Height".text().bold(),
+            text = cobbledexTranslation("cobbledex.texts.height").bold(),
             x = x + 12F,
             y = y + 156.5f,
             centered = false,
@@ -151,7 +150,7 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
 
         drawScaledText(
             context = context,
-            text = "Weight".text().bold(),
+            text = cobbledexTranslation("cobbledex.texts.weight").bold(),
             x = x + 12F,
             y = y + 178.5f,
             centered = false,
@@ -160,7 +159,7 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
 
         drawScaledText(
             context = context,
-            text = "Evolutions".text().bold(),
+            text = cobbledexTranslation("cobbledex.texts.evolutions").bold(),
             x = x + 302,
             y = y + 29,
             centered = true,
@@ -170,7 +169,7 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
         drawScaledText(
             context = context,
             font = CobblemonResources.DEFAULT_LARGE,
-            text = "Cobbledex".text().bold(),
+            text = cobbledexTranslation("cobbledex.texts.cobbledex").bold(),
             x = x + 169.5F,
             y = y + 7.35F,
             shadow = false,
@@ -206,7 +205,6 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
 
             drawScaledText(
                 context = context,
-//                font = CobblemonResources.DEFAULT_LARGE,
                 text = pokemon.nationalPokedexNumber.toString().text(),
                 x = x + 12,
                 y = y + 143.5f,
@@ -271,7 +269,6 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
         super.close()
     }
 
-
     fun setPreviewPokemon(pokemon: Species?)
     {
         longTextDisplay?.clear()
@@ -312,122 +309,29 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
                     longTextDisplay?.add(mutableText, false)
                 }
             }
-
-
-            val world: ClientWorld? = MinecraftClient.getInstance().world
-            if (world != null) {
-                val biomeRegistry = BiomeUtils.getBiomesRegistry(world)
-
-                val spawnDetails =  CobblemonUtils.getSpawnDetails(pokemon)
-                    .flatMap { spawnDetail ->
-                        spawnDetail.conditions.mapNotNull { y -> y.biomes }.flatten().map { condition ->
-                            val antiConditions = spawnDetail.anticonditions.mapNotNull { y -> y.biomes }.flatten()
-
-                            BiomeChecker(spawnDetail, condition, BiomeUtils.getAllBiomes(world as World).filter { b ->
-                                condition.fits(b.biome, biomeRegistry) && !antiConditions.any { anti -> anti.fits(b.biome, biomeRegistry) }
-                            }.map { b ->
-                                "biome.${b.identifier.toTranslationKey()}".asTranslated()
-                            })
-                        }
-                    }
-
-
-                if (spawnDetails.isNotEmpty()) {
-                    longTextDisplay?.add(cobbledexTranslation("cobbledex.texts.biomes").bold(), true)
-                    spawnDetails.forEach { spawn ->
-
-                        if (spawn.biomeCondition is BiomeTagCondition) {
-                            val condition = spawn.biomeCondition.tag.id.toTranslationKey()
-                            val conditionMutableText = condition.asTranslated()
-                            val tooltipText = condition.asTranslated().bold().add("\n".text())
-                            tooltipText.add("Weight: ${spawn.details.weight}\n".text().setStyle(Style.EMPTY.withBold(false)))
-                            tooltipText.add("Level Range: ${spawn.details.levelRange}\n".text().setStyle(Style.EMPTY.withBold(false)))
-
-                            val structureConditions = spawn.details.conditions.mapNotNull {
-                                    structureCondition -> structureCondition.structures
-                            }.flatten()
-
-                            if (structureConditions.isNotEmpty()) {
-                                tooltipText.add("\nNeed structure:".text().bold().darkGreen())
-                                structureConditions.forEach { structure ->
-
-                                    try {
-                                        val structureName = structure.fold(
-                                            { left -> left.toTranslationKey() },
-                                            { right -> right.id.toTranslationKey() }
-                                        )
-
-                                        if (structureName.isNotEmpty()) {
-                                            tooltipText.add("\n".text())
-                                            tooltipText.add("structure.$structureName".asTranslated().setStyle(Style.EMPTY.withBold(false)))
-                                        }
-                                    } catch (e: Exception)
-                                    {
-                                        logError(e.toString())
-                                    }
-                                }
-                            }
-
-
-
-                            // Too much stuff to write, we can skip it!
-                            if (!condition.endsWith("is_overworld") && !condition.endsWith("is_nether"))
-                            {
-                                spawn.biomeList.forEach { biome ->
-                                    tooltipText.add("\n".text())
-                                    tooltipText.add(biome.setStyle(Style.EMPTY.withBold(false)))
-                                }
-                            } else {
-                                val antiConditionBiomes = spawn.details.anticonditions.mapNotNull { x -> x.biomes}.flatten().filterIsInstance<RegistryLikeTagCondition<Biome>>()
-                                if (antiConditionBiomes.isNotEmpty()) {
-                                    tooltipText.add("\nBlacklisted Biomes:".text().bold().darkRed())
-                                    antiConditionBiomes.forEach { b ->
-
-                                        tooltipText.add("\n".text())
-                                        tooltipText.add(
-                                            b.tag.id.toTranslationKey().asTranslated().darkRed()
-                                                .setStyle(Style.EMPTY.withBold(false))
-                                        )
-
-                                    }
-                                }
-                            }
-
-                            val hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltipText)
-
-                            longTextDisplay?.add(conditionMutableText.setStyle(Style.EMPTY.withHoverEvent(hoverEvent)), false)
-                        }
-                    }
-                }
-            }
         }
 
         val x = (width - BASE_WIDTH) / 2
         val y = (height - BASE_HEIGHT) / 2
-
 
         evolutionDisplay?.clearEvolutions()
         if (pokemon != null) {
             RequestCobbledexPacket(pokemon.resourceIdentifier).sendToServer()
         }
 
-
         if (pokemon != null) {
             previewPokemon = pokemon
-
 
             modelWidget = ModelWidget(
                 pX = x + 13,
                 pY = y + 41,
                 pWidth = PORTRAIT_SIZE,
                 pHeight = PORTRAIT_SIZE,
-                //pokemon = pokemon.asRenderablePokemon(),
                 pokemon = RenderablePokemon(pokemon, pokemon.standardForm.aspects.toSet()),
                 baseScale = 1.8F,
                 rotationY = 345F,
                 offsetY = -10.0
             )
-
 
             val typeOffset = 14f
             typeWidget = TypeIcon(
@@ -450,5 +354,94 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
 
     fun setEvolutions(evolutions: List<Species>) {
         evolutionDisplay?.selectEvolutions(evolutions)
+    }
+
+    var lastLoadedSpawnDetails: List<SerializablePokemonSpawnDetail>? = null
+    fun setSpawnDetails(spawnDetails: List<SerializablePokemonSpawnDetail>) {
+        lastLoadedSpawnDetails = spawnDetails
+
+        if (spawnDetails.isEmpty()) return
+
+        longTextDisplay?.add(cobbledexTranslation("cobbledex.texts.biomes").bold(), true)
+
+        val world: ClientWorld? = MinecraftClient.getInstance().world
+        if (world != null) {
+            val biomeRegistry = BiomeUtils.getBiomesRegistry(world)
+
+            spawnDetails.forEach { spawn ->
+
+                val biomes = spawn.conditions?.filter {
+                    it.biomes != null
+                }?.mapNotNull {
+                    it.biomes
+                }?.flatten()?.map {
+                    it as RegistryLikeTagCondition<Biome>
+                }
+
+                biomes?.forEach { biomeCondition ->
+                    val tooltipText = "".text()
+                    val condition = biomeCondition.tag.id.toTranslationKey()
+                    val conditionMutableText = condition.asTranslated()
+
+                    tooltipText.add("Weight: ${spawn.weight}".text().setStyle(Style.EMPTY.withBold(false)))
+                    if (spawn.levelRange != null) {
+                        val levelRange = spawn.levelRange!!
+                        tooltipText.add(
+                            "\nLevel Range: ${levelRange.first} - ${levelRange.last}".text().setStyle(Style.EMPTY.withBold(false))
+                        )
+                    }
+
+                    val structureConditions = spawn.conditions?.mapNotNull { structureCondition ->
+                        structureCondition.structures
+                    }?.flatten()
+
+                    if (!structureConditions.isNullOrEmpty()) {
+                        tooltipText.add("\n\nNeed structure:".text().bold().darkGreen())
+                        structureConditions.forEach { structure ->
+                            val structureName = structure.toTranslationKey()
+
+                            tooltipText.add("\n".text())
+                            tooltipText.add("structure.$structureName".asTranslated().setStyle(Style.EMPTY.withBold(false)))
+                        }
+                    }
+
+
+                    // Too much stuff to write, we can skip it!
+                    if (!condition.endsWith("is_overworld") && !condition.endsWith("is_nether")) {
+
+                        val antiConditions = spawn.antiConditions?.mapNotNull { y -> y.biomes }?.flatten() ?: listOf()
+                        val availableBiomes = BiomeUtils.getAllBiomes(world).filter { b ->
+                            biomeCondition.fits(b.biome, biomeRegistry)&& !antiConditions.any { anti -> anti.fits(b.biome, biomeRegistry) }
+                        }.map { "biome.${it.identifier.toTranslationKey()}".asTranslated() }
+//
+                        availableBiomes.forEach { biome ->
+                            tooltipText.add("\n".text())
+                            tooltipText.add(biome.setStyle(Style.EMPTY.withBold(false)))
+                        }
+
+                    } else {
+                        val antiConditionBiomes = spawn.antiConditions?.mapNotNull { x -> x.biomes }?.flatten()?.filterIsInstance<RegistryLikeTagCondition<Biome>>()
+                        if (!antiConditionBiomes.isNullOrEmpty()) {
+                            tooltipText.add("\nBlacklisted Biomes:".text().bold().darkRed())
+                            antiConditionBiomes.forEach { b ->
+
+                                tooltipText.add("\n".text())
+                                tooltipText.add(
+                                    b.tag.id.toTranslationKey().asTranslated().darkRed()
+                                        .setStyle(Style.EMPTY.withBold(false)))
+
+                            }
+                        }
+                    }
+
+                    val hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltipText)
+
+                    longTextDisplay?.add(conditionMutableText.setStyle(Style.EMPTY.withHoverEvent(hoverEvent)), false)
+                }
+
+
+            }
+
+        }
     }
 }

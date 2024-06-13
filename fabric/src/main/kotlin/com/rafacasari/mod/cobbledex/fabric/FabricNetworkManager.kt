@@ -2,7 +2,7 @@ package com.rafacasari.mod.cobbledex.fabric
 
 import com.rafacasari.mod.cobbledex.INetworkManager
 
-import com.rafacasari.mod.cobbledex.network.CobbledexNetworkManager
+import com.rafacasari.mod.cobbledex.network.CobbledexNetwork
 import com.rafacasari.mod.cobbledex.network.server.IClientNetworkPacketHandler
 import com.rafacasari.mod.cobbledex.network.server.INetworkPacket
 import com.rafacasari.mod.cobbledex.network.server.IServerNetworkPacketHandler
@@ -21,11 +21,11 @@ import net.minecraft.util.Identifier
 object FabricNetworkManager : INetworkManager {
 
     override fun registerClientBound() {
-        CobbledexNetworkManager.registerClientBound()
+        CobbledexNetwork.registerClientBound()
     }
 
     override fun registerServerBound() {
-        CobbledexNetworkManager.registerServerBound()
+        CobbledexNetwork.registerServerBound()
     }
 
     override fun <T : INetworkPacket<T>> createClientBound(
@@ -50,14 +50,14 @@ object FabricNetworkManager : INetworkManager {
         ServerPlayNetworking.registerGlobalReceiver(identifier, this.createServerBoundHandler(decoder::invoke, handler::handleOnNettyThread))
     }
 
-    private fun <T : INetworkPacket<*>> createServerBoundHandler(
+    fun <T : INetworkPacket<*>> createServerBoundHandler(
         decoder: (PacketByteBuf) -> T,
         handler: (T, MinecraftServer, ServerPlayerEntity) -> Unit
     ) = ServerPlayNetworking.PlayChannelHandler { server, player, _, buffer, _ ->
         handler(decoder(buffer), server, player)
     }
 
-    private fun <T : INetworkPacket<*>> createClientBoundHandler(
+    fun <T : INetworkPacket<*>> createClientBoundHandler(
         decoder: (PacketByteBuf) -> T,
         handler: (T, MinecraftClient) -> Unit
     ) = ClientPlayNetworking.PlayChannelHandler { client, _,  buffer, _ ->
