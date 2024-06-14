@@ -23,15 +23,11 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
 
             val spawnDetails = CobblemonUtils.getSpawnDetails(pokemon)
 
-//            val details = Seriali(spawnDetails.associate {
-//                conditions -> conditions.id to conditions.conditions.map { SerializableSpawnCondition(it) }
-//            })
-
             val serializableSpawnDetails = spawnDetails.map {
                 SerializablePokemonSpawnDetail(it)
             }
 
-            ReceiveCobbledexPacket(evolutions, serializableSpawnDetails).sendToPlayer(player)
+            ReceiveCobbledexPacket(pokemon, evolutions, serializableSpawnDetails).sendToPlayer(player)
         }
     }
 }

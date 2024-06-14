@@ -15,7 +15,7 @@ object ReceiveCobbledexPacketHandler : IClientNetworkPacketHandler<ReceiveCobble
             }
 
             CobbledexGUI.Instance?.setEvolutions(evolutions)
-            CobbledexGUI.Instance?.setSpawnDetails(packet.spawnDetails)
+            CobbledexGUI.Instance?.setSpawnDetails(packet.species, packet.spawnDetails)
 
         } catch (e: Exception) {
             logError(e.toString())

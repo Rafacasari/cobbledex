@@ -315,7 +315,11 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
         val y = (height - BASE_HEIGHT) / 2
 
         evolutionDisplay?.clearEvolutions()
-        if (pokemon != null) {
+        if (lastLoadedSpecies != null && lastLoadedSpecies == pokemon && lastLoadedSpawnDetails != null)
+        {
+            setSpawnDetails(lastLoadedSpecies, lastLoadedSpawnDetails!!, true)
+        }
+        else if (pokemon != null) {
             RequestCobbledexPacket(pokemon.resourceIdentifier).sendToServer()
         }
 
@@ -356,13 +360,18 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
         evolutionDisplay?.selectEvolutions(evolutions)
     }
 
-    var lastLoadedSpawnDetails: List<SerializablePokemonSpawnDetail>? = null
-    fun setSpawnDetails(spawnDetails: List<SerializablePokemonSpawnDetail>) {
-        lastLoadedSpawnDetails = spawnDetails
+    private var lastLoadedSpecies: Species? = null
+    private var lastLoadedSpawnDetails: List<SerializablePokemonSpawnDetail>? = null
+
+    fun setSpawnDetails(species: Species?, spawnDetails: List<SerializablePokemonSpawnDetail>, fromCache: Boolean = false) {
+        if (!fromCache) {
+            lastLoadedSpawnDetails = spawnDetails
+            lastLoadedSpecies = species
+        }
 
         if (spawnDetails.isEmpty()) return
 
-        longTextDisplay?.add(cobbledexTranslation("cobbledex.texts.biomes").bold(), true)
+        longTextDisplay?.add(cobbledexTranslation("cobbledex.texts.biomes").bold())
 
         val world: ClientWorld? = MinecraftClient.getInstance().world
         if (world != null) {
@@ -378,65 +387,117 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
                     it as RegistryLikeTagCondition<Biome>
                 }
 
-                biomes?.forEach { biomeCondition ->
-                    val tooltipText = "".text()
-                    val condition = biomeCondition.tag.id.toTranslationKey()
-                    val conditionMutableText = condition.asTranslated()
+                spawn.conditions?.forEach { cond ->
+                    cond.biomes?.forEach {
+                        biomeCondition ->
+                        if (biomeCondition is RegistryLikeTagCondition<Biome>)
+                        {
+                            val tooltipText = "".text()
+                            val condition = biomeCondition.tag.id.toTranslationKey()
+                            val conditionMutableText = condition.asTranslated()
 
-                    tooltipText.add("Weight: ${spawn.weight}".text().setStyle(Style.EMPTY.withBold(false)))
-                    if (spawn.levelRange != null) {
-                        val levelRange = spawn.levelRange!!
-                        tooltipText.add(
-                            "\nLevel Range: ${levelRange.first} - ${levelRange.last}".text().setStyle(Style.EMPTY.withBold(false))
-                        )
-                    }
-
-                    val structureConditions = spawn.conditions?.mapNotNull { structureCondition ->
-                        structureCondition.structures
-                    }?.flatten()
-
-                    if (!structureConditions.isNullOrEmpty()) {
-                        tooltipText.add("\n\nNeed structure:".text().bold().darkGreen())
-                        structureConditions.forEach { structure ->
-                            val structureName = structure.toTranslationKey()
-
-                            tooltipText.add("\n".text())
-                            tooltipText.add("structure.$structureName".asTranslated().setStyle(Style.EMPTY.withBold(false)))
-                        }
-                    }
-
-
-                    // Too much stuff to write, we can skip it!
-                    if (!condition.endsWith("is_overworld") && !condition.endsWith("is_nether")) {
-
-                        val antiConditions = spawn.antiConditions?.mapNotNull { y -> y.biomes }?.flatten() ?: listOf()
-                        val availableBiomes = BiomeUtils.getAllBiomes(world).filter { b ->
-                            biomeCondition.fits(b.biome, biomeRegistry)&& !antiConditions.any { anti -> anti.fits(b.biome, biomeRegistry) }
-                        }.map { "biome.${it.identifier.toTranslationKey()}".asTranslated() }
-//
-                        availableBiomes.forEach { biome ->
-                            tooltipText.add("\n".text())
-                            tooltipText.add(biome.setStyle(Style.EMPTY.withBold(false)))
-                        }
-
-                    } else {
-                        val antiConditionBiomes = spawn.antiConditions?.mapNotNull { x -> x.biomes }?.flatten()?.filterIsInstance<RegistryLikeTagCondition<Biome>>()
-                        if (!antiConditionBiomes.isNullOrEmpty()) {
-                            tooltipText.add("\n\nBlacklisted Biomes:".text().bold().darkRed())
-                            antiConditionBiomes.forEach { b ->
-
-                                tooltipText.add("\n".text())
+                            tooltipText.add("Weight: ${spawn.weight}".text().setStyle(Style.EMPTY.withBold(false)))
+                            if (spawn.levelRange != null) {
+                                val levelRange = spawn.levelRange!!
                                 tooltipText.add(
-                                    b.tag.id.toTranslationKey().asTranslated().darkRed()
-                                        .setStyle(Style.EMPTY.withBold(false)))
-
+                                    "\nLevel Range: ${levelRange.first}-${levelRange.last}".text().setStyle(Style.EMPTY.withBold(false))
+                                )
                             }
+
+                            if (cond.canSeeSky != null) {
+                                val skyInfo = if (cond.canSeeSky!!) "Should see sky" else "Should NOT see sky"
+                                tooltipText.add(
+                                    "\n$skyInfo".text().setStyle(Style.EMPTY.withBold(false))
+                                )
+                            }
+
+                            if (cond.isRaining != null) {
+                                val rainInfo = if (cond.isRaining!!) "Weather: Raining" else "Weather: Clear"
+                                tooltipText.add(
+                                    "\n$rainInfo".text().setStyle(Style.EMPTY.withBold(false))
+                                )
+                            }
+
+                            if (cond.isThundering != null) {
+                                val thunderInfo = if (cond.isThundering!!) "Should be thundering" else "Should not be thundering"
+                                tooltipText.add(
+                                    "\n$thunderInfo".text().setStyle(Style.EMPTY.withBold(false))
+                                )
+                            }
+
+                            if (cond.minLight != null)
+                                tooltipText.add("\nMin Light: ${cond.minLight}".text().setStyle(Style.EMPTY.withBold(false)))
+
+                            if (cond.minSkyLight != null)
+                                tooltipText.add("\nMin Sky Light: ${cond.minSkyLight}".text().setStyle(Style.EMPTY.withBold(false)))
+
+                            if (cond.maxLight != null)
+                                tooltipText.add("\nMax Light: ${cond.maxLight}".text().setStyle(Style.EMPTY.withBold(false)))
+
+                            if (cond.maxSkyLight != null)
+                                tooltipText.add("\nMax Sky Light: ${cond.maxSkyLight}".text().setStyle(Style.EMPTY.withBold(false)))
+
+                            // TODO: Implement the following conditions
+                            //  cond.timeRange
+                            //  cond.moonPhase
+                            //  cond.minY cond.maxY
+                            //  There is also X and Z but I'm not sure if I need to implement it? I don't know what these are supposed to do
+
+                            val structureConditions = spawn.conditions?.mapNotNull { structureCondition ->
+                                structureCondition.structures
+                            }?.flatten()
+
+                            if (!structureConditions.isNullOrEmpty()) {
+                                tooltipText.add("\n\nNeed structure:".text().bold().darkGreen())
+                                structureConditions.forEach { structure ->
+                                    val structureName = structure.toTranslationKey()
+
+                                    tooltipText.add("\n".text())
+                                    tooltipText.add("structure.$structureName".asTranslated().setStyle(Style.EMPTY.withBold(false)))
+                                }
+                            }
+
+                            val antiConditionBiomes = spawn.antiConditions?.mapNotNull { x -> x.biomes }?.flatten()?.filterIsInstance<RegistryLikeTagCondition<Biome>>() ?: listOf()
+                            // Too much stuff to write, we can skip it!
+                            if (!condition.endsWith("is_overworld") && !condition.endsWith("is_nether")) {
+
+                                //val antiConditions = spawn.antiConditions?.mapNotNull { y -> y.biomes }?.flatten() ?: listOf()
+                                val availableBiomes = BiomeUtils.getAllBiomes(world).filter { b ->
+                                    biomeCondition.fits(b.biome, biomeRegistry)&& !antiConditionBiomes.any { anti -> anti.fits(b.biome, biomeRegistry) }
+                                }.map { "biome.${it.identifier.toTranslationKey()}".asTranslated() }
+//
+                                if (availableBiomes.isNotEmpty()) {
+                                    tooltipText.add("\n\nBiomes:".text().bold().blue())
+                                    availableBiomes.forEach { biome ->
+                                        tooltipText.add("\n".text())
+                                        tooltipText.add(biome.setStyle(Style.EMPTY.withBold(false)))
+                                    }
+                                }
+
+                            } else {
+
+                                if (antiConditionBiomes.isNotEmpty()) {
+                                    tooltipText.add("\n\nBlacklisted Biomes:".text().bold().darkRed())
+                                    antiConditionBiomes.forEach { b ->
+
+                                        tooltipText.add("\n".text())
+                                        tooltipText.add(
+                                            b.tag.id.toTranslationKey().asTranslated().darkRed()
+                                                .setStyle(Style.EMPTY.withBold(false)))
+
+                                    }
+                                }
+                            }
+
+                            val hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltipText)
+
+                            longTextDisplay?.add(conditionMutableText.setStyle(Style.EMPTY.withHoverEvent(hoverEvent)), false)
                         }
                     }
+                }
 
-                    val hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltipText)
+                biomes?.forEach { biomeCondition ->
 
-                    longTextDisplay?.add(conditionMutableText.setStyle(Style.EMPTY.withHoverEvent(hoverEvent)), false)
                 }
 
 
