@@ -1,5 +1,6 @@
 package com.rafacasari.mod.cobbledex.items
 
+import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -17,6 +18,9 @@ import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
 class CobbledexItem(settings: Settings) : Item(settings) {
 
 
+    companion object {
+        var totalPokemonDiscovered : Int = 0
+    }
 
     override fun useOnEntity(
         itemStack: ItemStack?, player: PlayerEntity?, target: LivingEntity?, hand: Hand?): ActionResult {
@@ -41,9 +45,13 @@ class CobbledexItem(settings: Settings) : Item(settings) {
     }
 
 
+    private val totalPokemonCount: Int
+        get() = PokemonSpecies.implemented.size
+
+
     override fun appendTooltip(stack: ItemStack?, world: World?, tooltip: MutableList<Text>?, context: TooltipContext?)
     {
-        tooltip?.add(Text.literal("Discovered: §a0§r/100"))
+        tooltip?.add(Text.literal("Discovered: §a${totalPokemonDiscovered}§r/${totalPokemonCount}"))
 
         super.appendTooltip(stack, world, tooltip, context)
     }

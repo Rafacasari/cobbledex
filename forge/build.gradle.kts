@@ -36,9 +36,7 @@ dependencies {
     "shadowCommon"(project(":common", "transformProductionForge")) { isTransitive = false }
 
     modImplementation("com.cobblemon:forge:${property("cobblemon_version")}")
-    implementation("thedarkcolour:kotlinforforge:4.4.0")
-
-
+    implementation("thedarkcolour:kotlinforforge:${property("kotlinforforge_version")}")
 
 }
 

@@ -37,6 +37,7 @@ class CobbledexForge : CobbledexImplementation {
     }
 
 
+    @Suppress("UNUSED_PARAMETER")
     private fun initialize(e: FMLCommonSetupEvent)
     {
         logInfo("Registering Forge Network")
@@ -60,7 +61,7 @@ class CobbledexForge : CobbledexImplementation {
 
     private fun registerClientCommands(e: RegisterClientCommandsEvent) {
         try {
-            logInfo("Cobbledex: REGISTERING CLIENT COMMANDS")
+            logInfo("REGISTERING CLIENT COMMANDS")
             CobbledexCommands.registerClient(e.dispatcher)
         } catch (e: Exception) {
             logError("Failed to register Cobbledex client commands!")

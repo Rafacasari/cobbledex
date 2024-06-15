@@ -392,11 +392,11 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
                         biomeCondition ->
                         if (biomeCondition is RegistryLikeTagCondition<Biome>)
                         {
-                            val tooltipText = "".text()
+                            val tooltipText =  biomeCondition.tag.id.toTranslationKey().asTranslated()
                             val condition = biomeCondition.tag.id.toTranslationKey()
                             val conditionMutableText = condition.asTranslated()
 
-                            tooltipText.add("Weight: ${spawn.weight}".text().setStyle(Style.EMPTY.withBold(false)))
+                            tooltipText.add("\nWeight: ${spawn.weight}".text().setStyle(Style.EMPTY.withBold(false)))
                             if (spawn.levelRange != null) {
                                 val levelRange = spawn.levelRange!!
                                 tooltipText.add(

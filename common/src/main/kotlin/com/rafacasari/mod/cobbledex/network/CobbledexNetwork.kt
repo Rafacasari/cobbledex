@@ -2,7 +2,9 @@ package com.rafacasari.mod.cobbledex.network
 
 
 import com.rafacasari.mod.cobbledex.Cobbledex
+import com.rafacasari.mod.cobbledex.network.client.handlers.PokedexDiscoveredUpdatedHandler
 import com.rafacasari.mod.cobbledex.network.client.handlers.ReceiveCobbledexPacketHandler
+import com.rafacasari.mod.cobbledex.network.client.packets.PokedexDiscoveredUpdated
 import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCobbledexPacket
 import com.rafacasari.mod.cobbledex.network.server.IClientNetworkPacketHandler
 import com.rafacasari.mod.cobbledex.network.server.INetworkPacket
@@ -20,7 +22,8 @@ object CobbledexNetwork {
     fun sendPacketToServer(packet: INetworkPacket<*>) = Cobbledex.implementation.networkManager.sendPacketToServer(packet)
 
     fun registerClientBound() {
-       createClientBound(ReceiveCobbledexPacket.ID, ReceiveCobbledexPacket::decode, ReceiveCobbledexPacketHandler)
+        createClientBound(ReceiveCobbledexPacket.ID, ReceiveCobbledexPacket::decode, ReceiveCobbledexPacketHandler)
+        createClientBound(PokedexDiscoveredUpdated.ID, PokedexDiscoveredUpdated::decode, PokedexDiscoveredUpdatedHandler)
     }
 
     fun registerServerBound() {

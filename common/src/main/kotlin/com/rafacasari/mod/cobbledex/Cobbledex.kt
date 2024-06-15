@@ -5,6 +5,7 @@ import com.cobblemon.mod.common.api.Priority
 import com.cobblemon.mod.common.api.events.CobblemonEvents
 import com.cobblemon.mod.common.api.storage.player.PlayerDataExtensionRegistry
 import com.cobblemon.mod.common.platform.events.PlatformEvents
+import com.cobblemon.mod.common.platform.events.ServerPlayerEvent
 import com.cobblemon.mod.common.pokemon.Species
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
@@ -13,6 +14,9 @@ import net.minecraft.util.ActionResult
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import com.rafacasari.mod.cobbledex.cobblemon.extensions.PlayerDiscovery
+import com.rafacasari.mod.cobbledex.items.CobbledexItem
+import com.rafacasari.mod.cobbledex.network.client.packets.PokedexDiscoveredUpdated
+import net.minecraft.server.network.ServerPlayerEntity
 
 object Cobbledex {
     const val MOD_ID : String = "cobbledex"
@@ -52,9 +56,25 @@ object Cobbledex {
                     }
                 }
 
+
                 // This should prevent events from being added more than once
                 eventsCreated = true
             }
+        }
+
+        PlatformEvents.CLIENT_PLAYER_LOGOUT.subscribe {
+            CobbledexItem.totalPokemonDiscovered = 0
+        }
+
+        PlatformEvents.SERVER_PLAYER_LOGIN.subscribe { login: ServerPlayerEvent.Login ->
+
+            val playerData = CobblemonPlayerData.get(login.player)
+            val cobbledexData = playerData.extraData[PlayerDiscovery.NAME_KEY] as PlayerDiscovery?
+            var totalPokemonDiscovered = 0
+            if (cobbledexData != null)
+                totalPokemonDiscovered = cobbledexData.caughtSpecies.size
+
+            PokedexDiscoveredUpdated(totalPokemonDiscovered).sendToPlayer(login.player)
         }
     }
 
@@ -83,6 +103,10 @@ object Cobbledex {
 
             player.sendMessage(Text.literal("You've discovered a new Pokémon: §a" + species.name + "§r"))
         }
+
+        if (player is ServerPlayerEntity)
+            PokedexDiscoveredUpdated(cobbledexData.caughtSpecies.size).sendToPlayer(player)
+
 
         CobblemonPlayerData.saveSingle(playerData)
 
