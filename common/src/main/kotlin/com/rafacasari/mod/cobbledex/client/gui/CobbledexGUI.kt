@@ -9,6 +9,7 @@ import com.cobblemon.mod.common.client.gui.ExitButton
 import com.cobblemon.mod.common.client.gui.TypeIcon
 import com.cobblemon.mod.common.client.gui.summary.widgets.ModelWidget
 import com.cobblemon.mod.common.client.render.drawScaledText
+import com.cobblemon.mod.common.pokemon.FormData
 import com.cobblemon.mod.common.pokemon.RenderablePokemon
 import com.cobblemon.mod.common.pokemon.Species
 import net.minecraft.client.MinecraftClient
@@ -25,6 +26,7 @@ import com.rafacasari.mod.cobbledex.client.widget.CobbledexTab
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.client.widget.PokemonEvolutionDisplay
 import com.rafacasari.mod.cobbledex.network.server.packets.RequestCobbledexPacket
+import com.rafacasari.mod.cobbledex.network.template.SerializableItemDrop
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonSpawnDetail
 import com.rafacasari.mod.cobbledex.utils.*
 
@@ -32,7 +34,7 @@ enum class CobbledexMenu {
     Info, Battle, Evolutions
 }
 
-class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTranslation("cobbledex.texts.cobbledex")) {
+class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<String>? = null) : Screen(cobbledexTranslation("cobbledex.texts.cobbledex")) {
 
     companion object
     {
@@ -51,11 +53,10 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
         var Instance : CobbledexGUI? = null
 
 
-        fun openCobbledexScreen(pokemon: Species? = null) {
+        fun openCobbledexScreen(pokemon: FormData? = null, aspects: Set<String>? = null) {
             playSound(CobblemonSounds.PC_ON)
 
-            Instance = CobbledexGUI(pokemon)
-            //MinecraftClient.getInstance().setScreenAndRender(Instance)
+            Instance = CobbledexGUI(pokemon, aspects)
             MinecraftClient.getInstance().setScreen(Instance)
         }
 
@@ -64,7 +65,7 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
             MinecraftClient.getInstance().soundManager.play(PositionedSoundInstance.master(soundEvent, 1f))
         }
 
-        var previewPokemon: Species? = null
+        var previewPokemon: FormData? = null
         var selectedTab : CobbledexMenu = CobbledexMenu.Info
 
     }
@@ -101,7 +102,7 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
         {
             // If there is no selected Pokémon and no preview, set to default
             if (previewPokemon == null)
-                previewPokemon = PokemonSpecies.getByPokedexNumber(1)
+                previewPokemon = PokemonSpecies.getByPokedexNumber(1)?.standardForm
 
             this.setPreviewPokemon(previewPokemon)
         }
@@ -110,26 +111,23 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
 //            if (selectedPokemon != previewPokemon)
 //                selectedTab = CobbledexMenu.Info
 
-            this.setPreviewPokemon(selectedPokemon)
+            this.setPreviewPokemon(selectedPokemon, selectedAspects)
         }
 
         // Initialize Tabs
         infoTabButton = CobbledexTab(x, y,x + 114, y + 178, "Info".text()) {
-            playSound(CobblemonSounds.GUI_CLICK)
             selectedTab = CobbledexMenu.Info
-            updateMenu()
+            defaultTabClickEvent()
         }
 
         battleTabButton = CobbledexTab(x, y,x + 151, y + 178, "Battle".text()) {
-            playSound(CobblemonSounds.GUI_CLICK)
             selectedTab = CobbledexMenu.Battle
-            updateMenu()
+            defaultTabClickEvent()
         }
 
         evolveTabButton = CobbledexTab(x, y,x + 188, y + 178, "Evolve".text()) {
-            playSound(CobblemonSounds.GUI_CLICK)
             selectedTab = CobbledexMenu.Evolutions
-            updateMenu()
+            defaultTabClickEvent()
         }
 
         // Add our tabs as a drawable child
@@ -139,6 +137,12 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
 
         // Update menu will highlight the current tab and draw text into longTextDisplay
         // (using cached data or client-side data)
+        updateMenu()
+    }
+
+    private fun defaultTabClickEvent() {
+        longTextDisplay?.resetScrollPosition()
+        playSound(CobblemonSounds.GUI_CLICK)
         updateMenu()
     }
 
@@ -153,7 +157,7 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
             CobbledexMenu.Info -> {
                 // Use cache to load spawnDetails
                 // We don't need to worry about being null, server should send information and packet handler will update automatically
-                setSpawnDetails(lastLoadedSpecies, lastLoadedSpawnDetails, true)
+                updateInfoPage(lastLoadedSpecies, lastLoadedSpawnDetails, lastLoadedPokemonDrops, true)
             }
 
             CobbledexMenu.Battle -> {
@@ -161,9 +165,11 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
             }
 
             CobbledexMenu.Evolutions -> {
-                longTextDisplay?.add("Coming soon...".text())
+                longTextDisplay?.addText("Coming soon...".text())
             }
         }
+
+        setEvolutions(null, true)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -272,7 +278,7 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
 
             drawScaledText(
                 context = context,
-                text = pokemon.nationalPokedexNumber.toString().text(),
+                text = pokemon.species.nationalPokedexNumber.toString().text(),
                 x = x + 12,
                 y = y + 143.5f,
                 shadow = false,
@@ -312,10 +318,10 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
 
 
                     val stringBuilder = "".text()
-                    val primaryType = pokemon.standardForm.primaryType
+                    val primaryType = pokemon.primaryType
                     stringBuilder.append(primaryType.displayName.setStyle(Style.EMPTY.withBold(true).withColor(primaryType.hue)))
 
-                    val secondType = pokemon.standardForm.secondaryType
+                    val secondType = pokemon.secondaryType
                     if (secondType != null) {
                         stringBuilder.append(" & ".text().setStyle(Style.EMPTY.withBold(true)))
                         stringBuilder.append(secondType.displayName.setStyle(Style.EMPTY.withBold(true).withColor(secondType.hue)))
@@ -336,7 +342,7 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
         super.close()
     }
 
-    fun setPreviewPokemon(pokemon: Species?)
+    fun setPreviewPokemon(pokemon: FormData?, pokemonAspects: Set<String>? = null)
     {
         val x = (width - BASE_WIDTH) / 2
         val y = (height - BASE_HEIGHT) / 2
@@ -344,8 +350,8 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
         evolutionDisplay?.clearEvolutions()
 
         // Request Pokémon Info to server and load into cache in Packet Handler (See ReceiveCobbledexPacketHandler)
-        if (pokemon != null && (lastLoadedSpecies == null || lastLoadedSpecies != pokemon))
-            RequestCobbledexPacket(pokemon.resourceIdentifier).sendToServer()
+        if (pokemon != null && (lastLoadedSpecies == null || lastLoadedSpecies != pokemon.species))
+            RequestCobbledexPacket(pokemon.species.resourceIdentifier).sendToServer()
 
         if (pokemon != null) {
             previewPokemon = pokemon
@@ -355,7 +361,7 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
                 pY = y + 41,
                 pWidth = PORTRAIT_SIZE,
                 pHeight = PORTRAIT_SIZE,
-                pokemon = RenderablePokemon(pokemon, pokemon.standardForm.aspects.toSet()),
+                pokemon = RenderablePokemon(pokemon.species, pokemonAspects ?: setOf()),
                 baseScale = 1.8F,
                 rotationY = 345F,
                 offsetY = -10.0
@@ -380,25 +386,45 @@ class CobbledexGUI(private val selectedPokemon: Species?) : Screen(cobbledexTran
         }
     }
 
-    fun setEvolutions(evolutions: List<Species>) {
+    private var lastLoadedEvolutions: List<Pair<Species, Set<String>>>? = null
+    fun setEvolutions(evolutions: List<Pair<Species, Set<String>>>?, fromCache: Boolean = false) {
+        if (!fromCache)
+            lastLoadedEvolutions = evolutions
+
+        if (fromCache)
+        {
+            evolutionDisplay?.selectEvolutions(evolutions ?: lastLoadedEvolutions)
+            return
+        }
+
         evolutionDisplay?.selectEvolutions(evolutions)
     }
 
     private var lastLoadedSpecies: Species? = null
     private var lastLoadedSpawnDetails: List<SerializablePokemonSpawnDetail>? = null
+    private var lastLoadedPokemonDrops: List<SerializableItemDrop>? = null
 
-    fun setSpawnDetails(species: Species?, spawnDetails: List<SerializablePokemonSpawnDetail>?, fromCache: Boolean = false) {
+    fun updateInfoPage(species: Species?, spawnDetails: List<SerializablePokemonSpawnDetail>?, itemDrops: List<SerializableItemDrop>?, fromCache: Boolean = false) {
         if (!fromCache) {
             // If our call isn't from cache, then we can update the current cache
             lastLoadedSpawnDetails = spawnDetails
             lastLoadedSpecies = species
+            lastLoadedPokemonDrops = itemDrops
 
             // Recall updateMenu to use cached values if needed
             updateMenu()
         } else {
             // We should make sure that the current cache is actually the selected Pokémon
-            if (previewPokemon != null)
-                InfoMenu.drawText(longTextDisplay, previewPokemon, if(previewPokemon == species) spawnDetails else null)
+            if (previewPokemon != null) {
+                val details = if (previewPokemon!!.species == species) spawnDetails else null
+                val drops = if (previewPokemon!!.species == species) itemDrops else null
+
+                InfoMenu.drawText(
+                    longTextDisplay,
+                    previewPokemon,
+                    details, drops
+                )
+            }
         }
     }
 }

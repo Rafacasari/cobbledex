@@ -1,6 +1,5 @@
 package com.rafacasari.mod.cobbledex.utils
 
-import com.mojang.datafixers.util.Either
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import com.rafacasari.mod.cobbledex.Cobbledex
@@ -13,12 +12,6 @@ fun logWarn(text: String) = Cobbledex.LOGGER.warn(text)
 fun logError(text: String) = Cobbledex.LOGGER.error(text)
 fun logDebug(text: String) = Cobbledex.LOGGER.debug(text)
 
-//fun <L, R> Either<L, R>.fold(ifLeft: (L) -> String, ifRight: (R) -> String): String {
-//    return if (this.left().isPresent) {
-//        ifLeft(this.left().get())
-//    } else {
-//        ifRight(this.right().get())
-//    }
-//}
-
 fun MutableText.withRGBColor(color: Int) = also { it.style = it.style.withColor(color) }
+
+fun Float.format(): String = if (this % 1 == 0f) this.toInt().toString() else this.toString()

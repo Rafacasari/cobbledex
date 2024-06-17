@@ -2,30 +2,54 @@ package com.rafacasari.mod.cobbledex.client.gui.menus
 
 import com.cobblemon.mod.common.api.conditional.RegistryLikeTagCondition
 import com.cobblemon.mod.common.api.text.*
-import com.cobblemon.mod.common.pokemon.Species
+import com.cobblemon.mod.common.pokemon.FormData
 import com.cobblemon.mod.common.util.asTranslated
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
+import com.rafacasari.mod.cobbledex.network.template.SerializableItemDrop
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonSpawnDetail
 import com.rafacasari.mod.cobbledex.utils.BiomeUtils
 import com.rafacasari.mod.cobbledex.utils.cobbledexTranslation
+import com.rafacasari.mod.cobbledex.utils.format
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.item.ItemStack
+import net.minecraft.registry.Registries
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.Style
 import net.minecraft.world.biome.Biome
 
 object InfoMenu {
 
-    fun drawText(longTextDisplay: LongTextDisplay?, pokemon: Species?, spawnDetails: List<SerializablePokemonSpawnDetail>?) {
+    fun drawText(longTextDisplay: LongTextDisplay?, pokemon: FormData?, spawnDetails: List<SerializablePokemonSpawnDetail>?, pokemonDrops: List<SerializableItemDrop>?) {
         if (longTextDisplay == null || pokemon == null) return
 
-        pokemon.standardForm.pokedex.forEach { pokedex ->
-            longTextDisplay.add(pokedex.asTranslated())
+        pokemon.pokedex.forEach { pokedex ->
+            longTextDisplay.addText(pokedex.asTranslated())
+        }
+
+        if (!pokemonDrops.isNullOrEmpty())
+        {
+            longTextDisplay.addText(cobbledexTranslation("cobbledex.texts.drops").bold())
+            pokemonDrops.forEach { itemDrop ->
+                val itemStack = ItemStack(Registries.ITEM.get(itemDrop.item))
+
+                // Hacky way to show quantity/rolls in a better way
+                val quantityRange = itemDrop.quantityRange
+                val quantity: String = if (quantityRange.first == quantityRange.last) quantityRange.first.toString() else "${quantityRange.first}-${quantityRange.last}"
+
+                val text = "item.${itemDrop.item.toTranslationKey()}".asTranslated()
+                text.add(" | ${itemDrop.percentage.format()}% | ${quantity}x".text())
+
+                longTextDisplay.addItemEntry(itemStack, text, false)
+                //longTextDisplay.addText(text, false)
+
+            }
+
         }
 
         val world: ClientWorld? = MinecraftClient.getInstance().world
         if (world != null && !spawnDetails.isNullOrEmpty()) {
-            longTextDisplay.add(cobbledexTranslation("cobbledex.texts.biomes").bold())
+            longTextDisplay.addText(cobbledexTranslation("cobbledex.texts.biomes").bold())
 
             val biomeRegistry = BiomeUtils.getBiomesRegistry(world)
 
@@ -149,7 +173,7 @@ object InfoMenu {
 
                             val hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltipText)
 
-                            longTextDisplay.add(
+                            longTextDisplay.addText(
                                 condition.asTranslated().setStyle(Style.EMPTY.withHoverEvent(hoverEvent)),
                                 false
                             )

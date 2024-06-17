@@ -31,29 +31,20 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
         return super.addEntry(entry)
     }
 
-//    fun selectPokemon(pokemon: Pokemon?) {
-//        clearEntries()
-//
-//        pokemon?.form?.evolutions?.map {
-//            EvolveSlot(it.result.create()) }?.forEach { entry ->
-//            this.addEntry(entry)
-//        }
-//    }
-
     fun clearEvolutions() = clearEntries()
 
 
-    fun selectEvolutions(pokemonList: List<Species>?) {
+    fun selectEvolutions(pokemonList: List<Pair<Species, Set<String>>>?) {
         clearEntries()
 
         pokemonList?.map {
-            EvolveSlot(it)
+            EvolveSlot(it.first, it.second)
         }?.forEach { entry ->
             this.addEntry(entry)
         }
     }
 
-    class EvolveSlot(private val evolution: Species) : Entry<EvolveSlot>() {
+    class EvolveSlot(private val evolution: Species, private val aspects: Set<String>) : Entry<EvolveSlot>() {
         val client: MinecraftClient = MinecraftClient.getInstance()
 
         private val selectButton: SummaryButton = SummaryButton(
@@ -62,7 +53,11 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
             buttonWidth = 40,
             buttonHeight = 10,
             clickAction = {
-                CobbledexGUI.Instance?.setPreviewPokemon(evolution)
+
+                CobbledexGUI.Instance?.selectedPokemon = evolution.standardForm
+                CobbledexGUI.Instance?.selectedAspects = aspects
+                CobbledexGUI.Instance?.setPreviewPokemon(evolution.standardForm, aspects)
+
             },
             text = "View".text(),
             resource = buttonResource,
@@ -140,7 +135,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
                 0.0
             )
 
-            drawPortraitPokemon(evolution, evolution.standardForm.aspects.toSet(), matrices, partialTicks = partialTicks, reversed = true)
+            drawPortraitPokemon(evolution, aspects, matrices, partialTicks = partialTicks, reversed = true)
 
             matrices.pop()
             context.disableScissor()

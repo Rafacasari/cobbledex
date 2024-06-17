@@ -1,16 +1,16 @@
 package com.rafacasari.mod.cobbledex.client.widget
 
 import com.cobblemon.mod.common.api.text.text
+import com.rafacasari.mod.cobbledex.client.widget.entries.ItemEntry
+import com.rafacasari.mod.cobbledex.client.widget.entries.TextEntry
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget
+import net.minecraft.item.ItemStack
 import net.minecraft.text.MutableText
 import net.minecraft.text.OrderedText
-import net.minecraft.text.Style
+import net.minecraft.text.Text
 import net.minecraft.util.Language
-import com.rafacasari.mod.cobbledex.mixins.TextHandlerAccessor
-import com.rafacasari.mod.cobbledex.utils.logError
-
 
 class LongTextDisplay (
     private val x: Int = 0,
@@ -19,7 +19,7 @@ class LongTextDisplay (
     private val frameHeight: Int,
     private val padding : Int = 3,
     private val scrollbarSize: Int = 2
-): AlwaysSelectedEntryListWidget<LongTextDisplay.DialogueLine>(
+): AlwaysSelectedEntryListWidget<LongTextDisplay.TextDisplayEntry>(
     MinecraftClient.getInstance(),
     frameWidth,
     frameHeight, // height
@@ -48,20 +48,41 @@ class LongTextDisplay (
 //        const val LINE_WIDTH = 180
     }
 
-    private fun add(entry: DialogueLine): Int {
+    private fun addText(entry: TextEntry): Int {
         return super.addEntry(entry)
     }
 
-    fun add(entry: MutableText, breakLine: Boolean = true, shadow: Boolean = false) {
+    fun addText(entry: MutableText, breakLine: Boolean = true, shadow: Boolean = false) {
 
         if (breakLine && super.getEntryCount() > 0) {
-            super.addEntry(DialogueLine(null))
+            super.addEntry(TextEntry(null))
         }
 
         val textRenderer = MinecraftClient.getInstance().textRenderer
         Language.getInstance().reorder(textRenderer.textHandler.wrapLines(entry, rowWidth - SCROLLBAR_PADDING, entry.style)).forEach {
-            add(DialogueLine(it, shadow))
+            addText(TextEntry(it, shadow))
         }
+    }
+
+    fun addItemEntry(item: ItemStack, entry: Text, breakLine: Boolean = true) {
+
+        if (breakLine && super.getEntryCount() > 0)
+            super.addEntry(TextEntry(null))
+
+        val textRenderer = MinecraftClient.getInstance().textRenderer
+        val reorderedTexts = Language.getInstance()
+            .reorder(textRenderer.textHandler.wrapLines(entry, rowWidth - SCROLLBAR_PADDING - 11, entry.style))
+
+        reorderedTexts.forEach {
+            if (reorderedTexts.first() == it)
+                addItemEntryInternal(item, it)
+            else addText(TextEntry(it, false))
+        }
+    }
+
+    private fun addItemEntryInternal(item: ItemStack, text: OrderedText) : Int
+    {
+        return super.addEntry(ItemEntry(item, text))
     }
 
     fun clear() {
@@ -89,9 +110,18 @@ class LongTextDisplay (
         super.render(context, mouseX, mouseY, partialTicks)
         context.disableScissor()
 
-        if (hoveredEntry?.pendingHover != null) {
-            val textRenderer = MinecraftClient.getInstance().textRenderer
-            context.drawHoverEvent(textRenderer, hoveredEntry?.pendingHover, mouseX, mouseY)
+        val currentEntry = hoveredEntry
+        if (currentEntry != null && currentEntry.isMouseOver(mouseX.toDouble(), mouseY.toDouble())) {
+
+            currentEntry.drawTooltip(context, mouseX, mouseY)
+        }
+
+        if (hoveredEntry != null && hoveredEntry is TextEntry) {
+            val hoveredTextEntry = hoveredEntry as TextEntry
+            if (hoveredTextEntry.pendingHover != null) {
+                val textRenderer = MinecraftClient.getInstance().textRenderer
+                context.drawHoverEvent(textRenderer, hoveredTextEntry.pendingHover, mouseX, mouseY)
+            }
         }
     }
 
@@ -124,74 +154,13 @@ class LongTextDisplay (
                 && mouseY < bottom
     }
 
-    class DialogueLine(private val line: OrderedText?, val shadow: Boolean = false) : Entry<DialogueLine>() {
-        override fun getNarration() = "".text()
-
-        private fun drawText(context: DrawContext, text: OrderedText, x: Number, y: Number, colour: Int, shadow: Boolean = true, pMouseX: Int? = null, pMouseY: Int? = null): Boolean {
-            val textRenderer = MinecraftClient.getInstance().textRenderer
-            val width = textRenderer.getWidth(text)
-
-            context.drawText(textRenderer, text, x.toInt(), y.toInt(), colour, shadow)
-
-            // Return isHovered
-            return pMouseY != null && pMouseX != null &&
-                    pMouseX.toInt() >= x.toInt() && pMouseX.toInt() <= x.toInt() + width &&
-                    pMouseY.toInt() >= y.toInt() && pMouseY.toInt() <= y.toInt() + textRenderer.fontHeight
-        }
+    fun resetScrollPosition() {
+        scrollAmount = 0.0
+    }
 
 
-        private fun drawOrderedText(context: DrawContext, text: OrderedText, x: Number, y: Number, colour: Int = 0x00FFFFFF, shadow: Boolean = false, pMouseX: Int? = null, pMouseY: Int? = null) {
-
-            val isHovered = drawText(
-                context = context,
-                text = text,
-                x = x.toFloat(), y = y.toFloat(),
-                colour = colour,
-                shadow = shadow,
-                pMouseX = pMouseX, pMouseY = pMouseY)
-
-            if (isHovered) {
-                val textRenderer = MinecraftClient.getInstance().textRenderer
-                var hoveredStyle: Style? = null
-                var charX = x.toFloat()
-                val charY = y.toFloat()
-
-                text.accept { _, style, codePoint ->
-                    try {
-                        val widthRetriever = (textRenderer.textHandler as TextHandlerAccessor).widthRetriever
-                        val charWidth = widthRetriever.getWidth(codePoint, style)
-
-                        if (pMouseX!! >= charX && pMouseX < charX + charWidth && pMouseY!! >= charY && pMouseY < charY + textRenderer.fontHeight) {
-                            hoveredStyle = style
-                        }
-
-                        charX += charWidth
-                    }
-                    catch (e: Exception)
-                    {
-                        logError(e.toString())
-                    }
-                    true
-                }
-
-                hoveredStyle?.let {
-                    newHover = it
-                    //context.drawHoverEvent(textRenderer, it, pMouseX!!, pMouseY!!)
-                }
-            }
-        }
-
-        private var newHover: Style? = null
-        var pendingHover: Style? = null
-
-        override fun render(context: DrawContext, index: Int, rowTop: Int, rowLeft: Int, rowWidth: Int, rowHeight: Int, mouseX: Int, mouseY: Int, isHovered: Boolean, partialTicks: Float) {
-            newHover = null
-
-            line?.let {
-                drawOrderedText(context, it, rowLeft, rowTop, pMouseX = mouseX, pMouseY = mouseY, shadow = shadow)
-            }
-
-            pendingHover = newHover
-        }
+    abstract class TextDisplayEntry : Entry<TextDisplayEntry>() {
+        override fun getNarration(): Text = "".text()
+        abstract fun drawTooltip(context: DrawContext, mouseX: Int, mouseY: Int)
     }
 }

@@ -1,5 +1,8 @@
 package com.rafacasari.mod.cobbledex.utils
 
+import com.cobblemon.mod.common.api.drop.ItemDropEntry
+import com.cobblemon.mod.common.api.pokemon.evolution.Evolution
+import com.cobblemon.mod.common.api.pokemon.evolution.requirement.EvolutionRequirement
 import com.cobblemon.mod.common.api.spawning.CobblemonSpawnPools
 import com.cobblemon.mod.common.api.spawning.detail.PokemonSpawnDetail
 import com.cobblemon.mod.common.pokemon.Species
@@ -25,5 +28,28 @@ object CobblemonUtils {
         }.map { x -> x as PokemonSpawnDetail }
 
         return spawnDetails
+    }
+
+
+
+    fun getPokemonDrops(species: Species) : List<ItemDropEntry> {
+        val drops = species.drops.entries.filterIsInstance<ItemDropEntry>()
+
+        return drops
+    }
+
+
+    // TODO: Create a serializable/encodable class "SerializablePokemonEvolution" that returns:
+    //  - Identifier
+    //  - FormData
+    //  - Aspects
+    //  - Evolution Requirements (with a SerializableEvolutionRequirement class)
+
+    fun getPokemonEvolutionRequirements(species: Species) : List<Pair<Evolution, MutableSet<EvolutionRequirement>>> {
+        val evolutionsWithRequirements = species.evolutions.map {
+            it to it.requirements
+        }
+
+        return evolutionsWithRequirements
     }
 }

@@ -40,7 +40,10 @@ object OpenCobbledexCommand : IClientCommandInterface {
         }
 
         MinecraftClient.getInstance().send {
-            CobbledexGUI.openCobbledexScreen(PokemonSpecies.getByName(properties.species!!))
+            val species = PokemonSpecies.getByName(properties.species!!)
+            if (species != null) {
+                CobbledexGUI.openCobbledexScreen(species.getForm(properties.aspects), properties.aspects)
+            }
         }
 
         return Command.SINGLE_SUCCESS

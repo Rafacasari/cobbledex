@@ -11,11 +11,12 @@ object ReceiveCobbledexPacketHandler : IClientNetworkPacketHandler<ReceiveCobble
     override fun handle(packet: ReceiveCobbledexPacket, client: MinecraftClient) {
         try {
             val evolutions = packet.evolutionList.mapNotNull {
-                 PokemonSpecies.getByIdentifier(it)
+                val species = PokemonSpecies.getByIdentifier(it.first)
+                if (species != null) Pair(species, it.second) else null
             }
 
             CobbledexGUI.Instance?.setEvolutions(evolutions)
-            CobbledexGUI.Instance?.setSpawnDetails(packet.species, packet.spawnDetails)
+            CobbledexGUI.Instance?.updateInfoPage(packet.species, packet.spawnDetails, packet.pokemonDrops)
 
         } catch (e: Exception) {
             logError(e.toString())

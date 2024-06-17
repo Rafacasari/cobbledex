@@ -4,6 +4,7 @@ import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCobbledexPacket
 import com.rafacasari.mod.cobbledex.network.server.IServerNetworkPacketHandler
 import com.rafacasari.mod.cobbledex.network.server.packets.RequestCobbledexPacket
+import com.rafacasari.mod.cobbledex.network.template.SerializableItemDrop
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonSpawnDetail
 import com.rafacasari.mod.cobbledex.utils.CobblemonUtils
 import net.minecraft.server.MinecraftServer
@@ -18,7 +19,9 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
             val evolutions = pokemon.evolutions.filter {
                 it.result.species != null
             }.mapNotNull {
-                PokemonSpecies.getByName(it.result.species!!)?.resourceIdentifier
+                val identifier = PokemonSpecies.getByName(it.result.species!!)?.resourceIdentifier
+                if (identifier != null) identifier to it.result.aspects
+                else null
             }
 
             val spawnDetails = CobblemonUtils.getSpawnDetails(pokemon)
@@ -27,7 +30,11 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
                 SerializablePokemonSpawnDetail(it)
             }
 
-            ReceiveCobbledexPacket(pokemon, evolutions, serializableSpawnDetails).sendToPlayer(player)
+            val drops = CobblemonUtils.getPokemonDrops(pokemon).map {
+                SerializableItemDrop(it)
+            }
+
+            ReceiveCobbledexPacket(pokemon, evolutions, serializableSpawnDetails, drops).sendToPlayer(player)
         }
     }
 }

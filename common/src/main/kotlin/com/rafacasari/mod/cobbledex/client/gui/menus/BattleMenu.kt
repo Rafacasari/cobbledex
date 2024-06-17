@@ -4,13 +4,13 @@ import com.cobblemon.mod.common.api.text.add
 import com.cobblemon.mod.common.api.text.bold
 import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.api.types.ElementalTypes
-import com.cobblemon.mod.common.pokemon.Species
+import com.cobblemon.mod.common.pokemon.FormData
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.utils.TypeChartUtils
 import com.rafacasari.mod.cobbledex.utils.withRGBColor
 
 object BattleMenu {
-    fun drawText(longTextDisplay: LongTextDisplay?, pokemon: Species?) {
+    fun drawText(longTextDisplay: LongTextDisplay?, pokemon: FormData?) {
         if (pokemon == null || longTextDisplay == null) return
 
 
@@ -20,7 +20,7 @@ object BattleMenu {
 
         elementalMultipliers.filter { it.key != 1f }.forEach { elementalKey ->
 
-            longTextDisplay.add("${elementalKey.key}x damage from".text())
+            longTextDisplay.addText("${elementalKey.key}x damage from".text())
 
             val typesText = elementalKey.value.fold("".text()) { acc, element ->
                 if (elementalKey.value.first() != element)
@@ -30,7 +30,7 @@ object BattleMenu {
             }
 
 
-            longTextDisplay.add(typesText, false)
+            longTextDisplay.addText(typesText, false)
         }
 
     }

@@ -37,7 +37,7 @@ class CobbledexItem(settings: Settings) : Item(settings) {
         }
 
         if (player.world.isClient) {
-            CobbledexGUI.openCobbledexScreen(target.pokemon.species)
+            CobbledexGUI.openCobbledexScreen(target.pokemon.form, target.aspects)
             return ActionResult.PASS
         }
 
@@ -59,21 +59,9 @@ class CobbledexItem(settings: Settings) : Item(settings) {
     override fun use(world: World?, user: PlayerEntity?, hand: Hand?): TypedActionResult<ItemStack> {
 
         if (user != null && world != null && world.isClient && user.isSneaking) {
-            CobbledexGUI.openCobbledexScreen(null)
+            CobbledexGUI.openCobbledexScreen()
         }
 
         return super.use(world, user, hand)
     }
-
-
-
-//    override fun use(level: World?, player: PlayerEntity, hand: Hand): InteractionResultHolder<ItemStack> {
-//        CobbledexReforged.LOGGER.info("ITEM USED")
-//
-//        if (level.isClientSide) {
-//            CobbledexGUI.openCobbledexScreen()
-//        }
-//
-//        return super.use(level, player, hand)
-//    }
 }
