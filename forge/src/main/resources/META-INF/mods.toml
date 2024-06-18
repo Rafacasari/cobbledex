@@ -50,7 +50,6 @@ versionRange = "[43,)"
 ordering = "NONE"
 side = "BOTH"
 
-
 [[dependencies.cobbledex]]
 modId = "minecraft"
 mandatory = true

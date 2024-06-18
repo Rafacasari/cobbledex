@@ -59,7 +59,7 @@ class TextEntry(private val line: OrderedText?, private val shadow: Boolean = fa
 
             text.accept { _, style, codePoint ->
                 try {
-                    val widthRetriever = (textRenderer.textHandler as TextHandlerAccessor).widthRetriever
+                    val widthRetriever = (textRenderer.textHandler as TextHandlerAccessor).cobbledexWidthRetriever
                     val charWidth = widthRetriever.getWidth(codePoint, style)
 
                     if (pMouseX!! >= charX && pMouseX < charX + charWidth && pMouseY!! >= charY && pMouseY < charY + textRenderer.fontHeight) {

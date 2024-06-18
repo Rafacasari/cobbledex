@@ -17,19 +17,38 @@ object CobblemonUtils {
 //        return COBBLEDEX_POOL
 //    }
 
-    fun getSpawnDetails(species: Species) : List<PokemonSpawnDetail> {
+//    fun getSpawnDetails(species: Species) : List<PokemonSpawnDetail> {
+//
+//        // Works on single-player, but not on multiplayer
+//        // Also works if you join single-player first, then multiplayer (lol)
+//        val cobblemonSpawnPool = CobblemonSpawnPools.WORLD_SPAWN_POOL
+//
+//        val spawnDetails = cobblemonSpawnPool.filter { x ->
+//            x is PokemonSpawnDetail && x.pokemon.species != null && x.pokemon.species == species.resourceIdentifier.path
+//        }.map { x -> x as PokemonSpawnDetail }
+//
+//        return spawnDetails
+//    }
 
-        // Works on single-player, but not on multiplayer
-        // Also works if you join single-player first, then multiplayer (lol)
+    fun getSpawnDetails(species: Species, aspects: Set<String>) : List<PokemonSpawnDetail> {
+
+        // Ignore male n female conditions
+        val pokeAspects = aspects.filter {
+            (it != "male" && it != "female")
+        }.toSet()
+
         val cobblemonSpawnPool = CobblemonSpawnPools.WORLD_SPAWN_POOL
 
-        val spawnDetails = cobblemonSpawnPool.filter { x ->
-            x is PokemonSpawnDetail && x.pokemon.species != null && x.pokemon.species == species.resourceIdentifier.path
-        }.map { x -> x as PokemonSpawnDetail }
+        val spawnDetails = cobblemonSpawnPool
+            .filterIsInstance<PokemonSpawnDetail>()
+            .filter {
+                it.pokemon.species != null &&
+                it.pokemon.species == species.resourceIdentifier.path &&
+                it.pokemon.aspects == pokeAspects
+            }
 
         return spawnDetails
     }
-
 
 
     fun getPokemonDrops(species: Species) : List<ItemDropEntry> {

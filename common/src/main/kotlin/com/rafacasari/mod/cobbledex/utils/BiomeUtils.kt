@@ -10,7 +10,7 @@ import net.minecraft.world.World
 import net.minecraft.world.biome.Biome
 
 data class CobbledexBiome(val identifier: Identifier, val biome: Biome)
-data class BiomeChecker(val details: PokemonSpawnDetail, val biomeCondition: RegistryLikeCondition<Biome>, val biomeList : List<MutableText>)
+//data class BiomeChecker(val details: PokemonSpawnDetail, val biomeCondition: RegistryLikeCondition<Biome>, val biomeList : List<MutableText>)
 
 object BiomeUtils {
 
@@ -23,7 +23,7 @@ object BiomeUtils {
         return getAllBiomes(registry)
     }
 
-    fun getAllBiomes(registry: Registry<Biome>) : List<CobbledexBiome> {
+    private fun getAllBiomes(registry: Registry<Biome>) : List<CobbledexBiome> {
         return registry.entrySet.map { entry ->  CobbledexBiome(entry.key.value, entry.value) }
     }
 }

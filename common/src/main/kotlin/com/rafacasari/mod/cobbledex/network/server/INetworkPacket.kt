@@ -1,6 +1,5 @@
 package com.rafacasari.mod.cobbledex.network.server
 
-import com.cobblemon.mod.common.api.net.Encodable
 import com.rafacasari.mod.cobbledex.Cobbledex
 import com.rafacasari.mod.cobbledex.network.CobbledexNetwork
 import io.netty.buffer.Unpooled
@@ -10,7 +9,7 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
 
-interface INetworkPacket<T: INetworkPacket<T>> : Encodable {
+interface INetworkPacket<T: INetworkPacket<T>> : IEncodable {
 
     val id: Identifier
 

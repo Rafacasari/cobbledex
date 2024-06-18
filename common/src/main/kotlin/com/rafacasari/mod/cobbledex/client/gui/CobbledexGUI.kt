@@ -22,6 +22,7 @@ import net.minecraft.util.Identifier
 import com.rafacasari.mod.cobbledex.Cobbledex
 import com.rafacasari.mod.cobbledex.client.gui.menus.BattleMenu
 import com.rafacasari.mod.cobbledex.client.gui.menus.InfoMenu
+import com.rafacasari.mod.cobbledex.client.widget.ArrowButton
 import com.rafacasari.mod.cobbledex.client.widget.CobbledexTab
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.client.widget.PokemonEvolutionDisplay
@@ -32,6 +33,10 @@ import com.rafacasari.mod.cobbledex.utils.*
 
 enum class CobbledexMenu {
     Info, Battle, Evolutions
+}
+
+enum class CobbledexRelatedMenu {
+    Evolutions, PreEvolutions, Forms
 }
 
 class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<String>? = null) : Screen(cobbledexTranslation("cobbledex.texts.cobbledex")) {
@@ -67,7 +72,15 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
         var previewPokemon: FormData? = null
         var selectedTab : CobbledexMenu = CobbledexMenu.Info
+        var selectedRelatedTab : CobbledexRelatedMenu = CobbledexRelatedMenu.Evolutions
 
+        // Cache
+        private var lastLoadedSpecies: Species? = null
+        private var lastLoadedSpawnDetails: List<SerializablePokemonSpawnDetail>? = null
+        private var lastLoadedPokemonDrops: List<SerializableItemDrop>? = null
+        var lastLoadedEvolutions: List<Pair<Species, Set<String>>>? = null
+        var lastLoadedPreEvolutions: List<Pair<Species, Set<String>>>? = null
+        var lastLoadedForms: List<Pair<Species, Set<String>>>? = null
     }
 
 
@@ -135,9 +148,30 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         addDrawableChild(battleTabButton)
         addDrawableChild(evolveTabButton)
 
+        addDrawableChild(ArrowButton(true, x + 262, y + 28) {
+            playSound(CobblemonSounds.GUI_CLICK)
+
+            val newTab = selectedRelatedTab.ordinal - 1
+            selectedRelatedTab = if (newTab < 0) CobbledexRelatedMenu.Forms else CobbledexRelatedMenu.entries[newTab]
+
+            updateRelatedSpecies()
+            evolutionDisplay?.resetScrollPosition()
+        })
+
+        addDrawableChild(ArrowButton(false, x + 339, y + 28) {
+            playSound(CobblemonSounds.GUI_CLICK)
+
+            val newTab = selectedRelatedTab.ordinal + 1
+            selectedRelatedTab = if (newTab > CobbledexRelatedMenu.entries.size - 1)  CobbledexRelatedMenu.Evolutions else CobbledexRelatedMenu.entries[newTab]
+
+            updateRelatedSpecies()
+            evolutionDisplay?.resetScrollPosition()
+        })
+
         // Update menu will highlight the current tab and draw text into longTextDisplay
         // (using cached data or client-side data)
         updateMenu()
+        updateRelatedSpecies()
     }
 
     private fun defaultTabClickEvent() {
@@ -146,7 +180,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         updateMenu()
     }
 
-    private fun updateMenu() {
+    fun updateMenu() {
         longTextDisplay?.clear()
 
         infoTabButton.setActive(selectedTab == CobbledexMenu.Info)
@@ -168,8 +202,6 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
                 longTextDisplay?.addText("Coming soon...".text())
             }
         }
-
-        setEvolutions(null, true)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -230,26 +262,14 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             scale = 0.65F
         )
 
-        drawScaledText(
-            context = context,
-            text = cobbledexTranslation("cobbledex.texts.evolutions").bold(),
-            x = x + 302,
-            y = y + 29,
-            centered = true,
-            scale = 0.8F
-        )
+        val selectedRelatedMenuText = when (selectedRelatedTab) {
+            CobbledexRelatedMenu.Evolutions -> cobbledexTranslation("cobbledex.texts.evolutions")
+            CobbledexRelatedMenu.PreEvolutions -> cobbledexTranslation("cobbledex.texts.preevolutions")
+            CobbledexRelatedMenu.Forms -> cobbledexTranslation("cobbledex.texts.forms")
+        }
 
-        drawScaledText(
-            context = context,
-            font = CobblemonResources.DEFAULT_LARGE,
-            text = cobbledexTranslation("cobbledex.texts.cobbledex").bold(),
-            x = x + 169.5F,
-            y = y + 7.35F,
-            shadow = false,
-            centered = true,
-            scale = 1.06f
-        )
-
+        drawScaledText(context = context, text = selectedRelatedMenuText.bold(), x = x + 302, y = y + 29.5f, centered = true, scale = 0.7F)
+        drawScaledText(context = context, font = CobblemonResources.DEFAULT_LARGE, text = cobbledexTranslation("cobbledex.texts.cobbledex").bold(), x = x + 169.5F, y = y + 7.35F, shadow = false, centered = true, scale = 1.06f)
 
         val pokemon = previewPokemon
         if (pokemon != null) {
@@ -257,7 +277,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             drawScaledText(
                 context = context,
                 font = CobblemonResources.DEFAULT_LARGE,
-                text = pokemon.name.text().bold(),
+                text = pokemon.species.name.text().bold(),
                 x = x + 13,
                 y = y + 28.3F,
                 shadow = false
@@ -350,8 +370,9 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         evolutionDisplay?.clearEvolutions()
 
         // Request Pokémon Info to server and load into cache in Packet Handler (See ReceiveCobbledexPacketHandler)
-        if (pokemon != null && (lastLoadedSpecies == null || lastLoadedSpecies != pokemon.species))
-            RequestCobbledexPacket(pokemon.species.resourceIdentifier).sendToServer()
+        if (pokemon != null && (lastLoadedSpecies == null || lastLoadedSpecies != pokemon.species)) {
+            RequestCobbledexPacket(pokemon.species.resourceIdentifier, pokemonAspects ?: setOf()).sendToServer()
+        }
 
         if (pokemon != null) {
             previewPokemon = pokemon
@@ -386,23 +407,43 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         }
     }
 
-    private var lastLoadedEvolutions: List<Pair<Species, Set<String>>>? = null
-    fun setEvolutions(evolutions: List<Pair<Species, Set<String>>>?, fromCache: Boolean = false) {
-        if (!fromCache)
-            lastLoadedEvolutions = evolutions
 
-        if (fromCache)
+
+    fun updateRelatedSpecies() {
+        if (previewPokemon == null || previewPokemon?.species != lastLoadedSpecies)
         {
-            evolutionDisplay?.selectEvolutions(evolutions ?: lastLoadedEvolutions)
+            evolutionDisplay?.clearEvolutions()
             return
         }
 
-        evolutionDisplay?.selectEvolutions(evolutions)
+        when(selectedRelatedTab) {
+            CobbledexRelatedMenu.Evolutions -> {
+                evolutionDisplay?.selectEvolutions(lastLoadedEvolutions)
+            }
+            CobbledexRelatedMenu.PreEvolutions -> {
+                evolutionDisplay?.selectEvolutions(lastLoadedPreEvolutions)
+            }
+            CobbledexRelatedMenu.Forms -> {
+                evolutionDisplay?.selectEvolutions(lastLoadedForms)
+            }
+        }
     }
 
-    private var lastLoadedSpecies: Species? = null
-    private var lastLoadedSpawnDetails: List<SerializablePokemonSpawnDetail>? = null
-    private var lastLoadedPokemonDrops: List<SerializableItemDrop>? = null
+//    fun setEvolutions(evolutions: List<Pair<Species, Set<String>>>?, fromCache: Boolean = false) {
+//        if (!fromCache)
+//            lastLoadedEvolutions = evolutions
+//
+//        if (fromCache)
+//        {
+//            evolutionDisplay?.selectEvolutions(evolutions ?: lastLoadedEvolutions)
+//            return
+//        }
+//
+//        evolutionDisplay?.selectEvolutions(evolutions)
+//    }
+
+
+
 
     fun updateInfoPage(species: Species?, spawnDetails: List<SerializablePokemonSpawnDetail>?, itemDrops: List<SerializableItemDrop>?, fromCache: Boolean = false) {
         if (!fromCache) {

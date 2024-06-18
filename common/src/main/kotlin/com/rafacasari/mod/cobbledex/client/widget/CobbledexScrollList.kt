@@ -17,8 +17,8 @@ abstract class CobbledexScrollList<T : AlwaysSelectedEntryListWidget.Entry<T>>(
     slotHeight
 ) {
     companion object {
-        const val WIDTH = 82 + 4
-        const val HEIGHT = 119 + 12
+        const val WIDTH = 82 + 3
+        const val HEIGHT = 119 + 11
         const val SLOT_WIDTH = 80
 
 //        private val backgroundResource = cobblemonResource("textures/gui/summary/summary_scroll_background.png")

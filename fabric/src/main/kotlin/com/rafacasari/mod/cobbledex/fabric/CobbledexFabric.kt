@@ -30,8 +30,6 @@ object CobbledexFabric : CobbledexImplementation {
         }
     }
 
-
-
     override val modAPI: ModAPI = ModAPI.FABRIC
 
     override fun environment(): Environment {

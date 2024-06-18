@@ -1,13 +1,13 @@
 package com.rafacasari.mod.cobbledex.network.template
 
 import com.cobblemon.mod.common.api.drop.ItemDropEntry
-import com.cobblemon.mod.common.api.net.Encodable
+import com.rafacasari.mod.cobbledex.network.server.IEncodable
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeIntRange
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.Identifier
 
-class SerializableItemDrop() : Encodable {
+class SerializableItemDrop() : IEncodable {
 
     lateinit var item: Identifier
     lateinit var dropMethod: String

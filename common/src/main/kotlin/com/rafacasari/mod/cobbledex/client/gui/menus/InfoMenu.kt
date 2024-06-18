@@ -65,7 +65,7 @@ object InfoMenu {
                             if (spawn.levelRange != null) {
                                 val levelRange = spawn.levelRange!!
                                 tooltipText.add(
-                                    "\nLevel Range: ${levelRange.first}-${levelRange.last}".text()
+                                    "\nLevel Range: ${levelRange.first} - ${levelRange.last}".text()
                                         .setStyle(Style.EMPTY.withBold(false))
                                 )
                             }
@@ -90,27 +90,27 @@ object InfoMenu {
                                 tooltipText.add("\n$thunderInfo".text().setStyle(Style.EMPTY.withBold(false)))
                             }
 
+                            var lightString = ""
                             if (cond.minLight != null)
-                                tooltipText.add(
-                                    "\nMin Light: ${cond.minLight}".text().setStyle(Style.EMPTY.withBold(false))
-                                )
+                                lightString = if (cond.maxLight == null)  "Min Light: ${cond.minLight}"
+                                else "Light: ${cond.minLight} - ${cond.maxLight}"
+                            else if(cond.maxLight != null)
+                                lightString = "Max Light: ${cond.maxLight}"
 
+                            if (lightString != "")
+                                tooltipText.add("\n${lightString}".text().setStyle(Style.EMPTY.withBold(false)))
+
+
+                            var skyLightString = ""
                             if (cond.minSkyLight != null)
-                                tooltipText.add(
-                                    "\nMin Sky Light: ${cond.minSkyLight}".text()
-                                        .setStyle(Style.EMPTY.withBold(false))
-                                )
+                                skyLightString = if (cond.maxSkyLight == null)  "Min Sky Light: ${cond.minSkyLight}"
+                                else "Sky Light: ${cond.minSkyLight} - ${cond.maxSkyLight}"
+                            else if(cond.maxSkyLight != null)
+                                skyLightString = "Max Sky Light: ${cond.maxSkyLight}"
 
-                            if (cond.maxLight != null)
-                                tooltipText.add(
-                                    "\nMax Light: ${cond.maxLight}".text().setStyle(Style.EMPTY.withBold(false))
-                                )
+                            if (skyLightString != "")
+                                tooltipText.add("\n${skyLightString}".text().setStyle(Style.EMPTY.withBold(false)))
 
-                            if (cond.maxSkyLight != null)
-                                tooltipText.add(
-                                    "\nMax Sky Light: ${cond.maxSkyLight}".text()
-                                        .setStyle(Style.EMPTY.withBold(false))
-                                )
 
                             // TODO: Implement the following conditions
                             //  cond.timeRange

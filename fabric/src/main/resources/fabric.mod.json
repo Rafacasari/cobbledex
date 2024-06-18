@@ -9,7 +9,8 @@
   "license": "",
   "environment": "*",
   "mixins": [
-    "cobbledex-common.mixins.json"
+    "cobbledex-common.mixins.json",
+    "fabric.mixins.json"
   ],
   "entrypoints": {
     "main": [

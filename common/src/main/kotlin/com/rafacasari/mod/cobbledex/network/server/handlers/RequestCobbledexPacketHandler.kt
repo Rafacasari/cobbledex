@@ -24,7 +24,24 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
                 else null
             }
 
-            val spawnDetails = CobblemonUtils.getSpawnDetails(pokemon)
+            // Select all pre-evolution forms or just the default form
+            val preEvolutions = pokemon.preEvolution?.let { preEvolution ->
+                val forms =
+                    if (preEvolution.species.forms.isEmpty()) setOf(preEvolution.form)
+                    else preEvolution.species.forms.toSet()
+
+                return@let forms.map {
+                    it.species.resourceIdentifier to it.aspects.toSet()
+                }
+            } ?: listOf()
+
+
+            val species = pokemon.forms.map {
+                val identifier = it.species.resourceIdentifier
+                identifier to it.aspects.toSet()
+            }
+
+            val spawnDetails = CobblemonUtils.getSpawnDetails(pokemon, packet.aspects)
 
             val serializableSpawnDetails = spawnDetails.map {
                 SerializablePokemonSpawnDetail(it)
@@ -34,7 +51,7 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
                 SerializableItemDrop(it)
             }
 
-            ReceiveCobbledexPacket(pokemon, evolutions, serializableSpawnDetails, drops).sendToPlayer(player)
+            ReceiveCobbledexPacket(pokemon, evolutions, preEvolutions, species, serializableSpawnDetails, drops).sendToPlayer(player)
         }
     }
 }

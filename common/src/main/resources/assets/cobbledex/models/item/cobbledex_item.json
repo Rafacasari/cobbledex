@@ -1,6 +1,161 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "cobbledex:item/cobbledex_item"
-  }
+	"credit": "Alro and prisontoys",
+	"texture_size": [32, 32],
+	"textures": {
+		"0": "cobbledex:item/cobbledex_texture",
+		"particle": "cobbledex:item/cobbledex_texture"
+	},
+	"elements": [
+		{
+			"name": "Cuerpo",
+			"from": [4, 0, 8],
+			"to": [12, 11, 8.5],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 7, 7.8]},
+			"faces": {
+				"north": {"uv": [4, 0, 8, 5.5], "texture": "#0"},
+				"east": {"uv": [8, 7.5, 8.25, 13], "texture": "#0"},
+				"south": {"uv": [0, 0, 4, 5.5], "texture": "#0"},
+				"west": {"uv": [8, 0, 8.25, 5.5], "texture": "#0"},
+				"up": {"uv": [12.5, 4.75, 8.5, 4.5], "rotation": 180, "texture": "#0"},
+				"down": {"uv": [12.5, 5, 8.5, 5.25], "rotation": 180, "texture": "#0"}
+			}
+		},
+		{
+			"name": "Placa_1",
+			"from": [4, 9, 7.5],
+			"to": [12, 11, 8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 7, 7.8]},
+			"faces": {
+				"north": {"uv": [7, 6.5, 11, 7.5], "texture": "#0"},
+				"east": {"uv": [1, 10, 1.25, 11], "texture": "#0"},
+				"south": {"uv": [7, 5.5, 11, 6.5], "texture": "#0"},
+				"west": {"uv": [0.5, 10, 0.75, 11], "texture": "#0"},
+				"up": {"uv": [4, 9.75, 0, 9.5], "rotation": 180, "texture": "#0"},
+				"down": {"uv": [13.5, 0, 9.5, 0.25], "rotation": 180, "texture": "#0"}
+			}
+		},
+		{
+			"name": "Placa_2",
+			"from": [8, 8, 7.5],
+			"to": [12, 9, 8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 7, 7.8]},
+			"faces": {
+				"north": {"uv": [9.5, 1, 11.5, 1.5], "texture": "#0"},
+				"east": {"uv": [3, 10, 3.25, 10.5], "texture": "#0"},
+				"south": {"uv": [9.5, 0.5, 11.5, 1], "texture": "#0"},
+				"west": {"uv": [2.5, 10, 2.75, 10.5], "texture": "#0"},
+				"up": {"uv": [11.5, 1.75, 9.5, 1.5], "rotation": 180, "texture": "#0"},
+				"down": {"uv": [11.5, 2, 9.5, 2.25], "rotation": 180, "texture": "#0"}
+			}
+		},
+		{
+			"from": [10, 9, 7.25],
+			"to": [11, 10, 7.5],
+			"rotation": {"angle": 0, "axis": "y", "origin": [6.5, 6.5, 7.8]},
+			"faces": {
+				"north": {"uv": [2, 10, 2.5, 10.5], "texture": "#0"},
+				"east": {"uv": [5, 10, 5.25, 10.5], "texture": "#0"},
+				"south": {"uv": [1.5, 10, 2, 10.5], "texture": "#0"},
+				"west": {"uv": [4.5, 10, 4.75, 10.5], "texture": "#0"},
+				"up": {"uv": [6, 10.25, 5.5, 10], "rotation": 180, "texture": "#0"},
+				"down": {"uv": [6.5, 10, 6, 10.25], "rotation": 180, "texture": "#0"}
+			}
+		},
+		{
+			"name": "Eje",
+			"from": [4, 0, 7.5],
+			"to": [5, 9, 8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 7, 7.8]},
+			"faces": {
+				"north": {"uv": [7.5, 7.5, 8, 12], "texture": "#0"},
+				"east": {"uv": [9, 7.5, 9.25, 12], "texture": "#0"},
+				"south": {"uv": [7, 7.5, 7.5, 12], "texture": "#0"},
+				"west": {"uv": [9, 0, 9.25, 4.5], "texture": "#0"},
+				"up": {"uv": [4, 10.25, 3.5, 10], "rotation": 180, "texture": "#0"},
+				"down": {"uv": [4.5, 10, 4, 10.25], "rotation": 180, "texture": "#0"}
+			}
+		},
+		{
+			"name": "Tapa_1",
+			"from": [1, 0, 8],
+			"to": [4, 9, 8.5],
+			"rotation": {"angle": -22.5, "axis": "y", "origin": [4.5, 5, 8]},
+			"faces": {
+				"north": {"uv": [4, 5.5, 5.5, 10], "texture": "#0"},
+				"east": {"uv": [8.5, 0, 8.75, 4.5], "texture": "#0"},
+				"south": {"uv": [5.5, 5.5, 7, 10], "texture": "#0"},
+				"west": {"uv": [8.5, 7.5, 8.75, 12], "texture": "#0"},
+				"up": {"uv": [11, 3.75, 9.5, 3.5], "texture": "#0"},
+				"down": {"uv": [11, 4, 9.5, 4.25], "texture": "#0"}
+			}
+		},
+		{
+			"name": "Tapa_2",
+			"from": [-3, 0, 8],
+			"to": [1, 8, 8.5],
+			"rotation": {"angle": -22.5, "axis": "y", "origin": [4.5, 5, 8]},
+			"faces": {
+				"north": {"uv": [0, 5.5, 2, 9.5], "texture": "#0"},
+				"east": {"uv": [9.5, 7.5, 9.75, 11.5], "texture": "#0"},
+				"south": {"uv": [2, 5.5, 4, 9.5], "texture": "#0"},
+				"west": {"uv": [0, 10, 0.25, 14], "texture": "#0"},
+				"up": {"uv": [11.5, 2.75, 9.5, 2.5], "texture": "#0"},
+				"down": {"uv": [11.5, 3, 9.5, 3.25], "texture": "#0"}
+			}
+		}
+	],
+	"gui_light": "front",
+	"display": {
+		"thirdperson_righthand": {
+			"rotation": [168.1, 4.03, -176.79],
+			"translation": [0.25, 2.75, 0],
+			"scale": [0.5, 0.5, 0.5]
+		},
+		"firstperson_righthand": {
+			"rotation": [128.49, 45.88, -150.13],
+			"translation": [3.75, 2.75, -5.5]
+		},
+		"firstperson_lefthand": {
+			"rotation": [142.49, 35.39, -160.59],
+			"translation": [10.25, 0, -7.25]
+		},
+		"ground": {
+			"translation": [0, 3.5, 0],
+			"scale": [0.7, 0.7, 0.7]
+		},
+		"gui": {
+			"rotation": [0, 180, 0],
+			"translation": [-3.25, 2, 0]
+		},
+		"head": {
+			"rotation": [90, 0, 0],
+			"translation": [0.75, 6.75, 2.5]
+		},
+		"fixed": {
+			"translation": [3, 2.25, -0.5]
+		}
+	},
+	"groups": [
+		{
+			"name": "Cara Inferior",
+			"origin": [9, 1, 0.9],
+			"color": 0,
+			"children": [
+				0,
+				{
+					"name": "Placa",
+					"origin": [8.12991, 6, 8.32759],
+					"color": 0,
+					"children": [1, 2, 3]
+				}
+			]
+		},
+		4,
+		{
+			"name": "Cara Superior",
+			"origin": [1.5, 1, 0.4],
+			"color": 0,
+			"children": [5, 6]
+		}
+	]
 }

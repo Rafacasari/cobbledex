@@ -1,21 +1,16 @@
-package com.rafacasari.mod.cobbledex.network.template
-
 import com.cobblemon.mod.common.api.conditional.RegistryLikeCondition
 import com.cobblemon.mod.common.api.conditional.RegistryLikeTagCondition
-import com.cobblemon.mod.common.api.net.Encodable
 import com.cobblemon.mod.common.api.spawning.TimeRange
 import com.cobblemon.mod.common.api.spawning.condition.SpawningCondition
-import com.cobblemon.mod.common.api.spawning.detail.PokemonSpawnDetail
+import com.rafacasari.mod.cobbledex.network.server.IEncodable
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableBool
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableFloat
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableInt
-import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableBool
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableFloat
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableInt
-import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIntRange
 import com.rafacasari.mod.cobbledex.utils.logError
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.RegistryKeys
@@ -23,65 +18,7 @@ import net.minecraft.registry.tag.TagKey
 import net.minecraft.util.Identifier
 import net.minecraft.world.biome.Biome
 
-class SerializablePokemonSpawnDetail() : Encodable {
-
-    var id = ""
-    var weight: Float = -1f
-    var levelRange: IntRange? = null
-
-    var conditions: List<SerializableSpawnCondition>? = null
-    var antiConditions: List<SerializableSpawnCondition>? = null
-
-    constructor(pokemonSpawnDetail: PokemonSpawnDetail) : this()
-    {
-        this.id = pokemonSpawnDetail.id
-        this.weight = pokemonSpawnDetail.weight
-        this.levelRange = pokemonSpawnDetail.levelRange
-        this.conditions = pokemonSpawnDetail.conditions.map {
-            SerializableSpawnCondition(it)
-        }
-        this.antiConditions = pokemonSpawnDetail.anticonditions.map {
-            SerializableSpawnCondition(it)
-        }
-    }
-
-    override fun encode(buffer: PacketByteBuf) {
-        buffer.writeString(id)
-        buffer.writeFloat(weight)
-        buffer.writeNullableIntRange(levelRange)
-
-        buffer.writeCollection(conditions ?: listOf()) {
-            buff, value -> value.encode(buff)
-        }
-
-        buffer.writeCollection(antiConditions ?: listOf()) {
-                buff, value -> value.encode(buff)
-        }
-    }
-
-    companion object {
-        fun decode(buffer: PacketByteBuf) : SerializablePokemonSpawnDetail {
-            val spawnDetail = SerializablePokemonSpawnDetail()
-
-            spawnDetail.id = buffer.readString()
-            spawnDetail.weight = buffer.readFloat()
-            spawnDetail.levelRange = buffer.readNullableIntRange()
-
-            spawnDetail.conditions = buffer.readList { buf ->
-                SerializableSpawnCondition.decode(buf)
-            }
-
-            spawnDetail.antiConditions = buffer.readList { buf ->
-                SerializableSpawnCondition.decode(buf)
-            }
-
-            return spawnDetail
-        }
-    }
-
-}
-
-class SerializableSpawnCondition() : Encodable {
+class SerializableSpawnCondition() : IEncodable {
 
     constructor(condition: SpawningCondition<*>) : this() {
         this.dimensions = condition.dimensions
@@ -146,7 +83,7 @@ class SerializableSpawnCondition() : Encodable {
 
         val dimensionList = dimensions ?: listOf()
         buffer.writeCollection(dimensionList) {
-            pbb, value -> pbb.writeIdentifier(value)
+                pbb, value -> pbb.writeIdentifier(value)
         }
 
         val biomeList = biomes?.mapNotNull { biome ->
@@ -156,12 +93,12 @@ class SerializableSpawnCondition() : Encodable {
         } ?: listOf()
 
         buffer.writeCollection(biomeList) {
-            pbb, value -> pbb.writeIdentifier(value)
+                pbb, value -> pbb.writeIdentifier(value)
         }
 
         val moonPhaseRanges = moonPhase ?: mutableListOf()
         buffer.writeCollection(moonPhaseRanges) {
-            pbb, value -> pbb.writeIntRange(value)
+                pbb, value -> pbb.writeIntRange(value)
         }
 
         buffer.writeNullableBool(canSeeSky)
@@ -180,13 +117,13 @@ class SerializableSpawnCondition() : Encodable {
 
         val timeRanges = timeRange?.ranges ?: mutableListOf()
         buffer.writeCollection(timeRanges) {
-            pbb, value -> pbb.writeIntRange(value)
+                pbb, value -> pbb.writeIntRange(value)
         }
 
         val structureList = structures ?: listOf()
 
         buffer.writeCollection(structureList) {
-            pbb, value -> pbb.writeIdentifier(value)
+                pbb, value -> pbb.writeIdentifier(value)
         }
     }
 

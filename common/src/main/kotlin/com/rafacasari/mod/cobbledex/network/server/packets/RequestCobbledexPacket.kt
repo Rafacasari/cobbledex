@@ -1,21 +1,28 @@
 package com.rafacasari.mod.cobbledex.network.server.packets
 
-
 import com.rafacasari.mod.cobbledex.network.server.INetworkPacket
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.Identifier
 
-class RequestCobbledexPacket internal constructor(val pokemon: Identifier): INetworkPacket<RequestCobbledexPacket> {
+class RequestCobbledexPacket internal constructor(val pokemon: Identifier, val aspects: Set<String>): INetworkPacket<RequestCobbledexPacket> {
     override val id = ID
 
     override fun encode(buffer: PacketByteBuf) {
         buffer.writeIdentifier(pokemon)
+        buffer.writeCollection(aspects) {
+            buff, value -> buff.writeString(value)
+        }
     }
 
     companion object{
         val ID = Identifier("cobbledex", "request_cobbledex")
         fun decode(buffer: PacketByteBuf) : RequestCobbledexPacket {
-            return RequestCobbledexPacket(buffer.readIdentifier())
+            val identifier = buffer.readIdentifier()
+            val aspects = buffer.readList {
+                buff -> buff.readString()
+            }.toSet()
+
+            return RequestCobbledexPacket(identifier, aspects)
         }
     }
 }

@@ -15,8 +15,22 @@ object ReceiveCobbledexPacketHandler : IClientNetworkPacketHandler<ReceiveCobble
                 if (species != null) Pair(species, it.second) else null
             }
 
-            CobbledexGUI.Instance?.setEvolutions(evolutions)
+            val preEvolutions = packet.preevolutionList.mapNotNull {
+                val species = PokemonSpecies.getByIdentifier(it.first)
+                if (species != null) Pair(species, it.second) else null
+            }
+
+            val forms = packet.formList.mapNotNull {
+                val species = PokemonSpecies.getByIdentifier(it.first)
+                if (species != null) Pair(species, it.second) else null
+            }
+
+            CobbledexGUI.lastLoadedEvolutions = evolutions
+            CobbledexGUI.lastLoadedPreEvolutions = preEvolutions
+            CobbledexGUI.lastLoadedForms = forms
+
             CobbledexGUI.Instance?.updateInfoPage(packet.species, packet.spawnDetails, packet.pokemonDrops)
+            CobbledexGUI.Instance?.updateRelatedSpecies()
 
         } catch (e: Exception) {
             logError(e.toString())

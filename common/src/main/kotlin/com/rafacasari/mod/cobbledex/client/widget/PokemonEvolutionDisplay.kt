@@ -3,23 +3,24 @@ package com.rafacasari.mod.cobbledex.client.widget
 import com.cobblemon.mod.common.api.gui.blitk
 import com.cobblemon.mod.common.api.gui.drawPortraitPokemon
 import com.cobblemon.mod.common.api.text.bold
-import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.client.CobblemonResources
 import com.cobblemon.mod.common.client.gui.summary.SummaryButton
 import com.cobblemon.mod.common.client.render.drawScaledText
+import com.cobblemon.mod.common.client.render.models.blockbench.repository.PokemonModelRepository
 import com.cobblemon.mod.common.pokemon.Species
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
 import com.rafacasari.mod.cobbledex.utils.cobbledexResource
+import com.rafacasari.mod.cobbledex.utils.cobbledexTranslation
 
 class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolutionDisplay.EvolveSlot>(x, y, SLOT_HEIGHT + SLOT_SPACING) {
     companion object {
-        const val SLOT_HEIGHT = 25
-        const val SLOT_SPACING = 5
+        const val SLOT_HEIGHT = 27
+        const val SLOT_SPACING = 3
         const val PORTRAIT_DIAMETER = 25
-        const val PORTRAIT_OFFSET_X = 53
-        const val PORTRAIT_OFFSET_Y = 0
+        const val PORTRAIT_OFFSET_X = 54
+        const val PORTRAIT_OFFSET_Y = 1
 
         private val portraitBackground = cobbledexResource("textures/gui/evolution_slot_background.png")
         private val slotOverlay = cobbledexResource("textures/gui/evolution_slot_overlay.png")
@@ -31,13 +32,23 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
         return super.addEntry(entry)
     }
 
+    fun resetScrollPosition() { scrollAmount = 0.0 }
+
     fun clearEvolutions() = clearEntries()
 
 
     fun selectEvolutions(pokemonList: List<Pair<Species, Set<String>>>?) {
+
         clearEntries()
 
-        pokemonList?.map {
+        pokemonList?.filter {
+
+            val filteredVariations = PokemonModelRepository.variations[it.first.resourceIdentifier]?.variations?.any {
+                x -> x.model != null && x.aspects == it.second
+            }
+
+            it.second.isEmpty() || (filteredVariations != null && filteredVariations)
+        }?.map {
             EvolveSlot(it.first, it.second)
         }?.forEach { entry ->
             this.addEntry(entry)
@@ -58,8 +69,10 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
                 CobbledexGUI.Instance?.selectedAspects = aspects
                 CobbledexGUI.Instance?.setPreviewPokemon(evolution.standardForm, aspects)
 
+                CobbledexGUI.Instance?.updateMenu()
+                CobbledexGUI.Instance?.updateRelatedSpecies()
             },
-            text = "View".text(),
+            text = cobbledexTranslation("cobbledex.texts.select"),
             resource = buttonResource,
             boldText = true,
             largeText = false,
@@ -80,37 +93,10 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
             isHovered: Boolean,
             partialTicks: Float
         ) {
-            val x = rowLeft - 3
+            val x = rowLeft - 2
             val y = rowTop
             val matrices = context.matrices
 
-//            blitk(
-//                matrixStack = matrices,
-//                texture = slotResource,
-//                x = x,
-//                y = y,
-//                height = SLOT_HEIGHT,
-//                width = rowWidth
-//            )
-
-
-
-
-//            // Render Pokémon
-//            matrices.push()
-//            matrices.translate(x + (PORTRAIT_DIAMETER / 2) + 53.0, y - 3.0, 0.0)
-//            matrices.scale(2.5F, 2.5F, 1F)
-//
-//            drawProfilePokemon(
-//                species = this.evolution.species.resourceIdentifier,
-//                aspects = this.evolution.aspects,
-//                matrixStack = matrices,
-//                rotation = Quaternionf().fromEulerXYZDegrees(Vector3f(13F, 35F, 0F)),
-//                state = null,
-//                scale = 5.5F,
-//                partialTicks = partialTicks
-//            )
-//            matrices.pop()
 
             blitk(
                 matrixStack = matrices,
@@ -131,7 +117,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
             matrices.push()
             matrices.translate(
                 x + PORTRAIT_OFFSET_X + PORTRAIT_DIAMETER / 2.0 - 1.0,
-                y.toDouble() - 10,
+                y.toDouble() - 8,
                 0.0
             )
 
@@ -150,7 +136,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
                 width = rowWidth
             )
 
-            selectButton.setPosFloat(x + 1F, y + 13F)
+            selectButton.setPosFloat(x + 4.5F, y + 14F)
             selectButton.render(context, mouseX, mouseY, partialTicks)
 
             drawScaledText(

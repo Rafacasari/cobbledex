@@ -9,6 +9,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface TextHandlerAccessor {
 
     @Accessor("widthRetriever")
-    TextHandler.WidthRetriever getWidthRetriever();
+    TextHandler.WidthRetriever getCobbledexWidthRetriever();
 
 }

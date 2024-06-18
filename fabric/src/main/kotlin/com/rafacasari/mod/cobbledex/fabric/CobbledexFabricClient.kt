@@ -22,7 +22,7 @@ class CobbledexFabricClient: ClientModInitializer {
     private fun registerClientCommand(commandDispatcher: CommandDispatcher<FabricClientCommandSource>?)
     {
         try {
-            logInfo("Cobbledex: REGISTERING CLIENT COMMANDS")
+            logInfo("REGISTERING FABRIC CLIENT COMMANDS")
             commandDispatcher?.let { CobbledexCommands.registerClient(it) }
         } catch (e: Exception) {
             logError("Failed to register Cobbledex client commands!")
