@@ -31,15 +31,15 @@ import com.rafacasari.mod.cobbledex.network.template.SerializableItemDrop
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonSpawnDetail
 import com.rafacasari.mod.cobbledex.utils.*
 
-enum class CobbledexMenu {
-    Info, Battle, Evolutions
-}
-
-enum class CobbledexRelatedMenu {
-    Evolutions, PreEvolutions, Forms
-}
-
 class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<String>? = null) : Screen(cobbledexTranslation("cobbledex.texts.cobbledex")) {
+
+    enum class CobbledexMenu {
+        Info, Battle, Evolutions
+    }
+
+    enum class CobbledexRelatedMenu {
+        Evolutions, PreEvolutions, Forms
+    }
 
     companion object
     {

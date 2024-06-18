@@ -1,6 +1,5 @@
 package com.rafacasari.mod.cobbledex.network.template
 
-import SerializableSpawnCondition
 import com.cobblemon.mod.common.api.spawning.detail.PokemonSpawnDetail
 import com.rafacasari.mod.cobbledex.network.server.IEncodable
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableIntRange

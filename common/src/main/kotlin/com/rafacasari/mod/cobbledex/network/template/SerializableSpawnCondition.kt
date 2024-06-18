@@ -1,3 +1,5 @@
+package com.rafacasari.mod.cobbledex.network.template
+
 import com.cobblemon.mod.common.api.conditional.RegistryLikeCondition
 import com.cobblemon.mod.common.api.conditional.RegistryLikeTagCondition
 import com.cobblemon.mod.common.api.spawning.TimeRange

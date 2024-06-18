@@ -64,7 +64,6 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
             buttonWidth = 40,
             buttonHeight = 10,
             clickAction = {
-
                 CobbledexGUI.Instance?.selectedPokemon = evolution.standardForm
                 CobbledexGUI.Instance?.selectedAspects = aspects
                 CobbledexGUI.Instance?.setPreviewPokemon(evolution.standardForm, aspects)

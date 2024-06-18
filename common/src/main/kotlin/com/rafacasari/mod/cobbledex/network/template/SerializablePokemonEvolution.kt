@@ -4,6 +4,11 @@ import com.cobblemon.mod.common.api.conditional.RegistryLikeTagCondition
 import com.cobblemon.mod.common.api.pokemon.evolution.Evolution
 import com.cobblemon.mod.common.api.pokemon.evolution.requirement.EvolutionRequirement
 import com.cobblemon.mod.common.pokemon.evolution.requirements.*
+import com.cobblemon.mod.common.pokemon.evolution.requirements.template.EntityQueryRequirement
+import com.cobblemon.mod.common.pokemon.evolution.variants.BlockClickEvolution
+import com.cobblemon.mod.common.pokemon.evolution.variants.ItemInteractionEvolution
+import com.cobblemon.mod.common.pokemon.evolution.variants.LevelUpEvolution
+import com.cobblemon.mod.common.pokemon.evolution.variants.TradeEvolution
 import com.rafacasari.mod.cobbledex.network.server.IEncodable
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableIdentifier
@@ -20,12 +25,36 @@ import net.minecraft.item.Item
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.Identifier
 
-class SerializablePokemonEvolution : IEncodable {
-
+class SerializablePokemonEvolution() : IEncodable {
 
     lateinit var requirements: List<SerializableEvolutionRequirement>
 
-    constructor(evolution: Evolution) {
+
+    constructor(evolution: Evolution) : this() {
+        when(evolution) {
+            is BlockClickEvolution -> {
+                evolution.requiredContext
+            }
+
+            is ItemInteractionEvolution -> {
+
+            }
+
+            is LevelUpEvolution -> {
+
+            }
+
+            is TradeEvolution -> {
+
+            }
+
+            // No context available, so it's just conditions?
+            else -> {
+
+                logInfo("No context reader for $evolution")
+            }
+        }
+
         requirements = evolution.requirements.map {
             SerializableEvolutionRequirement(it)
         }
@@ -36,7 +65,12 @@ class SerializablePokemonEvolution : IEncodable {
     }
 
     companion object {
+        fun decode(reader: PacketByteBuf) : SerializablePokemonEvolution
+        {
+            val evolution = SerializablePokemonEvolution()
 
+            return evolution
+        }
     }
 }
 
@@ -62,7 +96,9 @@ enum class EvolutionRequirementType {
     PROPERTY_RANGE,
     RECOIL,
     STAT_EQUAL,
-    TIME_RANGE
+    TIME_RANGE,
+    USE_MOVE,
+    ENTITY_QUERY,
 }
 
 class SerializableEvolutionRequirement(): IEncodable {
@@ -180,6 +216,29 @@ class SerializableEvolutionRequirement(): IEncodable {
                 type = EvolutionRequirementType.TIME_RANGE
                 listIntRange = requirement.range.ranges
             }
+
+            is UseMoveRequirement -> {
+                type = EvolutionRequirementType.USE_MOVE
+                stringValue = requirement.move.name
+                value = requirement.amount
+            }
+
+            is EntityQueryRequirement -> {
+                type = EvolutionRequirementType.ENTITY_QUERY
+                logInfo("No data available for EntityQuery")
+            }
+
+            // Don't seem to be requirement?
+//            is BlockClickEvolution -> {
+//                type = EvolutionRequirementType.BLOCK_CLICK
+//                identifier = (requirement.requiredContext as RegistryLikeTagCondition<Block>).tag.id
+//            }
+//
+//            // Don't seem to be requirement?
+//            is ItemInteractionEvolution -> {
+//                type = EvolutionRequirementType.ITEM_INTERACTION
+//                identifier = (requirement.requiredContext.item as RegistryLikeTagCondition<Item>).tag.id
+//            }
 
             else -> {
                 logInfo("No serializer found for $requirement")
