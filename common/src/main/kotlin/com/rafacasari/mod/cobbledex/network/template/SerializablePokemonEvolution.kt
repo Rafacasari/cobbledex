@@ -1,294 +1,225 @@
 package com.rafacasari.mod.cobbledex.network.template
 
+import com.cobblemon.mod.common.api.conditional.RegistryLikeCondition
 import com.cobblemon.mod.common.api.conditional.RegistryLikeTagCondition
+import com.cobblemon.mod.common.api.pokemon.PokemonProperties
+import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.api.pokemon.evolution.Evolution
-import com.cobblemon.mod.common.api.pokemon.evolution.requirement.EvolutionRequirement
-import com.cobblemon.mod.common.pokemon.evolution.requirements.*
-import com.cobblemon.mod.common.pokemon.evolution.requirements.template.EntityQueryRequirement
+import com.cobblemon.mod.common.api.text.bold
+import com.cobblemon.mod.common.api.text.plus
+import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.pokemon.evolution.variants.BlockClickEvolution
 import com.cobblemon.mod.common.pokemon.evolution.variants.ItemInteractionEvolution
 import com.cobblemon.mod.common.pokemon.evolution.variants.LevelUpEvolution
 import com.cobblemon.mod.common.pokemon.evolution.variants.TradeEvolution
+import com.cobblemon.mod.common.util.asTranslated
+import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.network.server.IEncodable
-import com.rafacasari.mod.cobbledex.utils.PacketUtils.readIntRange
+import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonEvolution.PokemonEvolutionType.*
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableIdentifier
-import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableInt
-import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableString
-import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIdentifier
-import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableInt
-import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableString
 import com.rafacasari.mod.cobbledex.utils.logInfo
+import com.rafacasari.mod.cobbledex.utils.logWarn
+import net.minecraft.block.Block
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 
 class SerializablePokemonEvolution() : IEncodable {
 
+    enum class PokemonEvolutionType {
+        BlockClick,
+        ItemInteraction,
+        LevelUp,
+        Trade,
+        Unknown
+    }
+
     lateinit var requirements: List<SerializableEvolutionRequirement>
+
+    fun drawInfo(longTextDisplay: LongTextDisplay) {
+        species?.let { pokemon ->
+            longTextDisplay.addPokemon(pokemon, resultAspects, pokemon.translatedName, true)
+
+            when (evolutionType) {
+                BlockClick -> {
+                    logInfo("${pokemon.name} evolution is BlockClick")
+                    requiredContextIdentifier?.let { itemIdentifier ->
+                        val item = Registries.BLOCK.get(itemIdentifier)
+                        val itemStack = ItemStack(item)
+                        longTextDisplay.addItemEntry(itemStack, "Right click a ".text() + item.translationKey.asTranslated().bold())
+                    }
+                }
+                ItemInteraction -> {
+                    requiredContextIdentifier?.let { itemIdentifier ->
+                        val item = Registries.ITEM.get(itemIdentifier)
+
+                        val itemStack = ItemStack(item)
+                        longTextDisplay.addItemEntry(itemStack, "Use a ".text() + item.translationKey.asTranslated().bold(), false)
+                    }
+                }
+
+
+                LevelUp -> {
+                    // Seems level up isn't actually level up, it's just a passive thing that check for the **conditions**
+                }
+
+                Trade -> {
+                    longTextDisplay.addText("Trade to evolve".text())
+                    // TODO: Does it need a specific trade?
+                }
+
+                Unknown -> {
+                    // What we do here?
+                }
+            }
+
+            if (requirements.isNotEmpty()) {
+                longTextDisplay.addText("Conditions: ".text().bold(), false)
+                requirements.forEach { req -> req.addText(longTextDisplay) }
+            }
+        }
+    }
+
+    lateinit var evolutionType: PokemonEvolutionType
+
+    private var speciesIdentifier: Identifier? = null
+    lateinit var resultAspects: Set<String>
+
+    var consumeHeldItem: Boolean = false
+    var requiredContextIdentifier: Identifier? = null
+
+    // Used just on Trade context
+    private var tradePokemonString: String? = null
+
+    // Lazy properties
+    val species by lazy {
+        speciesIdentifier?.let {
+            PokemonSpecies.getByIdentifier(it)
+        }
+    }
+
+    val tradePokemon by lazy {
+        tradePokemonString?.let {
+            PokemonProperties.parse(it)
+        }
+    }
+
 
 
     constructor(evolution: Evolution) : this() {
+        // species should always have a value, but since it's not a guaranteed result \
+        evolution.result.species?.let { speciesIdentifier = PokemonSpecies.getByName(it)?.resourceIdentifier }
+        resultAspects = evolution.result.aspects
+
+        // Common variables (available in all types-)
+        consumeHeldItem = evolution.consumeHeldItem
+        requirements = evolution.requirements.map {
+            SerializableEvolutionRequirement(it)
+        }
+
         when(evolution) {
             is BlockClickEvolution -> {
-                evolution.requiredContext
+                evolutionType = BlockClick
+                val block = evolution.requiredContext
+                if (block is RegistryLikeTagCondition<Block>)
+                    requiredContextIdentifier = block.tag.id
+                else logWarn("Is not a RegistryLikeTagCondition")
             }
 
             is ItemInteractionEvolution -> {
+                evolutionType = ItemInteraction
+                val item: RegistryLikeCondition<Item> = evolution.requiredContext.item
+                logInfo("ID: " + evolution.id)
+                // Let's start cache-ing!
+                requiredContextIdentifier = speciesIdentifier?.let { speciesId ->
+                    // val pair = Pair(speciesId, resultAspects)
+                    // Check for cache, using Identifier and Aspects as a unique-key
+                    if(evolutionItemCache.containsKey(evolution.id))
+                        return@let evolutionItemCache[evolution.id]
+                    else
+                    {
+                        logInfo("Using from cache")
+                        // Cache not found, let's create it and store
+                        evolutionItemCache[evolution.id] = Registries.ITEM.ids.firstOrNull {
+                            item.fits(Registries.ITEM.get(it), Registries.ITEM)
+                        }
 
+                        return@let evolutionItemCache[evolution.id]
+                    }
+                }
+
+
+
+//                if (item is RegistryLikeTagCondition<Item>) {
+//                    // this is never called because it's not a RegistryLikeTagCondition
+//                    requiredContextIdentifier = item.tag.id
+//                }
+//
+//                //requiredContextIdentifier = (item as RegistryLikeTagCondition<Item>).tag.id
+//                logInfo(if (requiredContextIdentifier == null) "Item is null" else "Item not null")
             }
 
             is LevelUpEvolution -> {
-
+                evolutionType = LevelUp
+                logInfo("ID: " + evolution.id)
+                // Don't have parameter? Seems just need the level up condition in evolution.requirements
             }
 
             is TradeEvolution -> {
-
+                evolutionType = Trade
+                tradePokemonString = evolution.requiredContext.asString()
             }
 
-            // No context available, so it's just conditions?
             else -> {
-
+                evolutionType = Unknown
                 logInfo("No context reader for $evolution")
             }
         }
 
-        requirements = evolution.requirements.map {
-            SerializableEvolutionRequirement(it)
-        }
+
     }
 
     override fun encode(buffer: PacketByteBuf) {
 
+        buffer.writeEnumConstant(evolutionType)
+        buffer.writeNullableIdentifier(speciesIdentifier)
+        buffer.writeCollection(resultAspects) {
+                buff, value -> buff.writeString(value)
+        }
+
+        buffer.writeBoolean(consumeHeldItem)
+        buffer.writeNullableIdentifier(requiredContextIdentifier)
+        buffer.writeNullableString(tradePokemonString)
+
+        buffer.writeCollection(requirements) {
+            buff, value -> value.encode(buff)
+        }
     }
 
     companion object {
+        val evolutionItemCache: MutableMap<String, Identifier?> = mutableMapOf()
+
         fun decode(reader: PacketByteBuf) : SerializablePokemonEvolution
         {
             val evolution = SerializablePokemonEvolution()
+            evolution.evolutionType = reader.readEnumConstant(PokemonEvolutionType::class.java)
+            evolution.speciesIdentifier = reader.readNullableIdentifier()
+            evolution.resultAspects = reader.readList { it.readString() }.toSet()
+
+            evolution.consumeHeldItem = reader.readBoolean()
+            evolution.requiredContextIdentifier = reader.readNullableIdentifier()
+            evolution.tradePokemonString = reader.readNullableString()
+
+            evolution.requirements = reader.readList {
+                SerializableEvolutionRequirement.decode(it)
+            }
 
             return evolution
-        }
-    }
-}
-
-enum class EvolutionRequirementType {
-    // Completed with X (value) Damage Taken
-    DAMAGE_TAKEN,
-    // Completed when giving a specific item (identifier) to Pokémon hold
-    HELD_ITEM,
-    // Completed when Pokémon reach X (value.toInt) friendship
-    FRIENDSHIP,
-    // Completed when any of the child requirements (anyRequirement) is complete
-    ANY_REQUIREMENT,
-    ATTACK_DEFENSE_RATIO,
-    BATTLE_CRITICAL_HITS,
-    BLOCKS_TRAVELED,
-    DEFEAT,
-    LEVEL,
-    MOVE_SET,
-    MOVE_TYPE,
-    PARTY_MEMBER,
-    PLAYER_AS_ADVANCEMENT,
-    POKEMON_PROPERTIES,
-    PROPERTY_RANGE,
-    RECOIL,
-    STAT_EQUAL,
-    TIME_RANGE,
-    USE_MOVE,
-    ENTITY_QUERY,
-}
-
-class SerializableEvolutionRequirement(): IEncodable {
-
-
-    lateinit var type: EvolutionRequirementType
-    var value: Int? = null
-    var intRange: IntRange? = null
-    var stringValue: String? = null
-    var identifier: Identifier? = null
-    var anyRequirement: List<SerializableEvolutionRequirement>? = null
-
-    var listIntRange: List<IntRange>? = null
-
-    val attackDefenceRatio: AttackDefenceRatioRequirement.AttackDefenceRatio? by lazy {
-        if (value != null)
-            return@lazy AttackDefenceRatioRequirement.AttackDefenceRatio.entries[value!!]
-        else
-            return@lazy null
-    }
-
-    constructor (requirement: EvolutionRequirement) : this() {
-
-        when(requirement)
-        {
-            is DamageTakenRequirement -> {
-                type = EvolutionRequirementType.DAMAGE_TAKEN
-                value = requirement.amount
-            }
-
-            is HeldItemRequirement -> {
-                type = EvolutionRequirementType.HELD_ITEM
-                identifier = (requirement.itemCondition.item as RegistryLikeTagCondition<Item>).tag.id
-            }
-
-            is FriendshipRequirement -> {
-                type = EvolutionRequirementType.FRIENDSHIP
-                value = requirement.amount
-            }
-
-            is AnyRequirement -> {
-                type = EvolutionRequirementType.ANY_REQUIREMENT
-                anyRequirement = requirement.possibilities.map { SerializableEvolutionRequirement(it) }
-            }
-
-            is AttackDefenceRatioRequirement -> {
-                type = EvolutionRequirementType.ATTACK_DEFENSE_RATIO
-                value = requirement.ratio.ordinal
-            }
-
-            is BattleCriticalHitsRequirement -> {
-                type = EvolutionRequirementType.BATTLE_CRITICAL_HITS
-                value = requirement.amount
-            }
-
-            is BlocksTraveledRequirement -> {
-                type = EvolutionRequirementType.BLOCKS_TRAVELED
-                value = requirement.amount
-            }
-
-            is DefeatRequirement -> {
-                type = EvolutionRequirementType.DEFEAT
-                value = requirement.amount
-            }
-
-            is LevelRequirement -> {
-                type = EvolutionRequirementType.LEVEL
-                intRange = IntRange(requirement.minLevel, requirement.maxLevel)
-            }
-
-            is MoveSetRequirement -> {
-                type = EvolutionRequirementType.MOVE_SET
-                stringValue = requirement.move.name
-            }
-
-            is MoveTypeRequirement -> {
-                type = EvolutionRequirementType.MOVE_TYPE
-                stringValue = requirement.type.name
-            }
-
-            is PartyMemberRequirement -> {
-                type = EvolutionRequirementType.PARTY_MEMBER
-                // Should use PokemonProperties.parse(stringValue) to read!
-                stringValue = requirement.target.asString(" ")
-            }
-
-            is PlayerHasAdvancementRequirement -> {
-                type = EvolutionRequirementType.PLAYER_AS_ADVANCEMENT
-                identifier = requirement.requiredAdvancement
-            }
-
-            is PokemonPropertiesRequirement -> {
-                type = EvolutionRequirementType.POKEMON_PROPERTIES
-                // Should use PokemonProperties.parse(stringValue) to read!
-                stringValue = requirement.target.asString(" ")
-            }
-
-            is PropertyRangeRequirement -> {
-                type = EvolutionRequirementType.PROPERTY_RANGE
-                stringValue = requirement.feature
-                intRange = requirement.range
-            }
-
-            is RecoilRequirement -> {
-                type = EvolutionRequirementType.RECOIL
-                value = requirement.amount
-            }
-
-            is StatEqualRequirement -> {
-                type = EvolutionRequirementType.STAT_EQUAL
-                stringValue = "${requirement.statOne}-${requirement.statTwo}"
-            }
-
-            is TimeRangeRequirement -> {
-                type = EvolutionRequirementType.TIME_RANGE
-                listIntRange = requirement.range.ranges
-            }
-
-            is UseMoveRequirement -> {
-                type = EvolutionRequirementType.USE_MOVE
-                stringValue = requirement.move.name
-                value = requirement.amount
-            }
-
-            is EntityQueryRequirement -> {
-                type = EvolutionRequirementType.ENTITY_QUERY
-                logInfo("No data available for EntityQuery")
-            }
-
-            // Don't seem to be requirement?
-//            is BlockClickEvolution -> {
-//                type = EvolutionRequirementType.BLOCK_CLICK
-//                identifier = (requirement.requiredContext as RegistryLikeTagCondition<Block>).tag.id
-//            }
-//
-//            // Don't seem to be requirement?
-//            is ItemInteractionEvolution -> {
-//                type = EvolutionRequirementType.ITEM_INTERACTION
-//                identifier = (requirement.requiredContext.item as RegistryLikeTagCondition<Item>).tag.id
-//            }
-
-            else -> {
-                logInfo("No serializer found for $requirement")
-            }
-        }
-
-    }
-
-    override fun encode(buffer: PacketByteBuf) {
-
-        buffer.writeEnumConstant(type)
-        buffer.writeNullableInt(value)
-        buffer.writeNullableIntRange(intRange)
-        buffer.writeNullableString(stringValue)
-        buffer.writeNullableIdentifier(identifier)
-
-        val anyReq = anyRequirement ?: listOf()
-        buffer.writeCollection(anyReq) {
-            buff, value -> value.encode(buff)
-        }
-
-        buffer.writeBoolean(listIntRange != null)
-        listIntRange?.let {
-            buffer.writeCollection(it) {
-                buff, value -> buff.writeIntRange(value)
-            }
-        }
-    }
-
-    companion object
-    {
-        fun decode(reader: PacketByteBuf) : SerializableEvolutionRequirement {
-            val requirement = SerializableEvolutionRequirement()
-
-            requirement.type = reader.readEnumConstant(EvolutionRequirementType::class.java)
-            requirement.value = reader.readNullableInt()
-            requirement.intRange = reader.readNullableIntRange()
-            requirement.stringValue = reader.readNullableString()
-            requirement.identifier = reader.readNullableIdentifier()
-
-            requirement.anyRequirement = reader.readList {
-                listReader -> decode(listReader)
-            }
-
-            requirement.listIntRange = if(reader.readBoolean()) reader.readList {
-                listReader -> listReader.readIntRange()
-            } else null
-
-
-            return requirement
         }
     }
 }

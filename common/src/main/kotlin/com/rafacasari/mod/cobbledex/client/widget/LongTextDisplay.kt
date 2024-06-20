@@ -1,7 +1,10 @@
 package com.rafacasari.mod.cobbledex.client.widget
 
 import com.cobblemon.mod.common.api.text.text
+import com.cobblemon.mod.common.pokemon.Species
+import com.rafacasari.mod.cobbledex.client.widget.entries.EmptyEntry
 import com.rafacasari.mod.cobbledex.client.widget.entries.ItemEntry
+import com.rafacasari.mod.cobbledex.client.widget.entries.PokemonEntry
 import com.rafacasari.mod.cobbledex.client.widget.entries.TextEntry
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
@@ -55,7 +58,7 @@ class LongTextDisplay (
     fun addText(entry: MutableText, breakLine: Boolean = true, shadow: Boolean = false) {
 
         if (breakLine && super.getEntryCount() > 0) {
-            super.addEntry(TextEntry(null))
+            addEmptyEntry()
         }
 
         val textRenderer = MinecraftClient.getInstance().textRenderer
@@ -67,7 +70,7 @@ class LongTextDisplay (
     fun addItemEntry(item: ItemStack, entry: Text, breakLine: Boolean = true) {
 
         if (breakLine && super.getEntryCount() > 0)
-            super.addEntry(TextEntry(null))
+            addEmptyEntry()
 
         val textRenderer = MinecraftClient.getInstance().textRenderer
         val reorderedTexts = Language.getInstance()
@@ -83,6 +86,16 @@ class LongTextDisplay (
     private fun addItemEntryInternal(item: ItemStack, text: OrderedText) : Int
     {
         return super.addEntry(ItemEntry(item, text))
+    }
+
+    fun addPokemon(pokemon: Species, aspects: Set<String>, translatedName: MutableText, breakLine: Boolean = false) {
+
+        if (breakLine && super.getEntryCount() > 0)
+            addEmptyEntry()
+
+        super.addEntry(PokemonEntry(pokemon, aspects, translatedName.asOrderedText()))
+        super.addEntry(EmptyEntry())
+
     }
 
     fun clear() {
@@ -158,6 +171,9 @@ class LongTextDisplay (
         scrollAmount = 0.0
     }
 
+    fun addEmptyEntry() {
+        super.addEntry(EmptyEntry())
+    }
 
     abstract class TextDisplayEntry : Entry<TextDisplayEntry>() {
         override fun getNarration(): Text = "".text()

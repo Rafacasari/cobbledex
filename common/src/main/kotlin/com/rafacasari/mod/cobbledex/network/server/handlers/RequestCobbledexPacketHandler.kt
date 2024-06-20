@@ -5,6 +5,7 @@ import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCobbledexPacke
 import com.rafacasari.mod.cobbledex.network.server.IServerNetworkPacketHandler
 import com.rafacasari.mod.cobbledex.network.server.packets.RequestCobbledexPacket
 import com.rafacasari.mod.cobbledex.network.template.SerializableItemDrop
+import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonEvolution
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonSpawnDetail
 import com.rafacasari.mod.cobbledex.utils.CobblemonUtils
 import net.minecraft.server.MinecraftServer
@@ -16,12 +17,21 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
 
         if (pokemon != null ) {
 
-            val evolutions = pokemon.evolutions.filter {
-                it.result.species != null
-            }.mapNotNull {
-                val identifier = PokemonSpecies.getByName(it.result.species!!)?.resourceIdentifier
-                if (identifier != null) identifier to it.result.aspects
-                else null
+//            val evolutions = pokemon.evolutions.filter {
+//                it.result.species != null
+//            }.mapNotNull {
+//                val identifier = PokemonSpecies.getByName(it.result.species!!)?.resourceIdentifier
+//                if (identifier != null) identifier to it.result.aspects
+//                else null
+//            }
+
+            val evolutions = pokemon.evolutions.mapNotNull {
+                it.result.species?.let { evoSpeciesName ->
+                    val evoSpecies = PokemonSpecies.getByName(evoSpeciesName)
+                    if(evoSpecies != null)
+                        SerializablePokemonEvolution(it)
+                    else null
+                }
             }
 
             // Select all pre-evolution forms or just the default form

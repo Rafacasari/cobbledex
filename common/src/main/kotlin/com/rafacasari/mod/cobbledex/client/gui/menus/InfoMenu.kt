@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.Style
+import net.minecraft.text.Text
 import net.minecraft.world.biome.Biome
 
 object InfoMenu {
@@ -27,8 +28,7 @@ object InfoMenu {
             longTextDisplay.addText(pokedex.asTranslated())
         }
 
-        if (!pokemonDrops.isNullOrEmpty())
-        {
+        if (!pokemonDrops.isNullOrEmpty()) {
             longTextDisplay.addText(cobbledexTranslation("cobbledex.texts.drops").bold())
             pokemonDrops.forEach { itemDrop ->
                 val itemStack = ItemStack(Registries.ITEM.get(itemDrop.item))
@@ -37,12 +37,13 @@ object InfoMenu {
                 val quantityRange = itemDrop.quantityRange
                 val quantity: String = if (quantityRange.first == quantityRange.last) quantityRange.first.toString() else "${quantityRange.first}-${quantityRange.last}"
 
-                val text = "item.${itemDrop.item.toTranslationKey()}".asTranslated()
-                text.add(" | ${itemDrop.percentage.format()}% | ${quantity}x".text())
-
-                longTextDisplay.addItemEntry(itemStack, text, false)
-                //longTextDisplay.addText(text, false)
-
+                val translation = Text.translatable(
+                    "cobbledex.texts.drops.item",
+                    itemStack.name,
+                    itemDrop.percentage.format(),
+                    quantity
+                )
+                longTextDisplay.addItemEntry(itemStack, translation, false)
             }
 
         }
@@ -172,11 +173,7 @@ object InfoMenu {
                             }
 
                             val hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltipText)
-
-                            longTextDisplay.addText(
-                                condition.asTranslated().setStyle(Style.EMPTY.withHoverEvent(hoverEvent)),
-                                false
-                            )
+                            longTextDisplay.addText(condition.asTranslated().setStyle(Style.EMPTY.withHoverEvent(hoverEvent)), false)
                         }
                     }
                 }
