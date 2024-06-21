@@ -11,7 +11,7 @@ object CobbledexConstants {
         return "${Cobbledex.MOD_ID}.errors.$name"
     }
 
-    val NotAPokemon by lazy { buildErrorMessage("NotAPokemon") }
+    val invalid_entity by lazy { buildErrorMessage("NotAPokemon") }
 
     val Cobbledex_Item = CobbledexItem(Item.Settings().maxCount(1).rarity(Rarity.COMMON))
 }

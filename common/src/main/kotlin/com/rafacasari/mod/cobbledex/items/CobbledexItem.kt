@@ -30,9 +30,9 @@ class CobbledexItem(settings: Settings) : Item(settings) {
         }
 
         if (target !is PokemonEntity) {
-            if (player.world.isClient) {
-                player.sendMessage(Text.translatable(CobbledexConstants.NotAPokemon))
-            }
+            if (player.world.isClient)
+                player.sendMessage(Text.translatable(CobbledexConstants.invalid_entity))
+
             return ActionResult.FAIL
         }
 

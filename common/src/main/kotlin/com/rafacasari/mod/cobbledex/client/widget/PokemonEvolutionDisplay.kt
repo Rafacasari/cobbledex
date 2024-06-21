@@ -64,9 +64,11 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
             buttonWidth = 40,
             buttonHeight = 10,
             clickAction = {
-                CobbledexGUI.Instance?.selectedPokemon = evolution.standardForm
+                val form = evolution.getForm(aspects)
+
+                CobbledexGUI.Instance?.selectedPokemon = form
                 CobbledexGUI.Instance?.selectedAspects = aspects
-                CobbledexGUI.Instance?.setPreviewPokemon(evolution.standardForm, aspects)
+                CobbledexGUI.Instance?.setPreviewPokemon(form, aspects)
 
                 CobbledexGUI.Instance?.updateMenu()
                 CobbledexGUI.Instance?.updateRelatedSpecies()

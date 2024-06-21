@@ -4,7 +4,7 @@ import com.rafacasari.mod.cobbledex.network.server.INetworkPacket
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.Identifier
 
-class RequestCobbledexPacket internal constructor(val pokemon: Identifier, val aspects: Set<String>): INetworkPacket<RequestCobbledexPacket> {
+class RequestCobbledexPacket internal constructor(val pokemon: Identifier, val aspects: Set<String>, val form: String = ""): INetworkPacket<RequestCobbledexPacket> {
     override val id = ID
 
     override fun encode(buffer: PacketByteBuf) {
@@ -12,6 +12,7 @@ class RequestCobbledexPacket internal constructor(val pokemon: Identifier, val a
         buffer.writeCollection(aspects) {
             buff, value -> buff.writeString(value)
         }
+        buffer.writeString(form)
     }
 
     companion object{
@@ -21,8 +22,8 @@ class RequestCobbledexPacket internal constructor(val pokemon: Identifier, val a
             val aspects = buffer.readList {
                 buff -> buff.readString()
             }.toSet()
-
-            return RequestCobbledexPacket(identifier, aspects)
+            val form = buffer.readString()
+            return RequestCobbledexPacket(identifier, aspects, form)
         }
     }
 }

@@ -79,7 +79,8 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
         // Cache
         private var lastLoadedSpecies: Species? = null
-        private var lastLoadedAspects: Set<String>? = null
+        private var lastLoadedForm: FormData? = null
+
         private var lastLoadedSpawnDetails: List<SerializablePokemonSpawnDetail>? = null
         private var lastLoadedPokemonDrops: List<SerializableItemDrop>? = null
 
@@ -379,21 +380,14 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
         evolutionDisplay?.clearEvolutions()
 
+        // Don't should be needed, since we are never storing aspects that aren't part of form
         val aspects = pokemonAspects?.let {
             CobblemonUtils.removeUnnecessaryAspects(it)
         } ?: setOf()
 
-        // Request Pokémon Info to server and load into cache in Packet Handler (See ReceiveCobbledexPacketHandler)
-//        if (pokemon != null
-//            && ((lastLoadedSpecies == null || lastLoadedSpecies != pokemon.species)
-//            || (lastLoadedAspects == null || lastLoadedAspects != pokemonAspects))) {
-        if (pokemon != null
-            && ((lastLoadedSpecies == null || lastLoadedSpecies != pokemon.species)
-                    || (lastLoadedAspects == null || lastLoadedAspects != pokemonAspects))) {
-            logInfo("Requested Cobbledex Packet")
-            lastLoadedAspects = aspects
+        if (pokemon != null && (lastLoadedSpecies == null || lastLoadedSpecies != pokemon.species || (lastLoadedForm == null) || lastLoadedForm != pokemon)) {
+            lastLoadedForm = pokemon
 
-            // TODO: Packet seems to be called always, check why
             RequestCobbledexPacket(pokemon.species.resourceIdentifier, aspects).sendToServer()
         }
 
@@ -405,7 +399,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
                 pY = y + 41,
                 pWidth = PORTRAIT_SIZE,
                 pHeight = PORTRAIT_SIZE,
-                pokemon = RenderablePokemon(pokemon.species, pokemonAspects ?: setOf()),
+                pokemon = RenderablePokemon(pokemon.species, pokemon.aspects.toSet()),
                 baseScale = 1.8F,
                 rotationY = 345F,
                 offsetY = -10.0

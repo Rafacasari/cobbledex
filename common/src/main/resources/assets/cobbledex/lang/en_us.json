@@ -23,8 +23,9 @@
 
   "cobbledex.texts.no_evolution_found": "No evolution found for %s",
   "cobbledex.evolution.use_item": "Use a %s",
-  "cobbledex.evolution.trade": "Complete a trade",
-  "cobbledex.evolution.trade_or_link_cable": "Trade or use %s",
+
+  "cobbledex.evolution.trade_any": "Complete any trade or use a %s",
+  "cobbledex.evolution.trade_specific": "Trade for an %s or use a %s",
 
   "cobbledex.evolution.damage_taken": "Need %s damage taken",
   "cobbledex.evolution.level": "Level: %s",

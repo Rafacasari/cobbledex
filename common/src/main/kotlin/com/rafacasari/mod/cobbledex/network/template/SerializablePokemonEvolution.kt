@@ -74,19 +74,15 @@ class SerializablePokemonEvolution() : IEncodable {
 
                     val item = Registries.ITEM.get(Identifier("cobblemon", "link_cable"))
                     val itemStack = ItemStack(item)
-                    val translation = Text.translatable("cobbledex.evolution.trade_or_link_cable", itemStack.name.bold())
+
+                    val translation =  tradePokemon?.species?.let { speciesName ->
+                        val tradeSpecies = PokemonSpecies.getByName(speciesName)
+                        if (tradeSpecies != null)
+                            Text.translatable("cobbledex.evolution.trade_specific", tradeSpecies.translatedName.bold(), itemStack.name.bold())
+                        Text.translatable("cobbledex.evolution.trade_specific", speciesName.text().bold(), itemStack.name.bold())
+                    } ?: Text.translatable("cobbledex.evolution.trade_any", itemStack.name.bold())
+
                     longTextDisplay.addItemEntry(itemStack, translation, false, disableTooltip = false)
-//                    if (tradePokemonString.isNullOrEmpty()) {
-//                        val item = Registries.ITEM.get(Identifier("cobblemon", "link_cable"))
-//                        val itemStack = ItemStack(item)
-//                        val translation = Text.translatable("cobbledex.evolution.trade_or_link_cable", itemStack.name.bold())
-//                        longTextDisplay.addItemEntry(itemStack, translation, false, disableTooltip = false)
-//                    } else {
-//                        longTextDisplay.addText(Text.translatable("cobbledex.evolution.trade"), false)
-//                        tradePokemonString?.let { properties ->
-//                            longTextDisplay.addText(properties.text(), false)
-//                        }
-//                    }
                 }
 
                 Unknown -> {
