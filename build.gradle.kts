@@ -5,6 +5,9 @@ plugins {
 
     id("dev.architectury.loom") version ("1.6-SNAPSHOT") apply false
     id("architectury-plugin") version ("3.4-SNAPSHOT") apply false
+
+    id("net.kyori.blossom") version "2.1.0" apply false
+    id("org.jetbrains.gradle.plugin.idea-ext") version ("1.1.8") apply false
 }
 
 group = "${property("maven_group")}"
@@ -23,4 +26,3 @@ allprojects {
         maven("https://thedarkcolour.github.io/KotlinForForge/")
     }
 }
-

@@ -1,6 +1,7 @@
 package com.rafacasari.mod.cobbledex.network.server.handlers
 
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
+import com.rafacasari.mod.cobbledex.Cobbledex
 import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCobbledexPacket
 import com.rafacasari.mod.cobbledex.network.server.IServerNetworkPacketHandler
 import com.rafacasari.mod.cobbledex.network.server.packets.RequestCobbledexPacket
@@ -16,23 +17,15 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
         val pokemon = PokemonSpecies.getByIdentifier(packet.pokemon)
 
         if (pokemon != null ) {
-
-//            val evolutions = pokemon.evolutions.filter {
-//                it.result.species != null
-//            }.mapNotNull {
-//                val identifier = PokemonSpecies.getByName(it.result.species!!)?.resourceIdentifier
-//                if (identifier != null) identifier to it.result.aspects
-//                else null
-//            }
-
-            val evolutions = pokemon.evolutions.mapNotNull {
+            val serverConfig = Cobbledex.getConfig()
+            val evolutions = if (serverConfig.showEvolutions) pokemon.evolutions.mapNotNull {
                 it.result.species?.let { evoSpeciesName ->
                     val evoSpecies = PokemonSpecies.getByName(evoSpeciesName)
                     if(evoSpecies != null)
                         SerializablePokemonEvolution(it)
                     else null
                 }
-            }
+            } else listOf()
 
             // Select all pre-evolution forms or just the default form
             val preEvolutions = pokemon.preEvolution?.let { preEvolution ->
@@ -51,15 +44,15 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
                 identifier to it.aspects.toSet()
             }
 
-            val spawnDetails = CobblemonUtils.getSpawnDetails(pokemon, packet.aspects)
+            val spawnDetails = if(serverConfig.howToFindEnabled) CobblemonUtils.getSpawnDetails(pokemon, packet.aspects) else listOf()
 
             val serializableSpawnDetails = spawnDetails.map {
                 SerializablePokemonSpawnDetail(it)
             }
 
-            val drops = CobblemonUtils.getPokemonDrops(pokemon).map {
+            val drops: List<SerializableItemDrop> = if(serverConfig.itemDropsEnabled) CobblemonUtils.getPokemonDrops(pokemon).map {
                 SerializableItemDrop(it)
-            }
+            } else listOf()
 
             ReceiveCobbledexPacket(pokemon, evolutions, preEvolutions, species, serializableSpawnDetails, drops).sendToPlayer(player)
         }

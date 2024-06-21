@@ -22,11 +22,14 @@
   "cobbledex.texts.weather.raining_and_thundering": "Clear",
 
   "cobbledex.texts.no_evolution_found": "No evolution found for %s",
+  "cobbledex.evolution.use_item": "Use a %s",
+  "cobbledex.evolution.trade": "Complete a trade",
+  "cobbledex.evolution.trade_or_link_cable": "Trade or use %s",
 
   "cobbledex.evolution.damage_taken": "Need %s damage taken",
-  "cobbledex.evolution.level": "Need level: %s",
-  "cobbledex.evolution.friendship": "Need friendship: %s",
-  "cobbledex.evolution.held_item": "Need Pokémon held item: %s",
+  "cobbledex.evolution.level": "Level: %s",
+  "cobbledex.evolution.friendship": "Friendship: %s",
+  "cobbledex.evolution.held_item": "Pokémon held item: %s",
   "cobbledex.evolution.any_requirement": "Need any of these requirements:",
   "cobbledex.evolution.attack_defence_ratio.attack_higher": "Need more attack than defence",
   "cobbledex.evolution.attack_defence_ratio.defence_higher": "Need more defence than attack",
@@ -40,10 +43,11 @@
   "cobbledex.evolution.player_has_advancement": "Trainer need %s advancement",
   "cobbledex.evolution.property_range": "Need %s between %s",
   "cobbledex.evolution.recoil": "Need %s recoil",
-  "cobbledex.evolution.stat_equal": "Stats %s need to be equal",
-  "cobbledex.evolution.time_range": "Need time of day: %s",
+  "cobbledex.evolution.stat_equal": "Stats %s and %s need to be equal",
+  "cobbledex.evolution.stat_compare": "Stat %s should be higher than %s",
+  "cobbledex.evolution.time_range": "Time of day: %s",
   "cobbledex.evolution.use_move": "Need to use %s movement %s times",
-  "cobbledex.evolution.weather": "Need weather: %s",
+  "cobbledex.evolution.weather": "Weather: %s",
   "cobbledex.evolution.biome.condition": "Need biome tag: %s",
   "cobbledex.evolution.biome.anti_condition": "Blacklisted biome tag: %s",
   "cobbledex.evolution.world": "Need World: %s",
@@ -52,6 +56,10 @@
   "cobbledex.evolution.structure.anti_condition": "Blacklisted structure: %s",
 
   "cobblemon.evolution/alolan": "Alolan",
+  "cobblemon.evolution/hisui": "Hisui",
+  "cobblemon.evolution/rowlet_dartrix_hisui_bias": "Hisui",
+  "cobblemon.evolution/cyndaquil_quilava_hisui_bias": "Hisui",
+  "cobblemon.evolution/oshawott_dewott_hisui_bias": "Hisui",
 
   "the_bumblezone.the_bumblezone": "Bumblezone",
 

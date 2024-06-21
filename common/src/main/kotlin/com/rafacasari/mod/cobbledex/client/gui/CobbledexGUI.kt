@@ -384,10 +384,12 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         } ?: setOf()
 
         // Request Pokémon Info to server and load into cache in Packet Handler (See ReceiveCobbledexPacketHandler)
+//        if (pokemon != null
+//            && ((lastLoadedSpecies == null || lastLoadedSpecies != pokemon.species)
+//            || (lastLoadedAspects == null || lastLoadedAspects != pokemonAspects))) {
         if (pokemon != null
             && ((lastLoadedSpecies == null || lastLoadedSpecies != pokemon.species)
-            || (lastLoadedAspects == null || lastLoadedAspects != pokemonAspects))) {
-
+                    || (lastLoadedAspects == null || lastLoadedAspects != pokemonAspects))) {
             logInfo("Requested Cobbledex Packet")
             lastLoadedAspects = aspects
 

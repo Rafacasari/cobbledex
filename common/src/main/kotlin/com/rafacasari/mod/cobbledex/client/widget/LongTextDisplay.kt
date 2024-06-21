@@ -2,17 +2,14 @@ package com.rafacasari.mod.cobbledex.client.widget
 
 import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.pokemon.Species
-import com.rafacasari.mod.cobbledex.client.widget.entries.EmptyEntry
-import com.rafacasari.mod.cobbledex.client.widget.entries.ItemEntry
-import com.rafacasari.mod.cobbledex.client.widget.entries.PokemonEntry
-import com.rafacasari.mod.cobbledex.client.widget.entries.TextEntry
+import com.rafacasari.mod.cobbledex.client.widget.entries.*
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget
 import net.minecraft.item.ItemStack
 import net.minecraft.text.MutableText
-import net.minecraft.text.OrderedText
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 import net.minecraft.util.Language
 
 class LongTextDisplay (
@@ -67,7 +64,7 @@ class LongTextDisplay (
         }
     }
 
-    fun addItemEntry(item: ItemStack, entry: Text, breakLine: Boolean = true) {
+    fun addItemEntry(item: ItemStack, entry: Text, breakLine: Boolean = true, disableTooltip: Boolean = false) {
 
         if (breakLine && super.getEntryCount() > 0)
             addEmptyEntry()
@@ -78,15 +75,27 @@ class LongTextDisplay (
 
         reorderedTexts.forEach {
             if (reorderedTexts.first() == it)
-                addItemEntryInternal(item, it)
+                super.addEntry(ItemEntry(item, it, disableTooltip))
             else addText(TextEntry(it, false))
         }
     }
 
-    private fun addItemEntryInternal(item: ItemStack, text: OrderedText) : Int
-    {
-        return super.addEntry(ItemEntry(item, text))
+    fun addIcon(icon: Identifier, entry: Text, width: Int, height: Int, xOffset: Number = 0, yOffset: Number = 0, scale: Float = 1f, breakLine: Boolean = true) {
+
+        if (breakLine && super.getEntryCount() > 0)
+            addEmptyEntry()
+
+        val textRenderer = MinecraftClient.getInstance().textRenderer
+        val reorderedTexts = Language.getInstance()
+            .reorder(textRenderer.textHandler.wrapLines(entry, rowWidth - SCROLLBAR_PADDING - 11, entry.style))
+
+        reorderedTexts.forEach {
+            if (reorderedTexts.first() == it)
+                super.addEntry(IconEntry(icon, it, xOffset, yOffset, width, height, scale))
+            else addText(TextEntry(it, false))
+        }
     }
+
 
     fun addPokemon(pokemon: Species, aspects: Set<String>, translatedName: MutableText, breakLine: Boolean = false) {
 

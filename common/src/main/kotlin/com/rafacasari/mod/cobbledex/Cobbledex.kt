@@ -17,20 +17,29 @@ import com.rafacasari.mod.cobbledex.cobblemon.extensions.PlayerDiscovery
 import com.rafacasari.mod.cobbledex.items.CobbledexItem
 import com.rafacasari.mod.cobbledex.network.client.packets.PokedexDiscoveredUpdated
 import net.minecraft.server.network.ServerPlayerEntity
+import java.io.File
+import java.io.FileReader
+import java.io.FileWriter
 
 object Cobbledex {
+    private lateinit var config: CobbledexConfig
+    fun getConfig() : CobbledexConfig = config
+
     const val MOD_ID : String = "cobbledex"
+
+    private const val VERSION = CobbledexBuildDetails.VERSION
+    private const val CONFIG_PATH = "config/$MOD_ID/settings.json"
 
     val LOGGER: Logger = LoggerFactory.getLogger("Cobbledex")
     lateinit var implementation: CobbledexImplementation
 
-
     private var eventsCreated: Boolean = false
     fun preInitialize(implementation: CobbledexImplementation) {
-        LOGGER.info("Initializing Cobbledex...")
+        LOGGER.info("Initializing Cobbledex $VERSION...")
         Cobbledex.implementation = implementation
 
         implementation.registerItems()
+        loadConfig()
 
         // TODO: Make our own event so we don't need to depend on Cobblemon PlatformEvents
         PlatformEvents.SERVER_STARTED.subscribe { _ ->
@@ -112,4 +121,39 @@ object Cobbledex {
 
         return ActionResult.SUCCESS
     }
+
+    fun loadConfig() {
+        val configFile = File(CONFIG_PATH)
+        configFile.parentFile.mkdirs()
+
+        if (configFile.exists()) {
+            try {
+                val fileReader = FileReader(configFile)
+                this.config = CobbledexConfig.GSON.fromJson(fileReader, CobbledexConfig::class.java)
+                fileReader.close()
+            } catch (error: Exception) {
+                LOGGER.error("Failed to load the config! Using default config")
+                this.config = CobbledexConfig()
+                error.printStackTrace()
+            }
+        } else {
+            this.config = CobbledexConfig()
+        }
+
+        config.lastSavedVersion = VERSION
+        this.saveConfig()
+    }
+
+    fun saveConfig() {
+        try {
+            val fileWriter = FileWriter(File(CONFIG_PATH))
+            CobbledexConfig.GSON.toJson(this.config, fileWriter)
+            fileWriter.flush()
+            fileWriter.close()
+        } catch (exception: Exception) {
+            LOGGER.error("Failed to save the config! Please consult the following stack trace:")
+            exception.printStackTrace()
+        }
+    }
+
 }

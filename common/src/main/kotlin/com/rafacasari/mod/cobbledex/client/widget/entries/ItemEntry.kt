@@ -13,7 +13,7 @@ import net.minecraft.text.OrderedText
 import net.minecraft.util.Colors
 import org.joml.Matrix4f
 
-class ItemEntry(val item: ItemStack, val text: OrderedText) : LongTextDisplay.TextDisplayEntry() {
+class ItemEntry(val item: ItemStack, val text: OrderedText, val disableTooltip: Boolean = false) : LongTextDisplay.TextDisplayEntry() {
     companion object
     {
         const val ITEM_SIZE = 10.5F
@@ -92,7 +92,8 @@ class ItemEntry(val item: ItemStack, val text: OrderedText) : LongTextDisplay.Te
     }
 
     override fun drawTooltip(context: DrawContext, mouseX: Int, mouseY: Int) {
-        context.drawItemTooltip(MinecraftClient.getInstance().textRenderer, item, mouseX, mouseY)
+        if (!disableTooltip)
+            context.drawItemTooltip(MinecraftClient.getInstance().textRenderer, item, mouseX, mouseY)
     }
 
     override fun isMouseOver(mouseX: Double, mouseY: Double): Boolean {

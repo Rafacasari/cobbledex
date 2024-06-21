@@ -13,5 +13,6 @@ fun logError(text: String) = Cobbledex.LOGGER.error(text)
 fun logDebug(text: String) = Cobbledex.LOGGER.debug(text)
 
 fun MutableText.withRGBColor(color: Int) = also { it.style = it.style.withColor(color) }
+fun Text.bold() = also { (it as MutableText).style = it.style.withBold(true) }
 
 fun Float.format(): String = if (this % 1 == 0f) this.toInt().toString() else this.toString()

@@ -1,0 +1,5 @@
+package com.rafacasari.mod.cobbledex
+
+object CobbledexBuildDetails {
+    const val VERSION = "{{ version }}"
+}

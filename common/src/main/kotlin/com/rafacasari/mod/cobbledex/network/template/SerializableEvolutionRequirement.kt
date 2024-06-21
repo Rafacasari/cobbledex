@@ -5,12 +5,14 @@ import com.cobblemon.mod.common.api.moves.Moves
 import com.cobblemon.mod.common.api.pokemon.PokemonProperties
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.api.pokemon.evolution.requirement.EvolutionRequirement
+import com.cobblemon.mod.common.api.pokemon.stats.Stats
 import com.cobblemon.mod.common.api.spawning.TimeRange
 import com.cobblemon.mod.common.api.spawning.condition.MoonPhase
 import com.cobblemon.mod.common.api.text.bold
 import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.api.types.ElementalTypes
 import com.cobblemon.mod.common.pokemon.evolution.requirements.*
+import com.cobblemon.mod.common.registry.ItemIdentifierCondition
 import com.cobblemon.mod.common.util.asTranslated
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.network.server.IEncodable
@@ -26,12 +28,13 @@ import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIdentifier
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableInt
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableString
+import com.rafacasari.mod.cobbledex.utils.cobbledexResource
 import com.rafacasari.mod.cobbledex.utils.logInfo
 import com.rafacasari.mod.cobbledex.utils.withRGBColor
-import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
+import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.world.biome.Biome
@@ -39,9 +42,9 @@ import net.minecraft.world.gen.structure.Structure
 
 class SerializableEvolutionRequirement(): IEncodable {
 
+
     // TODO: Add a "Margin Left" parameter, exclusively to use on ANY_REQUIREMENT
     fun addText(longTextDisplay: LongTextDisplay, padding: Int = 0) {
-
 
         when (type) {
             EvolutionRequirementType.DAMAGE_TAKEN -> {
@@ -51,14 +54,16 @@ class SerializableEvolutionRequirement(): IEncodable {
             EvolutionRequirementType.HELD_ITEM -> {
                if (identifier != null) {
                    val itemStack = ItemStack(Registries.ITEM.get(identifier))
-                   longTextDisplay.addItemEntry(itemStack, Text.translatable("cobbledex.evolution.held_item", itemStack.translationKey.asTranslated().bold()))
+                   longTextDisplay.addItemEntry(itemStack, Text.translatable("cobbledex.evolution.held_item", itemStack.translationKey.asTranslated().bold()), false)
                } else {
                    longTextDisplay.addText( Text.translatable("cobbledex.evolution.held_item", "UNKNOWN".text().bold()), false)
                }
             }
 
             EvolutionRequirementType.FRIENDSHIP -> {
-                longTextDisplay.addText(Text.translatable("cobbledex.evolution.friendship", value.toString().text().bold()), false)
+
+                val translation = Text.translatable("cobbledex.evolution.friendship", value.toString().text().bold())
+                longTextDisplay.addIcon(HEART_ICON, translation, 18, 16, xOffset = -3f, scale = 0.5f, breakLine = false)
             }
 
             EvolutionRequirementType.ANY_REQUIREMENT -> {
@@ -98,7 +103,9 @@ class SerializableEvolutionRequirement(): IEncodable {
 
             EvolutionRequirementType.LEVEL -> {
                 intRange?.let {
-                    longTextDisplay.addText(Text.translatable("cobbledex.evolution.level", it.first.toString().text().bold()), false)
+                    //longTextDisplay.addText(Text.translatable("cobbledex.evolution.level", it.first.toString().text().bold()), false)
+                    val translation = Text.translatable("cobbledex.evolution.level", it.first.toString().text().bold())
+                    longTextDisplay.addIcon(LEVEL_ICON, translation, 18, 16, xOffset = -3f, scale = 0.5f, breakLine = false)
                 }
             }
 
@@ -174,18 +181,41 @@ class SerializableEvolutionRequirement(): IEncodable {
             // TODO: Use Stats.getStat(string) to get the translated stat name
             //  Will need to separate two nullable strings into buffer
             EvolutionRequirementType.STAT_EQUAL -> {
-                stringValue?.let { equalValue ->
-                    longTextDisplay.addText(Text.translatable("cobbledex.evolution.stat_equal", equalValue.text().bold()), false)
+                val statOne = stringValue?.let { stat -> Stats.getStat(stat) }
+                val statTwo = extraStringValue?.let { stat -> Stats.getStat(stat) }
+
+                if (statOne != null && statTwo != null) {
+                    val stat1 = (statOne.displayName as MutableText).bold()
+                    val stat2 = (statTwo.displayName as MutableText).bold()
+                    longTextDisplay.addText(Text.translatable("cobbledex.evolution.stat_equal", stat1, stat2), false)
+                }
+            }
+
+            EvolutionRequirementType.STAT_COMPARE -> {
+                val statOne = stringValue?.let { stat -> Stats.getStat(stat) }
+                val statTwo = extraStringValue?.let { stat -> Stats.getStat(stat) }
+
+                if (statOne != null && statTwo != null) {
+                    val statLow = (statOne.displayName as MutableText).bold()
+                    val statHigher = (statTwo.displayName as MutableText).bold()
+                    longTextDisplay.addText(Text.translatable("cobbledex.evolution.stat_compare", statHigher, statLow), false)
                 }
             }
 
             EvolutionRequirementType.TIME_RANGE -> {
                 listIntRange?.let { ranges ->
-                    val test = TimeRange.timeRanges.mapNotNull { time ->
+
+                    val times = TimeRange.timeRanges.mapNotNull { time ->
                         if(time.value.ranges == ranges) time.key else null
                     }
 
-                    test.forEach { time ->  longTextDisplay.addText(Text.translatable("cobbledex.evolution.time_range", time.text().bold()), false) }
+                    val item = Registries.ITEM.get(Identifier("minecraft", "clock"))
+                    val itemStack = ItemStack(item)
+                    times.forEach { time ->
+                        val translation = Text.translatable("cobbledex.evolution.time_range", time.text().bold())
+                        longTextDisplay.addItemEntry(itemStack, translation, breakLine = false, disableTooltip = true)
+                        //longTextDisplay.addText(translation, false)
+                    }
                 }
             }
 
@@ -259,9 +289,12 @@ class SerializableEvolutionRequirement(): IEncodable {
                 }
             }
 
+            //            EvolutionRequirementType.POKEMON_PROPERTIES -> TODO()
+//            EvolutionRequirementType.AREA_REQUIREMENT -> TODO()
             else -> {
                  longTextDisplay.addText("No text available for condition $type".text(), false)
             }
+
         }
 
     }
@@ -291,6 +324,7 @@ class SerializableEvolutionRequirement(): IEncodable {
         PROPERTY_RANGE,
         RECOIL,
         STAT_EQUAL,
+        STAT_COMPARE,
         TIME_RANGE,
         USE_MOVE,
 
@@ -299,13 +333,15 @@ class SerializableEvolutionRequirement(): IEncodable {
         BIOME,
         WORLD,
         MOON_PHASE,
-        STRUCTURE
+        STRUCTURE,
     }
 
     lateinit var type: EvolutionRequirementType
     var value: Int? = null
     var intRange: IntRange? = null
     var stringValue: String? = null
+    var extraStringValue: String? = null
+
     var identifier: Identifier? = null
     var anyRequirement: List<SerializableEvolutionRequirement>? = null
 
@@ -326,6 +362,7 @@ class SerializableEvolutionRequirement(): IEncodable {
 
     constructor (requirement: EvolutionRequirement) : this() {
 
+
         when(requirement)
         {
             is DamageTakenRequirement -> {
@@ -335,7 +372,10 @@ class SerializableEvolutionRequirement(): IEncodable {
 
             is HeldItemRequirement -> {
                 type = EvolutionRequirementType.HELD_ITEM
-                identifier = (requirement.itemCondition.item as RegistryLikeTagCondition<Item>).tag.id
+                val item = requirement.itemCondition.item
+                if (item is ItemIdentifierCondition)
+                    identifier = item.identifier
+
             }
 
             is FriendshipRequirement -> {
@@ -413,14 +453,15 @@ class SerializableEvolutionRequirement(): IEncodable {
 
             is StatEqualRequirement -> {
                 type = EvolutionRequirementType.STAT_EQUAL
-
-                stringValue = "${requirement.statOne} & ${requirement.statTwo}"
+                stringValue = requirement.statOne
+                extraStringValue = requirement.statTwo
             }
 
-//            is StatCompareRequirement -> {
-//                type = EvolutionRequirementType.STAT_COMPARE
-//                stringValue = "${requirement.lowStat} > ${requirement.highStat}"
-//            }
+            is StatCompareRequirement -> {
+                type = EvolutionRequirementType.STAT_COMPARE
+                stringValue = requirement.lowStat
+                extraStringValue = requirement.highStat
+            }
 
             is TimeRangeRequirement -> {
                 type = EvolutionRequirementType.TIME_RANGE
@@ -495,6 +536,7 @@ class SerializableEvolutionRequirement(): IEncodable {
         buffer.writeNullableInt(value)
         buffer.writeNullableIntRange(intRange)
         buffer.writeNullableString(stringValue)
+        buffer.writeNullableString(extraStringValue)
         buffer.writeNullableIdentifier(identifier)
 
         val anyReq = anyRequirement ?: listOf()
@@ -516,6 +558,8 @@ class SerializableEvolutionRequirement(): IEncodable {
 
     companion object
     {
+        val HEART_ICON = cobbledexResource("textures/gui/icons/friendship.png")
+        val LEVEL_ICON = cobbledexResource("textures/gui/icons/level_up.png")
         fun decode(reader: PacketByteBuf) : SerializableEvolutionRequirement {
             val requirement = SerializableEvolutionRequirement()
 
@@ -523,6 +567,7 @@ class SerializableEvolutionRequirement(): IEncodable {
             requirement.value = reader.readNullableInt()
             requirement.intRange = reader.readNullableIntRange()
             requirement.stringValue = reader.readNullableString()
+            requirement.extraStringValue = reader.readNullableString()
             requirement.identifier = reader.readNullableIdentifier()
 
             requirement.anyRequirement = reader.readList {
