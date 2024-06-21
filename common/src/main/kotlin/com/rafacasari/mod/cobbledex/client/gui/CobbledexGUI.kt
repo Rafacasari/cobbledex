@@ -86,7 +86,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
         var lastLoadedEvolutions: List<SerializablePokemonEvolution>? = null
         var lastLoadedPreEvolutions: List<Pair<Species, Set<String>>>? = null
-        var lastLoadedForms: List<Pair<Species, Set<String>>>? = null
+        //var lastLoadedForms: List<Pair<Species, Set<String>>>? = null
     }
 
 
@@ -389,6 +389,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             lastLoadedForm = pokemon
 
             RequestCobbledexPacket(pokemon.species.resourceIdentifier, aspects).sendToServer()
+            longTextDisplay?.resetScrollPosition()
         }
 
         if (pokemon != null) {
@@ -444,7 +445,11 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
                 evolutionDisplay?.selectEvolutions(lastLoadedPreEvolutions)
             }
             CobbledexRelatedMenu.Forms -> {
-                evolutionDisplay?.selectEvolutions(lastLoadedForms)
+
+                val forms = lastLoadedSpecies?.forms?.map {  form ->
+                    form.species to form.aspects.toSet()
+                }
+                evolutionDisplay?.selectEvolutions(forms)
             }
         }
     }

@@ -13,7 +13,6 @@ class ReceiveCobbledexPacket internal constructor(
     val species: Species?,
     val evolutionList: List<SerializablePokemonEvolution>,
     val preevolutionList: List<Pair<Identifier, Set<String>>>,
-    val formList: List<Pair<Identifier, Set<String>>>,
     val spawnDetails: List<SerializablePokemonSpawnDetail>,
     val pokemonDrops: List<SerializableItemDrop>
 ):
@@ -26,13 +25,6 @@ class ReceiveCobbledexPacket internal constructor(
         if (species != null)
             buffer.writeIdentifier(species.resourceIdentifier)
 
-//        buffer.writeCollection(evolutionList) { buff, value ->
-//            buff.writeIdentifier(value.first)
-//            buff.writeCollection(value.second) { aspectBuffer, aspect ->
-//                aspectBuffer.writeString(aspect)
-//            }
-//        }
-
         buffer.writeCollection(evolutionList) { buff, value ->
             value.encode(buff)
         }
@@ -44,12 +36,12 @@ class ReceiveCobbledexPacket internal constructor(
             }
         }
 
-        buffer.writeCollection(formList) { buff, value ->
-            buff.writeIdentifier(value.first)
-            buff.writeCollection(value.second) { aspectBuffer, aspect ->
-                aspectBuffer.writeString(aspect)
-            }
-        }
+//        buffer.writeCollection(formList) { buff, value ->
+//            buff.writeIdentifier(value.first)
+//            buff.writeCollection(value.second) { aspectBuffer, aspect ->
+//                aspectBuffer.writeString(aspect)
+//            }
+//        }
 
         buffer.writeCollection(spawnDetails) {
             buff, value -> value.encode(buff)
@@ -83,11 +75,11 @@ class ReceiveCobbledexPacket internal constructor(
                 }.toSet())
             }
 
-            val formsList = buffer.readList { value ->
-                Pair(value.readIdentifier(), value.readList { aspect ->
-                    aspect.readString()
-                }.toSet())
-            }
+//            val formsList = buffer.readList { value ->
+//                Pair(value.readIdentifier(), value.readList { aspect ->
+//                    aspect.readString()
+//                }.toSet())
+//            }
 
             val spawnDetails = buffer.readList {
                 value -> SerializablePokemonSpawnDetail.decode(value)
@@ -97,7 +89,7 @@ class ReceiveCobbledexPacket internal constructor(
                     value -> SerializableItemDrop.decode(value)
             }
 
-            return ReceiveCobbledexPacket(bufferSpecies, evolutionList, preEvolutionList, formsList, spawnDetails, pokemonDrops)
+            return ReceiveCobbledexPacket(bufferSpecies, evolutionList, preEvolutionList, spawnDetails, pokemonDrops)
         }
     }
 }

@@ -38,11 +38,11 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
                 }
             } ?: listOf()
 
-
-            val species = pokemon.forms.map {
-                val identifier = it.species.resourceIdentifier
-                identifier to it.aspects.toSet()
-            }
+//
+//            val forms = pokemon.forms.map {
+//                val identifier = it.species.resourceIdentifier
+//                identifier to it.aspects.toSet()
+//            }
 
             val spawnDetails = if(serverConfig.howToFindEnabled) CobblemonUtils.getSpawnDetails(pokemon, packet.aspects) else listOf()
 
@@ -54,7 +54,7 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
                 SerializableItemDrop(it)
             } else listOf()
 
-            ReceiveCobbledexPacket(pokemon, evolutions, preEvolutions, species, serializableSpawnDetails, drops).sendToPlayer(player)
+            ReceiveCobbledexPacket(pokemon, evolutions, preEvolutions, serializableSpawnDetails, drops).sendToPlayer(player)
         }
     }
 }
