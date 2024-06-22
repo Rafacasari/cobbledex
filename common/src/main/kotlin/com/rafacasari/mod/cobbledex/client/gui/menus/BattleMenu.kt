@@ -8,6 +8,7 @@ import com.cobblemon.mod.common.pokemon.FormData
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.utils.TypeChartUtils
 import com.rafacasari.mod.cobbledex.utils.withRGBColor
+import net.minecraft.text.Text
 
 object BattleMenu {
     fun drawText(longTextDisplay: LongTextDisplay?, pokemon: FormData?) {
@@ -20,7 +21,8 @@ object BattleMenu {
 
         elementalMultipliers.filter { it.key != 1f }.forEach { elementalKey ->
 
-            longTextDisplay.addText("${elementalKey.key}x damage from".text())
+            val translation = Text.translatable("cobbledex.texts.battle.damage_from", elementalKey.key)
+            longTextDisplay.addText(translation)
 
             val typesText = elementalKey.value.fold("".text()) { acc, element ->
                 if (elementalKey.value.first() != element)
@@ -28,7 +30,6 @@ object BattleMenu {
 
                 acc.add(element.displayName.bold().withRGBColor(element.hue))
             }
-
 
             longTextDisplay.addText(typesText, false)
         }

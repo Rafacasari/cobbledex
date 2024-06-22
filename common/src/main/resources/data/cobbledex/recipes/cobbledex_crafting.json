@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "iai",
+    "gbg",
+    "iri"
+  ],
+  "key": {
+    "i": {
+      "item": "minecraft:iron_ingot"
+    },
+    "r": {
+      "item": "minecraft:redstone"
+    },
+    "b": {
+      "item": "minecraft:book"
+    },
+    "g": {
+      "item": "minecraft:glass_pane"
+    },
+    "a": {
+      "item": "cobblemon:red_apricorn"
+    }
+  },
+  "result": {
+    "item": "cobbledex:cobbledex_item",
+    "count": 1
+  }
+}

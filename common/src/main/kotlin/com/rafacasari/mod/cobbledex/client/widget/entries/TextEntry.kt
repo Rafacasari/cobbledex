@@ -1,7 +1,6 @@
 package com.rafacasari.mod.cobbledex.client.widget.entries
 
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
-import com.rafacasari.mod.cobbledex.mixins.TextHandlerAccessor
 import com.rafacasari.mod.cobbledex.utils.logError
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
@@ -57,10 +56,12 @@ class TextEntry(private val line: OrderedText?, private val shadow: Boolean = fa
             var charX = x.toFloat()
             val charY = y.toFloat()
 
-            text.accept { _, style, codePoint ->
+
+            text.accept { index, style, codePoint ->
                 try {
-                    val widthRetriever = (textRenderer.textHandler as TextHandlerAccessor).cobbledexWidthRetriever
-                    val charWidth = widthRetriever.getWidth(codePoint, style)
+                    val charWidth: Float = textRenderer.textHandler.getWidth {
+                        x -> x.accept(index, style, codePoint)
+                    }
 
                     if (pMouseX!! >= charX && pMouseX < charX + charWidth && pMouseY!! >= charY && pMouseY < charY + textRenderer.fontHeight) {
                         hoveredStyle = style

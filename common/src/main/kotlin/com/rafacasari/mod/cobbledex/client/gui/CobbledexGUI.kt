@@ -375,6 +375,20 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
     fun setPreviewPokemon(pokemon: FormData?, pokemonAspects: Set<String>? = null)
     {
+        // TODO: Implement this when make the shiny/gender buttons
+        //  This should be possible to get all possible choice-features
+        //  Will be useful for Pokémon that have a lot of non-form variants (recolors)
+//        if (pokemon != null) {
+//            val species = pokemon.species
+//            val features = SpeciesFeatureAssignments.getFeatures(species).mapNotNull { featureName ->
+//                val feature: SpeciesFeatureProvider<out SpeciesFeature>? = SpeciesFeatures.getFeature(featureName)
+//
+//                if (feature != null && feature is ChoiceSpeciesFeatureProvider)
+//                    return@mapNotNull featureName to feature.choices
+//                else return@mapNotNull null
+//            }.toMap()
+//        }
+
         val x = (width - BASE_WIDTH) / 2
         val y = (height - BASE_HEIGHT) / 2
 
