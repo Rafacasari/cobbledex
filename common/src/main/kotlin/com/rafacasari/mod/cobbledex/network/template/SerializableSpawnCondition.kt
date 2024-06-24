@@ -4,7 +4,7 @@ import com.cobblemon.mod.common.api.conditional.RegistryLikeCondition
 import com.cobblemon.mod.common.api.conditional.RegistryLikeTagCondition
 import com.cobblemon.mod.common.api.spawning.TimeRange
 import com.cobblemon.mod.common.api.spawning.condition.SpawningCondition
-import com.rafacasari.mod.cobbledex.network.server.IEncodable
+import com.rafacasari.mod.cobbledex.network.IEncodable
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableBool
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableFloat

@@ -1,7 +1,7 @@
 package com.rafacasari.mod.cobbledex.network.template
 
 import com.cobblemon.mod.common.api.spawning.detail.PokemonSpawnDetail
-import com.rafacasari.mod.cobbledex.network.server.IEncodable
+import com.rafacasari.mod.cobbledex.network.IEncodable
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIntRange
 import net.minecraft.network.PacketByteBuf

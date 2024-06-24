@@ -1,4 +1,4 @@
-package com.rafacasari.mod.cobbledex.network.server
+package com.rafacasari.mod.cobbledex.network
 
 import net.minecraft.network.PacketByteBuf
 

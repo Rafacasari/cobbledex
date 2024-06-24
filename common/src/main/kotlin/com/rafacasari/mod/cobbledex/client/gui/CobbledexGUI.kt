@@ -19,7 +19,6 @@ import net.minecraft.client.sound.PositionedSoundInstance
 import net.minecraft.sound.SoundEvent
 import net.minecraft.text.Style
 import net.minecraft.util.Identifier
-import com.rafacasari.mod.cobbledex.Cobbledex
 import com.rafacasari.mod.cobbledex.client.gui.menus.BattleMenu
 import com.rafacasari.mod.cobbledex.client.gui.menus.EvolutionMenu
 import com.rafacasari.mod.cobbledex.client.gui.menus.InfoMenu
@@ -34,7 +33,9 @@ import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonSpawnDet
 import com.rafacasari.mod.cobbledex.utils.*
 import net.minecraft.text.Text
 
-class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<String>? = null) : Screen(cobbledexTranslation("cobbledex.texts.cobbledex")) {
+class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<String>? = null) : Screen(
+    cobbledexTextTranslation("cobbledex")
+) {
 
     enum class CobbledexMenu {
         Info, Battle, Evolutions
@@ -52,11 +53,11 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
         const val PORTRAIT_SIZE = 58
 
-        private val MAIN_BACKGROUND: Identifier = Identifier(Cobbledex.MOD_ID, "textures/gui/new_cobbledex_background.png")
-        private val PORTRAIT_BACKGROUND: Identifier = Identifier(Cobbledex.MOD_ID, "textures/gui/portrait_background.png")
+        private val MAIN_BACKGROUND: Identifier = cobbledexResource("textures/gui/new_cobbledex_background.png")
+        private val PORTRAIT_BACKGROUND: Identifier = cobbledexResource("textures/gui/portrait_background.png")
 
-        private val TYPE_SPACER: Identifier = Identifier(Cobbledex.MOD_ID, "textures/gui/type_spacer.png")
-        private val TYPE_SPACER_DOUBLE: Identifier = Identifier(Cobbledex.MOD_ID, "textures/gui/type_spacer_double.png")
+        private val TYPE_SPACER: Identifier = cobbledexResource("textures/gui/type_spacer.png")
+        private val TYPE_SPACER_DOUBLE: Identifier = cobbledexResource("textures/gui/type_spacer_double.png")
 
         var Instance : CobbledexGUI? = null
 
@@ -126,25 +127,22 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             this.setPreviewPokemon(previewPokemon)
         }
         else {
-            // Return to info menu
-//            if (selectedPokemon != previewPokemon)
-//                selectedTab = CobbledexMenu.Info
-
+            // selectedPokemon is null which means that it's from right-clicking a entity
             this.setPreviewPokemon(selectedPokemon, selectedAspects)
         }
 
         // Initialize Tabs
-        infoTabButton = CobbledexTab(x, y,x + 114, y + 178, "Info".text()) {
+        infoTabButton = CobbledexTab(x, y,x + 114, y + 178, cobbledexTextTranslation("tab.info")) {
             selectedTab = CobbledexMenu.Info
             defaultTabClickEvent()
         }
 
-        battleTabButton = CobbledexTab(x, y,x + 151, y + 178, "Battle".text()) {
+        battleTabButton = CobbledexTab(x, y,x + 151, y + 178, cobbledexTextTranslation("tab.battle")) {
             selectedTab = CobbledexMenu.Battle
             defaultTabClickEvent()
         }
 
-        evolveTabButton = CobbledexTab(x, y,x + 188, y + 178, "Evolve".text()) {
+        evolveTabButton = CobbledexTab(x, y,x + 188, y + 178, cobbledexTextTranslation("tab.evolve")) {
             selectedTab = CobbledexMenu.Evolutions
             defaultTabClickEvent()
         }
@@ -288,7 +286,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             drawScaledText(
                 context = context,
                 font = CobblemonResources.DEFAULT_LARGE,
-                text = pokemon.species.name.text().bold(),
+                text = pokemon.species.translatedName.bold(),
                 x = x + 13,
                 y = y + 28.3F,
                 shadow = false
@@ -316,9 +314,10 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
                 scale =  0.65f
             )
 
+
             drawScaledText(
                 context = context,
-                text = ((pokemon.height / 10).toString() + "m").text(),
+                text = cobbledexTextTranslation("info.height_value", (pokemon.height / 10).format()),
                 x = x + 12,
                 y = y + 165.5f,
                 centered = false,
@@ -327,7 +326,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
             drawScaledText(
                 context = context,
-                text = ((pokemon.weight / 10).toString() + "kg").text(),
+                text = cobbledexTextTranslation("info.weight_value", (pokemon.weight / 10).format()),
                 x = x + 12,
                 y = y + 187.5f,
                 centered = false,
@@ -373,7 +372,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         super.close()
     }
 
-    fun setPreviewPokemon(pokemon: FormData?, pokemonAspects: Set<String>? = null)
+    fun setPreviewPokemon(pokemon: FormData?, formAspects: Set<String>? = null)
     {
         // TODO: Implement this when make the shiny/gender buttons
         //  This should be possible to get all possible choice-features
@@ -395,7 +394,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         evolutionDisplay?.clearEvolutions()
 
         // Don't should be needed, since we are never storing aspects that aren't part of form
-        val aspects = pokemonAspects?.let {
+        val aspects = formAspects?.let {
             CobblemonUtils.removeUnnecessaryAspects(it)
         } ?: setOf()
 
@@ -455,9 +454,11 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
                     it.species?.let { species -> species to it.resultAspects }
                 })
             }
+
             CobbledexRelatedMenu.PreEvolutions -> {
                 evolutionDisplay?.selectEvolutions(lastLoadedPreEvolutions)
             }
+
             CobbledexRelatedMenu.Forms -> {
 
                 val forms = lastLoadedSpecies?.forms?.map {  form ->

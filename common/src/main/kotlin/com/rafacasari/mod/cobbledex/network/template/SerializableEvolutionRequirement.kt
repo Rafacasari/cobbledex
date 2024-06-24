@@ -15,7 +15,7 @@ import com.cobblemon.mod.common.pokemon.evolution.requirements.*
 import com.cobblemon.mod.common.registry.ItemIdentifierCondition
 import com.cobblemon.mod.common.util.asTranslated
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
-import com.rafacasari.mod.cobbledex.network.server.IEncodable
+import com.rafacasari.mod.cobbledex.network.IEncodable
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableBool
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableIdentifier

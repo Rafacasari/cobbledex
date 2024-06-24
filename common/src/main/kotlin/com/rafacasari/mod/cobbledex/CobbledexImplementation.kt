@@ -1,7 +1,7 @@
 package com.rafacasari.mod.cobbledex
 
-import com.rafacasari.mod.cobbledex.network.server.IClientNetworkPacketHandler
-import com.rafacasari.mod.cobbledex.network.server.INetworkPacket
+import com.rafacasari.mod.cobbledex.network.client.IClientNetworkPacketHandler
+import com.rafacasari.mod.cobbledex.network.INetworkPacket
 import com.rafacasari.mod.cobbledex.network.server.IServerNetworkPacketHandler
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.network.listener.ClientPlayPacketListener

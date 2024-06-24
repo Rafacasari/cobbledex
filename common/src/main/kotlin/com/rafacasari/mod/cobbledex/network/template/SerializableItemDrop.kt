@@ -1,7 +1,7 @@
 package com.rafacasari.mod.cobbledex.network.template
 
 import com.cobblemon.mod.common.api.drop.ItemDropEntry
-import com.rafacasari.mod.cobbledex.network.server.IEncodable
+import com.rafacasari.mod.cobbledex.network.IEncodable
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeIntRange
 import net.minecraft.network.PacketByteBuf

@@ -15,7 +15,16 @@
   "cobbledex.texts.height": "Height",
   "cobbledex.texts.select": "Select",
   "cobbledex.texts.battle.damage_from": "%sx damage from:",
+  "cobbledex.texts.tab.info": "Info",
+  "cobbledex.texts.tab.battle": "Battle",
+  "cobbledex.texts.tab.evolve": "Evolve",
 
+  "cobbledex.texts.info.height_value": "%sm",
+  "cobbledex.texts.info.weight_value": "%skg",
+
+  "cobbledex.texts.new_pokemon_discovered": "You've discovered a new Pokémon: %s",
+  "cobbledex.texts.click_to_open_cobbledex": "Click to open in Cobbledex",
+  "cobbledex.texts.tooltip_description.discovered": "Discovered: %s/%s",
   "cobbledex.texts.drops.item": "%s | %s%% | %sx",
   "cobbledex.texts.weather.clear": "Clear",
   "cobbledex.texts.weather.raining": "Raining",

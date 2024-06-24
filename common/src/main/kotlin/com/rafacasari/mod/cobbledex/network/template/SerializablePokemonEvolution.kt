@@ -15,7 +15,7 @@ import com.cobblemon.mod.common.pokemon.evolution.variants.TradeEvolution
 import com.cobblemon.mod.common.registry.ItemIdentifierCondition
 import com.cobblemon.mod.common.util.asTranslated
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
-import com.rafacasari.mod.cobbledex.network.server.IEncodable
+import com.rafacasari.mod.cobbledex.network.IEncodable
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonEvolution.PokemonEvolutionType.*
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableIdentifier
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableString

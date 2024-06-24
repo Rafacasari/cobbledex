@@ -4,19 +4,25 @@ import com.cobblemon.mod.common.Cobblemon.playerData as CobblemonPlayerData
 import com.cobblemon.mod.common.api.Priority
 import com.cobblemon.mod.common.api.events.CobblemonEvents
 import com.cobblemon.mod.common.api.storage.player.PlayerDataExtensionRegistry
+import com.cobblemon.mod.common.api.text.bold
+import com.cobblemon.mod.common.api.text.onClick
+import com.cobblemon.mod.common.api.text.onHover
 import com.cobblemon.mod.common.platform.events.PlatformEvents
 import com.cobblemon.mod.common.platform.events.ServerPlayerEvent
-import com.cobblemon.mod.common.pokemon.Species
+import com.cobblemon.mod.common.pokemon.FormData
+import com.rafacasari.mod.cobbledex.client.gui.CobbledexCollectionGUI
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import com.rafacasari.mod.cobbledex.cobblemon.extensions.PlayerDiscovery
-import com.rafacasari.mod.cobbledex.items.CobbledexItem
-import com.rafacasari.mod.cobbledex.network.client.packets.PokedexDiscoveredUpdated
+import com.rafacasari.mod.cobbledex.network.client.packets.OpenCobbledexPacket
+import com.rafacasari.mod.cobbledex.network.client.packets.AddToCollectionPacket
+import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCollectionDataPacket
+import com.rafacasari.mod.cobbledex.utils.cobbledexTextTranslation
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.util.Formatting
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
@@ -48,20 +54,20 @@ object Cobbledex {
 
             if (!eventsCreated) {
                 CobblemonEvents.STARTER_CHOSEN.subscribe(Priority.LOW) {
-                    registerPlayerDiscovery(it.player, it.pokemon.species)
+                    registerPlayerDiscovery(it.player, it.pokemon.form)
 
                     val itemStack = ItemStack(CobbledexConstants.Cobbledex_Item, 1)
                     it.player.giveItemStack(itemStack)
                 }
 
                 CobblemonEvents.POKEMON_CAPTURED.subscribe(Priority.LOW) {
-                    registerPlayerDiscovery(it.player, it.pokemon.species)
+                    registerPlayerDiscovery(it.player, it.pokemon.form)
                 }
 
                 CobblemonEvents.EVOLUTION_COMPLETE.subscribe(Priority.LOW) {
                     val player = it.pokemon.getOwnerPlayer()
                     if (player != null) {
-                        registerPlayerDiscovery(player, it.pokemon.species)
+                        registerPlayerDiscovery(player, it.pokemon.form)
                     }
                 }
 
@@ -72,7 +78,7 @@ object Cobbledex {
         }
 
         PlatformEvents.CLIENT_PLAYER_LOGOUT.subscribe {
-            CobbledexItem.totalPokemonDiscovered = 0
+            CobbledexCollectionGUI.discoveredList = null
         }
 
         PlatformEvents.SERVER_PLAYER_LOGIN.subscribe { login: ServerPlayerEvent.Login ->
@@ -83,7 +89,8 @@ object Cobbledex {
             if (cobbledexData != null)
                 totalPokemonDiscovered = cobbledexData.caughtSpecies.size
 
-            PokedexDiscoveredUpdated(totalPokemonDiscovered).sendToPlayer(login.player)
+            AddToCollectionPacket(totalPokemonDiscovered,).sendToPlayer(login.player)
+            ReceiveCollectionDataPacket(cobbledexData?.caughtSpecies?.toList() ?: listOf()).sendToPlayer(login.player)
         }
     }
 
@@ -95,9 +102,9 @@ object Cobbledex {
         return implementation.environment() == Environment.SERVER
     }
 
-    fun registerPlayerDiscovery(player: PlayerEntity?, species: Species?): ActionResult
+    fun registerPlayerDiscovery(player: PlayerEntity?, formData: FormData?): ActionResult
     {
-        if (player == null || species == null)
+        if (player == null || formData == null)
             return ActionResult.PASS
 
         val playerData = CobblemonPlayerData.get(player)
@@ -107,22 +114,25 @@ object Cobbledex {
         } as PlayerDiscovery
 
 
-        if (!cobbledexData.caughtSpecies.contains(species.nationalPokedexNumber)) {
-            cobbledexData.caughtSpecies.add(species.nationalPokedexNumber)
+        if (!cobbledexData.caughtSpecies.contains(formData.species.nationalPokedexNumber)) {
+            cobbledexData.caughtSpecies.add(formData.species.nationalPokedexNumber)
 
-            player.sendMessage(Text.literal("You've discovered a new Pokémon: §a" + species.name + "§r"))
+            val translation = cobbledexTextTranslation("new_pokemon_discovered", formData.species.translatedName.bold().formatted(Formatting.GREEN).onClick {
+                OpenCobbledexPacket(formData).sendToPlayer(it)
+            }.onHover(cobbledexTextTranslation("click_to_open_cobbledex")))
+
+            player.sendMessage(translation)
+
+            if (player is ServerPlayerEntity)
+                AddToCollectionPacket(formData.species.nationalPokedexNumber).sendToPlayer(player)
         }
-
-        if (player is ServerPlayerEntity)
-            PokedexDiscoveredUpdated(cobbledexData.caughtSpecies.size).sendToPlayer(player)
-
 
         CobblemonPlayerData.saveSingle(playerData)
 
         return ActionResult.SUCCESS
     }
 
-    fun loadConfig() {
+    private fun loadConfig() {
         val configFile = File(CONFIG_PATH)
         configFile.parentFile.mkdirs()
 
@@ -144,7 +154,7 @@ object Cobbledex {
         this.saveConfig()
     }
 
-    fun saveConfig() {
+    private fun saveConfig() {
         try {
             val fileWriter = FileWriter(File(CONFIG_PATH))
             CobbledexConfig.GSON.toJson(this.config, fileWriter)

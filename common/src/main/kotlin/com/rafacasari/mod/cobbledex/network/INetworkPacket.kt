@@ -1,7 +1,6 @@
-package com.rafacasari.mod.cobbledex.network.server
+package com.rafacasari.mod.cobbledex.network
 
 import com.rafacasari.mod.cobbledex.Cobbledex
-import com.rafacasari.mod.cobbledex.network.CobbledexNetwork
 import io.netty.buffer.Unpooled
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.RegistryKey

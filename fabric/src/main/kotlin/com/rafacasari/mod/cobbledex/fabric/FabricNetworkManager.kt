@@ -3,8 +3,8 @@ package com.rafacasari.mod.cobbledex.fabric
 import com.rafacasari.mod.cobbledex.INetworkManager
 
 import com.rafacasari.mod.cobbledex.network.CobbledexNetwork
-import com.rafacasari.mod.cobbledex.network.server.IClientNetworkPacketHandler
-import com.rafacasari.mod.cobbledex.network.server.INetworkPacket
+import com.rafacasari.mod.cobbledex.network.client.IClientNetworkPacketHandler
+import com.rafacasari.mod.cobbledex.network.INetworkPacket
 import com.rafacasari.mod.cobbledex.network.server.IServerNetworkPacketHandler
 import kotlin.reflect.KClass
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking

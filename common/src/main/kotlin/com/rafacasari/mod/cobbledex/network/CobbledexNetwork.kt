@@ -1,16 +1,12 @@
 package com.rafacasari.mod.cobbledex.network
 
-
 import com.rafacasari.mod.cobbledex.Cobbledex
-import com.rafacasari.mod.cobbledex.network.client.handlers.PokedexDiscoveredUpdatedHandler
-import com.rafacasari.mod.cobbledex.network.client.handlers.ReceiveCobbledexPacketHandler
-import com.rafacasari.mod.cobbledex.network.client.packets.PokedexDiscoveredUpdated
-import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCobbledexPacket
-import com.rafacasari.mod.cobbledex.network.server.IClientNetworkPacketHandler
-import com.rafacasari.mod.cobbledex.network.server.INetworkPacket
+import com.rafacasari.mod.cobbledex.network.client.handlers.*
+import com.rafacasari.mod.cobbledex.network.client.packets.*
+import com.rafacasari.mod.cobbledex.network.client.IClientNetworkPacketHandler
 import com.rafacasari.mod.cobbledex.network.server.IServerNetworkPacketHandler
-import com.rafacasari.mod.cobbledex.network.server.handlers.RequestCobbledexPacketHandler
-import com.rafacasari.mod.cobbledex.network.server.packets.RequestCobbledexPacket
+import com.rafacasari.mod.cobbledex.network.server.handlers.*
+import com.rafacasari.mod.cobbledex.network.server.packets.*
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Identifier
@@ -22,8 +18,10 @@ object CobbledexNetwork {
     fun sendPacketToServer(packet: INetworkPacket<*>) = Cobbledex.implementation.networkManager.sendPacketToServer(packet)
 
     fun registerClientBound() {
-        createClientBound(ReceiveCobbledexPacket.ID, ReceiveCobbledexPacket::decode, ReceiveCobbledexPacketHandler)
-        createClientBound(PokedexDiscoveredUpdated.ID, PokedexDiscoveredUpdated::decode, PokedexDiscoveredUpdatedHandler)
+        createClientBound(ReceiveCobbledexPacket.ID, ReceiveCobbledexPacket::decode, ReceiveCobbledexHandler)
+        createClientBound(AddToCollectionPacket.ID, AddToCollectionPacket::decode, AddToCollectionHandler)
+        createClientBound(OpenCobbledexPacket.ID, OpenCobbledexPacket::decode, OpenCobbledexHandler)
+        createClientBound(ReceiveCollectionDataPacket.ID, ReceiveCollectionDataPacket::decode, ReceiveCollectionDataHandler)
     }
 
     fun registerServerBound() {

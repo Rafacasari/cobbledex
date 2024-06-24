@@ -3,9 +3,7 @@ package com.rafacasari.mod.cobbledex.utils
 import com.cobblemon.mod.common.api.types.ElementalType
 import com.rafacasari.mod.cobbledex.cobblemon.showdown.ShowdownService
 
-
 object TypeChartUtils {
-
     private var typeChart: HashMap<String, HashMap<String, Int>>? = null
 
     fun getModifier(type: ElementalType, defenderType1: ElementalType?, defenderType2: ElementalType?): Float {
@@ -17,15 +15,16 @@ object TypeChartUtils {
         return multiplier
     }
 
-    private fun getDamageTaken(moveName: String, typeName: String?): Number {
+    private fun getDamageTaken(attackType: String, defenderType: String?): Number {
         if (typeChart == null)
             typeChart = ShowdownService.getTypeChart()
 
-        val damageTaken = typeChart!![typeName] ?: return 1
+        return typeChart?.let {
+            val damageTaken = it[defenderType] ?: return@let 1
+            val damageType = damageTaken[attackType] ?: return@let 1
 
-        val damageType = damageTaken[moveName] ?: return 1
-
-        return getMultiplier(damageType)
+            return@let getMultiplier(damageType)
+        } ?: 1
     }
 
     private fun getMultiplier(damage: Int): Float {

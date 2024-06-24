@@ -2,6 +2,7 @@ package com.rafacasari.mod.cobbledex.commands
 
 import com.mojang.brigadier.CommandDispatcher
 import com.rafacasari.mod.cobbledex.client.commands.OpenCobbledexCommand
+import com.rafacasari.mod.cobbledex.client.commands.OpenCollectionCommand
 import net.minecraft.command.CommandSource
 
 object CobbledexCommands {
@@ -13,5 +14,6 @@ object CobbledexCommands {
     // Client side commands
     fun <A: CommandSource, T: CommandDispatcher<A>> registerClient(dispatcher: T) {
         OpenCobbledexCommand.register(dispatcher)
+        OpenCollectionCommand.register(dispatcher)
     }
 }

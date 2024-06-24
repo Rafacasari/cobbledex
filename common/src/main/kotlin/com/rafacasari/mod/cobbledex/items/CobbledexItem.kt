@@ -1,6 +1,7 @@
 package com.rafacasari.mod.cobbledex.items
 
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
+import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -13,13 +14,18 @@ import net.minecraft.util.*
 import net.minecraft.world.World
 import com.rafacasari.mod.cobbledex.CobbledexConstants
 import com.rafacasari.mod.cobbledex.Cobbledex
+import com.rafacasari.mod.cobbledex.client.gui.CobbledexCollectionGUI
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
+import com.rafacasari.mod.cobbledex.utils.cobbledexTextTranslation
 
 class CobbledexItem(settings: Settings) : Item(settings) {
 
 
     companion object {
-        var totalPokemonDiscovered : Int = 0
+        val totalPokemonDiscovered: Int
+            get() {
+                return CobbledexCollectionGUI.discoveredList?.size ?: 0
+            }
     }
 
     override fun useOnEntity(
@@ -41,7 +47,7 @@ class CobbledexItem(settings: Settings) : Item(settings) {
             return ActionResult.PASS
         }
 
-        return Cobbledex.registerPlayerDiscovery(player, target.pokemon.species)
+        return Cobbledex.registerPlayerDiscovery(player, target.pokemon.form)
     }
 
 
@@ -51,7 +57,8 @@ class CobbledexItem(settings: Settings) : Item(settings) {
 
     override fun appendTooltip(stack: ItemStack?, world: World?, tooltip: MutableList<Text>?, context: TooltipContext?)
     {
-        tooltip?.add(Text.literal("Discovered: §a${totalPokemonDiscovered}§r/${totalPokemonCount}"))
+        val translation = cobbledexTextTranslation("tooltip_description.discovered", totalPokemonDiscovered.toString().text().formatted(Formatting.GREEN), totalPokemonCount.toString())
+        tooltip?.add(translation)
 
         super.appendTooltip(stack, world, tooltip, context)
     }

@@ -16,3 +16,7 @@ fun MutableText.withRGBColor(color: Int) = also { it.style = it.style.withColor(
 fun Text.bold() = also { (it as MutableText).style = it.style.withBold(true) }
 
 fun Float.format(): String = if (this % 1 == 0f) this.toInt().toString() else this.toString()
+
+fun cobbledexTextTranslation(key: String, vararg arg: Any): MutableText {
+    return Text.translatable("cobbledex.texts.$key", *arg)
+}

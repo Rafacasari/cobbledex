@@ -2,7 +2,7 @@ package com.rafacasari.mod.cobbledex.network.client.packets
 
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.pokemon.Species
-import com.rafacasari.mod.cobbledex.network.server.INetworkPacket
+import com.rafacasari.mod.cobbledex.network.INetworkPacket
 import com.rafacasari.mod.cobbledex.network.template.SerializableItemDrop
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonEvolution
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonSpawnDetail
