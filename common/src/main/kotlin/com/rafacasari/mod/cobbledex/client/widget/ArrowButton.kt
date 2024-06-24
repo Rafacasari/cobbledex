@@ -7,6 +7,7 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.client.sound.SoundManager
 
+// TODO: We can make this implement ImageButton
 class ArrowButton(
     private val isLeft: Boolean,
     pX: Int, pY: Int,

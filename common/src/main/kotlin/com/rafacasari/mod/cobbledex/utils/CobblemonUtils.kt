@@ -87,24 +87,24 @@ object CobblemonUtils {
         val buffer = bufferSource.getBuffer(renderType)
 
         model.withLayerContext(bufferSource, null, PokemonModelRepository.getLayers(species, aspects)) {
-            //model.render(context, matrixStack, buffer, -100, OverlayTexture.DEFAULT_UV, 1f, 1f, 1f, 1f)
-            renderModel(model, context, matrixStack, buffer, -100, -1, 1f, 1f, 1f, 1f)
+            //model.render(context, matrixStack, buffer, -100,-1, 1f, 1f, 1f, 1f)
+            renderBlackModel(model, context, matrixStack, buffer, -100, -1)
             bufferSource.draw()
         }
         model.setDefault()
     }
 
-    fun renderModel(
+    private fun renderBlackModel(
         model: PokemonPoseableModel,
         context: RenderContext,
         stack: MatrixStack,
         buffer: VertexConsumer,
         packedLight: Int,
         packedOverlay: Int,
-        r: Float,
-        g: Float,
-        b: Float,
-        a: Float
+        r: Float = 1f,
+        g: Float = 1f,
+        b: Float = 1f,
+        a: Float = 1f
     ) {
         model.rootPart.render(
             context,
@@ -122,7 +122,7 @@ object CobblemonUtils {
         if (provider != null) {
             for (layer in model.currentLayers) {
                 val texture = layer.texture?.invoke(model.currentState?.animationSeconds ?: 0F) ?: continue
-                val renderLayer = model.getLayer(texture, layer.emissive, layer.translucent)
+                val renderLayer = model.getLayer(texture, emissive = false, translucent = false)
                 val consumer = provider.getBuffer(renderLayer)
                 stack.push()
                 model.rootPart.render(

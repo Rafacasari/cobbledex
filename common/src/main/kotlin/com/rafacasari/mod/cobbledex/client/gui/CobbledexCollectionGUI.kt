@@ -1,12 +1,14 @@
 package com.rafacasari.mod.cobbledex.client.gui
 
 import com.cobblemon.mod.common.api.gui.blitk
-import com.cobblemon.mod.common.client.gui.drawProfilePokemon
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.api.text.bold
+import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.client.CobblemonResources
+import com.cobblemon.mod.common.client.gui.drawProfilePokemon
 import com.cobblemon.mod.common.client.render.drawScaledText
 import com.cobblemon.mod.common.util.math.fromEulerXYZDegrees
+import com.rafacasari.mod.cobbledex.client.widget.ImageButton
 import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.drawBlackSilhouettePokemon
 import com.rafacasari.mod.cobbledex.utils.cobbledexResource
 import com.rafacasari.mod.cobbledex.utils.cobbledexTextTranslation
@@ -37,6 +39,11 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         private val PORTRAIT_BACKGROUND: Identifier = cobbledexResource("textures/gui/collection/portrait_background.png")
         private val ENTRY_BACKGROUND: Identifier = cobbledexResource("textures/gui/collection/entry_background.png")
 
+        private val DOUBLE_LEFT_ARROW: Identifier = cobbledexResource("textures/gui/collection/double_left_arrow.png")
+        private val DOUBLE_RIGHT_ARROW: Identifier = cobbledexResource("textures/gui/collection/double_right_arrow.png")
+        private val LEFT_ARROW: Identifier = cobbledexResource("textures/gui/collection/left_arrow.png")
+        private val RIGHT_ARROW: Identifier = cobbledexResource("textures/gui/collection/right_arrow.png")
+
         fun show() {
             val instance = CobbledexCollectionGUI()
             MinecraftClient.getInstance().setScreen(instance)
@@ -47,6 +54,43 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         }
 
         private var currentPage = 1
+        private var maxPages = 1
+
+        val implementedSpecies by lazy {
+            return@lazy PokemonSpecies.implemented.toSortedSet(compareBy {
+                it.nationalPokedexNumber
+            }).toList()
+        }
+
+    }
+
+    override fun init() {
+        val x = (width - CobbledexGUI.BASE_WIDTH) / 2
+        val y = (height - CobbledexGUI.BASE_HEIGHT) / 2
+
+        addDrawableChild(ImageButton(DOUBLE_LEFT_ARROW, 14, 11, x + 131, y + 175) {
+            currentPage = 1
+        })
+
+        addDrawableChild(ImageButton(LEFT_ARROW, 8, 11, x + 156, y + 175) {
+            if (currentPage <= 1)
+                currentPage = maxPages
+            else currentPage--
+        })
+
+        addDrawableChild(ImageButton(RIGHT_ARROW, 8, 11, x + 229, y + 175) {
+            if (currentPage >= maxPages)
+                currentPage = 1
+            else currentPage++
+        })
+
+        addDrawableChild(ImageButton(DOUBLE_RIGHT_ARROW, 14, 11, x + 248, y + 175) {
+            currentPage = maxPages
+        })
+
+        val totalItems = (COLUMN_SIZE * LINES_SIZE)
+        // Get total items
+        maxPages =  (implementedSpecies.size + totalItems - 1) / totalItems
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -78,29 +122,40 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
             font = CobblemonResources.DEFAULT_LARGE,
             text = cobbledexTranslation("cobbledex.texts.cobbledex").bold(),
             x = x + 200.25F,
-            y = y + 10.5F,
+            y = y + 13.25F,
             shadow = false,
             centered = true,
-            scale = 1.1f
+            scale = 1f
         )
 
-        val minWidth = AREA_WIDTH / (COLUMN_SIZE + 0.5)
-        val minHeight = AREA_HEIGHT / (LINES_SIZE + 0.5)
-        val tamanhoQuadrado = minOf(minWidth, minHeight)
-        val espacoHorizontal = (AREA_WIDTH - tamanhoQuadrado * COLUMN_SIZE) / (COLUMN_SIZE - 1)
-        val espacoVertical = (AREA_HEIGHT - tamanhoQuadrado * LINES_SIZE) / (LINES_SIZE - 1)
+        drawScaledText(
+            context = context,
+            font = CobblemonResources.DEFAULT_LARGE,
+            text = "$currentPage / $maxPages".text().bold(),
+            x = x + 196F,
+            y = y + 173F,
+            shadow = false,
+            centered = true,
+            scale = 1.5F
+        )
 
-
+        val padding = 0.5
+        val minWidth = AREA_WIDTH / (COLUMN_SIZE + padding)
+        val minHeight = AREA_HEIGHT / (LINES_SIZE + padding)
+        val minSize = minOf(minWidth, minHeight)
+        val horizontalPadding = (AREA_WIDTH - minSize * COLUMN_SIZE) / (COLUMN_SIZE - 1)
+        val verticalPadding = (AREA_HEIGHT - minSize * LINES_SIZE) / (LINES_SIZE - 1)
 
         var currentIndex = 1
         val linesSize = LINES_SIZE - 1
         val columnsSize = COLUMN_SIZE - 1
         for (currentY: Int in 0..linesSize) {
             for (currentX in 0..columnsSize) {
-                val entryX = x + (83.5F + (tamanhoQuadrado * currentX) + (espacoHorizontal * currentX))
-                val entryY = y + (24.5F + (tamanhoQuadrado * currentY) + (espacoVertical * currentY))
+                val currentPokemonIndex = COLUMN_SIZE * LINES_SIZE * (currentPage - 1) + (currentIndex - 1)
+                val entryX = x + (83.5F + (minSize * currentX) + (horizontalPadding * currentX))
+                val entryY = y + (24.5F + (minSize * currentY) + (verticalPadding * currentY))
 
-                val species = PokemonSpecies.getByPokedexNumber(currentIndex * currentPage)
+                val species = if(implementedSpecies.size > currentPokemonIndex) implementedSpecies[currentPokemonIndex] else null
 
                 species?.let {
 
@@ -108,25 +163,25 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                         matrixStack = matrices,
                         texture = ENTRY_BACKGROUND,
                         x = entryX,  y = entryY,
-                        width = tamanhoQuadrado,
-                        height = tamanhoQuadrado
+                        width = minSize,
+                        height = minSize
                     )
 
                     context.enableScissor(
                         entryX.toInt(),
                         entryY.toInt(),
-                        entryX.toInt() + tamanhoQuadrado.toInt(),
-                        entryY.toInt() + tamanhoQuadrado.toInt()
+                        entryX.toInt() + minSize.toInt(),
+                        entryY.toInt() + minSize.toInt()
                     )
 
 
                     matrices.push()
-                    matrices.translate(entryX + (tamanhoQuadrado / 2.0), entryY, 0.0)
+                    matrices.translate(entryX + (minSize / 2.0), entryY, 0.0)
 
                     val rotation = Quaternionf().fromEulerXYZDegrees(Vector3f(10f, 35f, 0F))
 
 
-                    if (discoveredList?.contains(currentIndex * currentPage) == true) {
+                    if (discoveredList?.contains(species.nationalPokedexNumber) == true) {
                         drawProfilePokemon(
                             species = species.resourceIdentifier,
                             aspects = species.standardForm.aspects.toSet(),
@@ -134,7 +189,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                             rotation = rotation,
                             state = null,
                             partialTicks = delta,
-                            scale = (tamanhoQuadrado / 2).toFloat()
+                            scale = (minSize / 2).toFloat()
                         )
                     } else {
 
@@ -143,12 +198,23 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                             aspects = species.standardForm.aspects.toSet(),
                             matrixStack = matrices,
                             rotation = rotation,
-                            scale = (tamanhoQuadrado / 2).toFloat()
+                            scale = (minSize / 2).toFloat()
                         )
                     }
                     matrices.pop()
 
                     context.disableScissor()
+
+                    drawScaledText(
+                        context = context,
+                        font = CobblemonResources.DEFAULT_LARGE,
+                        text = "#${species.nationalPokedexNumber}".text().bold(),
+                        x = entryX + 1.5f,
+                        y = entryY + 0.5f,
+                        shadow = false,
+                        centered = false,
+                        scale = 0.5F, opacity = 0.5f
+                    )
 
                 }
 
@@ -156,5 +222,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
 
             }
         }
+
+        super.render(context, mouseX, mouseY, delta)
     }
 }
