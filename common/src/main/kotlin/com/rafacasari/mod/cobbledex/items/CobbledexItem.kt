@@ -3,11 +3,9 @@ package com.rafacasari.mod.cobbledex.items
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
-import net.minecraft.entity.LivingEntity
+import com.cobblemon.mod.common.util.isLookingAt
 import net.minecraft.entity.player.PlayerEntity
-
 import net.minecraft.item.*
-
 import net.minecraft.client.item.TooltipContext
 import net.minecraft.text.Text
 import net.minecraft.util.*
@@ -17,6 +15,11 @@ import com.rafacasari.mod.cobbledex.Cobbledex
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexCollectionGUI
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
 import com.rafacasari.mod.cobbledex.utils.cobbledexTextTranslation
+import net.minecraft.client.gui.screen.Screen
+import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.text.MutableText
+import net.minecraft.text.TextContent
+import net.minecraft.util.math.Box
 
 class CobbledexItem(settings: Settings) : Item(settings) {
 
@@ -28,45 +31,71 @@ class CobbledexItem(settings: Settings) : Item(settings) {
             }
     }
 
-    override fun useOnEntity(
-        itemStack: ItemStack?, player: PlayerEntity?, target: LivingEntity?, hand: Hand?): ActionResult {
-
-        if (player == null || target == null || player.world == null) {
-            return ActionResult.FAIL
-        }
-
-        if (target !is PokemonEntity) {
-            if (player.world.isClient)
-                player.sendMessage(Text.translatable(CobbledexConstants.invalid_entity))
-
-            return ActionResult.FAIL
-        }
-
-        if (player.world.isClient) {
-            CobbledexGUI.openCobbledexScreen(target.pokemon.form, target.aspects)
-            return ActionResult.PASS
-        }
-
-        return Cobbledex.registerPlayerDiscovery(player, target.pokemon.form)
-    }
-
-
     private val totalPokemonCount: Int
         get() = PokemonSpecies.implemented.size
 
 
-    override fun appendTooltip(stack: ItemStack?, world: World?, tooltip: MutableList<Text>?, context: TooltipContext?)
+    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext)
     {
-        val translation = cobbledexTextTranslation("tooltip_description.discovered", totalPokemonDiscovered.toString().text().formatted(Formatting.GREEN), totalPokemonCount.toString())
-        tooltip?.add(translation)
+
+        val percentage = "%.2f%%".format((totalPokemonDiscovered.toDouble() / totalPokemonCount) * 100)
+        val translation = cobbledexTextTranslation("tooltip_description.discovered", totalPokemonDiscovered.toString().text().formatted(Formatting.GREEN), totalPokemonCount.toString(), percentage)
+        tooltip.add(translation)
+
+
+        tooltip.add(MutableText.of(TextContent.EMPTY))
+        if (Screen.hasShiftDown()) {
+            tooltip.add(cobbledexTextTranslation("tooltip_description.instructions1"))
+            tooltip.add(cobbledexTextTranslation("tooltip_description.instructions2"))
+            tooltip.add(cobbledexTextTranslation("tooltip_description.instructions3"))
+            tooltip.add(cobbledexTextTranslation("tooltip_description.instructions4"))
+        } else {
+            tooltip.add(cobbledexTextTranslation("tooltip_description.press_shift").formatted(Formatting.GREEN))
+        }
+
 
         super.appendTooltip(stack, world, tooltip, context)
     }
 
-    override fun use(world: World?, user: PlayerEntity?, hand: Hand?): TypedActionResult<ItemStack> {
+    override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
+        val itemStack = user.getStackInHand(hand)
 
-        if (user != null && world != null && world.isClient && user.isSneaking) {
-            CobbledexGUI.openCobbledexScreen()
+        if (world.isClient && user.isSneaking) {
+            CobbledexCollectionGUI.show()
+            return TypedActionResult.pass(itemStack)
+        }
+
+        if (!user.isSneaking) {
+            // Better entity detection from official Pokédex
+            val entity = user.world
+                .getOtherEntities(user, Box.of(user.pos, 16.0, 16.0, 16.0))
+                .filter { user.isLookingAt(it, stepDistance = 0.1F) }
+                .minByOrNull { it.distanceTo(user) }
+
+            if (entity != null) {
+                if (entity !is PokemonEntity) {
+                    if (world.isClient)
+                        user.sendMessage(Text.translatable(CobbledexConstants.invalid_entity))
+
+                    return TypedActionResult.fail(itemStack)
+                }
+
+                val target = entity.pokemon
+                if (world.isClient && CobbledexCollectionGUI.discoveredList?.contains(target.species.nationalPokedexNumber) == true) {
+                    CobbledexGUI.openCobbledexScreen(target.form, target.aspects)
+                    return TypedActionResult.success(itemStack, false)
+                }
+
+                if (user is ServerPlayerEntity) {
+                    Cobbledex.registerPlayerDiscovery(user, target.form)
+                    return TypedActionResult.success(itemStack)
+                }
+            } else if(world.isClient) {
+                if (CobbledexGUI.previewPokemon != null)
+                    CobbledexGUI.openCobbledexScreen()
+                else CobbledexCollectionGUI.show()
+            }
+
         }
 
         return super.use(world, user, hand)

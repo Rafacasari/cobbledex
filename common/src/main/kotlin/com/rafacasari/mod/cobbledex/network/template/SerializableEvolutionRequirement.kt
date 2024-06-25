@@ -63,7 +63,7 @@ class SerializableEvolutionRequirement(): IEncodable {
             EvolutionRequirementType.FRIENDSHIP -> {
 
                 val translation = Text.translatable("cobbledex.evolution.friendship", value.toString().text().bold())
-                longTextDisplay.addIcon(HEART_ICON, translation, 18, 16, xOffset = -3f, scale = 0.5f, breakLine = false)
+                longTextDisplay.addIcon(HEART_ICON, translation, 16, 16, xOffset = -3.5f, yOffset = -2.5f, scale = 0.65f, breakLine = false)
             }
 
             EvolutionRequirementType.ANY_REQUIREMENT -> {
@@ -105,7 +105,7 @@ class SerializableEvolutionRequirement(): IEncodable {
                 intRange?.let {
                     //longTextDisplay.addText(Text.translatable("cobbledex.evolution.level", it.first.toString().text().bold()), false)
                     val translation = Text.translatable("cobbledex.evolution.level", it.first.toString().text().bold())
-                    longTextDisplay.addIcon(LEVEL_ICON, translation, 18, 16, xOffset = -3f, scale = 0.5f, breakLine = false)
+                    longTextDisplay.addIcon(LEVEL_ICON, translation, 16, 16, xOffset = -3.5f, yOffset = -2.5f, scale = 0.65f, breakLine = false)
                 }
             }
 

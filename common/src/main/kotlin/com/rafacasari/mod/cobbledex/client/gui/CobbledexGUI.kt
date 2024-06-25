@@ -56,14 +56,14 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         private val MAIN_BACKGROUND: Identifier = cobbledexResource("textures/gui/new_cobbledex_background.png")
         private val PORTRAIT_BACKGROUND: Identifier = cobbledexResource("textures/gui/portrait_background.png")
 
-        private val TYPE_SPACER: Identifier = cobbledexResource("textures/gui/type_spacer.png")
-        private val TYPE_SPACER_DOUBLE: Identifier = cobbledexResource("textures/gui/type_spacer_double.png")
+        internal val TYPE_SPACER: Identifier = cobbledexResource("textures/gui/type_spacer.png")
+        internal val TYPE_SPACER_DOUBLE: Identifier = cobbledexResource("textures/gui/type_spacer_double.png")
 
         var Instance : CobbledexGUI? = null
 
 
-        fun openCobbledexScreen(pokemon: FormData? = null, aspects: Set<String>? = null) {
-            playSound(CobblemonSounds.PC_ON)
+        fun openCobbledexScreen(pokemon: FormData? = null, aspects: Set<String>? = null, skipSound: Boolean = false) {
+            if (!skipSound) playSound(CobblemonSounds.PC_ON)
 
             Instance = CobbledexGUI(pokemon, aspects)
             MinecraftClient.getInstance().setScreen(Instance)
@@ -88,6 +88,10 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         var lastLoadedEvolutions: List<SerializablePokemonEvolution>? = null
         var lastLoadedPreEvolutions: List<Pair<Species, Set<String>>>? = null
         //var lastLoadedForms: List<Pair<Species, Set<String>>>? = null
+
+        internal fun onServerJoin() {
+            previewPokemon = null
+        }
     }
 
 
@@ -280,8 +284,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         drawScaledText(context = context, text = selectedRelatedMenuText.bold(), x = x + 302, y = y + 29.5f, centered = true, scale = 0.7F)
         drawScaledText(context = context, font = CobblemonResources.DEFAULT_LARGE, text = cobbledexTranslation("cobbledex.texts.cobbledex").bold(), x = x + 169.5F, y = y + 7.35F, shadow = false, centered = true, scale = 1.06f)
 
-        val pokemon = previewPokemon
-        if (pokemon != null) {
+        previewPokemon?.let { pokemon ->
 
             drawScaledText(
                 context = context,
@@ -337,10 +340,10 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
         super.render(context, mouseX, mouseY, delta)
 
-        if (pokemon != null && typeWidget != null) {
+        if (previewPokemon != null && typeWidget != null) {
             val typeX : Float? = typeWidget?.x?.toFloat()
             val typeY : Float? = typeWidget?.y?.toFloat()
-            val space : Float = if(pokemon.secondaryType != null) 16f else 8f
+            val space : Float = if(previewPokemon?.secondaryType != null) 16f else 8f
             if (typeX != null && typeY != null) {
                 val itemHovered =
                     mouseX.toFloat() in typeX - space..(typeX + space) && mouseY.toFloat() in typeY..(typeY + 16)
@@ -348,10 +351,10 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
 
                     val stringBuilder = "".text()
-                    val primaryType = pokemon.primaryType
+                    val primaryType = previewPokemon!!.primaryType
                     stringBuilder.append(primaryType.displayName.setStyle(Style.EMPTY.withBold(true).withColor(primaryType.hue)))
 
-                    val secondType = pokemon.secondaryType
+                    val secondType = previewPokemon!!.secondaryType
                     if (secondType != null) {
                         stringBuilder.append(" & ".text().setStyle(Style.EMPTY.withBold(true)))
                         stringBuilder.append(secondType.displayName.setStyle(Style.EMPTY.withBold(true).withColor(secondType.hue)))

@@ -11,6 +11,7 @@ import com.cobblemon.mod.common.platform.events.PlatformEvents
 import com.cobblemon.mod.common.platform.events.ServerPlayerEvent
 import com.cobblemon.mod.common.pokemon.FormData
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexCollectionGUI
+import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.util.ActionResult
@@ -79,6 +80,11 @@ object Cobbledex {
 
         PlatformEvents.CLIENT_PLAYER_LOGOUT.subscribe {
             CobbledexCollectionGUI.discoveredList = null
+        }
+
+        PlatformEvents.CLIENT_PLAYER_LOGIN.subscribe {
+            CobbledexGUI.onServerJoin()
+            CobbledexCollectionGUI.needReload = true
         }
 
         PlatformEvents.SERVER_PLAYER_LOGIN.subscribe { login: ServerPlayerEvent.Login ->

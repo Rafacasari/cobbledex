@@ -22,6 +22,7 @@ import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableString
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIdentifier
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableString
 import com.rafacasari.mod.cobbledex.utils.bold
+import com.rafacasari.mod.cobbledex.utils.cobbledexResource
 import com.rafacasari.mod.cobbledex.utils.logInfo
 import com.rafacasari.mod.cobbledex.utils.logWarn
 import net.minecraft.block.Block
@@ -82,7 +83,8 @@ class SerializablePokemonEvolution() : IEncodable {
                         Text.translatable("cobbledex.evolution.trade_specific", speciesName.text().bold(), itemStack.name.bold())
                     } ?: Text.translatable("cobbledex.evolution.trade_any", itemStack.name.bold())
 
-                    longTextDisplay.addItemEntry(itemStack, translation, false, disableTooltip = false)
+                    longTextDisplay.addIcon(TRADE_ICON, translation, 16, 16, xOffset = -3.5f, yOffset = -2.5f, scale = 0.65f, breakLine = false)
+                    //longTextDisplay.addItemEntry(itemStack, translation, false, disableTooltip = false)
                 }
 
                 Unknown -> {
@@ -185,6 +187,8 @@ class SerializablePokemonEvolution() : IEncodable {
     }
 
     companion object {
+        val TRADE_ICON = cobbledexResource("textures/gui/icons/trade.png")
+
         fun decode(reader: PacketByteBuf) : SerializablePokemonEvolution
         {
             val evolution = SerializablePokemonEvolution()

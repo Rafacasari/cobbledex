@@ -24,7 +24,12 @@
 
   "cobbledex.texts.new_pokemon_discovered": "You've discovered a new Pokémon: %s",
   "cobbledex.texts.click_to_open_cobbledex": "Click to open in Cobbledex",
-  "cobbledex.texts.tooltip_description.discovered": "Discovered: %s/%s",
+  "cobbledex.texts.tooltip_description.discovered": "Discovered: %s/%s (%s)",
+  "cobbledex.texts.tooltip_description.press_shift": "Hold <Shift> for instructions",
+  "cobbledex.texts.tooltip_description.instructions1": "§a§lRight-Click§r a Pokémon to mark as seen",
+  "cobbledex.texts.tooltip_description.instructions2": "§a§lRight-Click§r a Pokémon to open §lInformation GUI§r",
+  "cobbledex.texts.tooltip_description.instructions3": "§a§lRight-Click§r on air to open §llast viewed Pokémon§r",
+  "cobbledex.texts.tooltip_description.instructions4": "§a§lShift + Right-Click§r to open §lCollection GUI§r",
   "cobbledex.texts.drops.item": "%s | %s%% | %sx",
   "cobbledex.texts.weather.clear": "Clear",
   "cobbledex.texts.weather.raining": "Raining",
