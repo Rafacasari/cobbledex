@@ -95,7 +95,7 @@ object Cobbledex {
             if (cobbledexData != null)
                 totalPokemonDiscovered = cobbledexData.caughtSpecies.size
 
-            AddToCollectionPacket(totalPokemonDiscovered,).sendToPlayer(login.player)
+            AddToCollectionPacket(totalPokemonDiscovered).sendToPlayer(login.player)
             ReceiveCollectionDataPacket(cobbledexData?.caughtSpecies?.toList() ?: listOf()).sendToPlayer(login.player)
         }
     }

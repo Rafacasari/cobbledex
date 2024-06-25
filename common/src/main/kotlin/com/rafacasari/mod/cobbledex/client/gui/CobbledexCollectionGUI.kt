@@ -83,9 +83,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                 {
                     currentPage = 1
                     lastHoveredEntry = null
-                    implementedSpeciesInternal = PokemonSpecies.implemented.toSortedSet(compareBy {
-                        it.nationalPokedexNumber
-                    }).toList()
+                    implementedSpeciesInternal = PokemonSpecies.implemented.sortedBy { it.nationalPokedexNumber }
 
                     needReload = false
                 }
