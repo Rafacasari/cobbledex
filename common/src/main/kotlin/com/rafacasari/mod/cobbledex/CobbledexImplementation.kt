@@ -11,15 +11,12 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Identifier
 import kotlin.reflect.KClass
 
-//import net.minecraft.world.biome.Biome
-
 interface CobbledexImplementation {
     val modAPI: ModAPI
     val networkManager: INetworkManager
     fun server(): MinecraftServer?
     fun environment(): Environment
     fun registerItems()
-//    fun getAllRegisteredBiomes() : List<Biome>
 }
 
 enum class ModAPI {

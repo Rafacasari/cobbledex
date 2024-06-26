@@ -12,6 +12,7 @@ import net.minecraft.util.*
 import net.minecraft.world.World
 import com.rafacasari.mod.cobbledex.CobbledexConstants
 import com.rafacasari.mod.cobbledex.Cobbledex
+import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexCollectionGUI
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
 import com.rafacasari.mod.cobbledex.utils.cobbledexTextTranslation
@@ -22,12 +23,10 @@ import net.minecraft.text.TextContent
 import net.minecraft.util.math.Box
 
 class CobbledexItem(settings: Settings) : Item(settings) {
-
-
     companion object {
         val totalPokemonDiscovered: Int
             get() {
-                return CobbledexCollectionGUI.discoveredList?.size ?: 0
+                return CobbledexCollectionGUI.discoveredList.size
             }
     }
 
@@ -81,13 +80,15 @@ class CobbledexItem(settings: Settings) : Item(settings) {
                 }
 
                 val target = entity.pokemon
-                if (world.isClient && CobbledexCollectionGUI.discoveredList?.contains(target.species.nationalPokedexNumber) == true) {
+
+                val discoveryRegister = CobbledexCollectionGUI.discoveredList[target.species.showdownId()]?.contains(target.form.formOnlyShowdownId())
+                if (world.isClient && discoveryRegister == true) {
                     CobbledexGUI.openCobbledexScreen(target.form, target.aspects)
                     return TypedActionResult.success(itemStack, false)
                 }
 
                 if (user is ServerPlayerEntity) {
-                    Cobbledex.registerPlayerDiscovery(user, target.form)
+                    Cobbledex.registerPlayerDiscovery(user, target.form, target.shiny, DiscoveryRegister.RegisterType.SEEN)
                     return TypedActionResult.success(itemStack)
                 }
             } else if(world.isClient) {

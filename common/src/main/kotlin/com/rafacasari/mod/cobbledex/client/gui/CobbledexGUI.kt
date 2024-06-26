@@ -33,7 +33,7 @@ import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonSpawnDet
 import com.rafacasari.mod.cobbledex.utils.*
 import net.minecraft.text.Text
 
-class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<String>? = null) : Screen(
+class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<String>? = null, val cameFromCollection: Boolean = false) : Screen(
     cobbledexTextTranslation("cobbledex")
 ) {
 
@@ -62,10 +62,10 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         var Instance : CobbledexGUI? = null
 
 
-        fun openCobbledexScreen(pokemon: FormData? = null, aspects: Set<String>? = null, skipSound: Boolean = false) {
+        fun openCobbledexScreen(pokemon: FormData? = null, aspects: Set<String>? = null, skipSound: Boolean = false, cameFromCollection: Boolean = false) {
             if (!skipSound) playSound(CobblemonSounds.PC_ON)
 
-            Instance = CobbledexGUI(pokemon, aspects)
+            Instance = CobbledexGUI(pokemon, aspects, cameFromCollection)
             MinecraftClient.getInstance().setScreen(Instance)
         }
 
@@ -109,7 +109,11 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         val x = (width - BASE_WIDTH) / 2
         val y = (height - BASE_HEIGHT) / 2
 
-        this.addDrawableChild(ExitButton(pX = x + 315, pY = y + 172) { this.close() })
+        this.addDrawableChild(ExitButton(pX = x + 315, pY = y + 172) {
+            this.close()
+            if (cameFromCollection)
+                CobbledexCollectionGUI.show(true)
+        })
 
         evolutionDisplay = PokemonEvolutionDisplay(x + 260, y + 37)
         addDrawableChild(evolutionDisplay)
@@ -282,7 +286,16 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         }
 
         drawScaledText(context = context, text = selectedRelatedMenuText.bold(), x = x + 302, y = y + 29.5f, centered = true, scale = 0.7F)
-        drawScaledText(context = context, font = CobblemonResources.DEFAULT_LARGE, text = cobbledexTranslation("cobbledex.texts.cobbledex").bold(), x = x + 169.5F, y = y + 7.35F, shadow = false, centered = true, scale = 1.06f)
+        drawScaledText(
+            context = context,
+            font = CobblemonResources.DEFAULT_LARGE,
+            text = cobbledexTranslation("cobbledex.texts.cobbledex").bold(),
+            x = x + 169.5F,
+            y = y + 7.35F,
+            shadow = true,
+            centered = true,
+            scale = 1.06f
+        )
 
         previewPokemon?.let { pokemon ->
 
@@ -467,6 +480,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
                 val forms = lastLoadedSpecies?.forms?.map {  form ->
                     form.species to form.aspects.toSet()
                 }
+
                 evolutionDisplay?.selectEvolutions(forms)
             }
         }

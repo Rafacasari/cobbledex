@@ -7,7 +7,13 @@ import net.minecraft.client.MinecraftClient
 
 object AddToCollectionHandler : IClientNetworkPacketHandler<AddToCollectionPacket> {
     override fun handle(packet: AddToCollectionPacket, client: MinecraftClient) {
-//        CobbledexItem.totalPokemonDiscovered = packet.discoveredCount
-        CobbledexCollectionGUI.discoveredList?.add(packet.nationalNumber)
+
+        val speciesRegister = CobbledexCollectionGUI.discoveredList[packet.species]
+
+        if (speciesRegister == null) {
+            // Register not found, create it
+            CobbledexCollectionGUI.discoveredList[packet.species] = mutableMapOf(packet.form to packet.entry)
+        }
+        else speciesRegister[packet.form] = packet.entry
     }
 }

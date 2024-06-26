@@ -100,5 +100,17 @@ object PacketUtils {
         else null
     }
 
+    fun PacketByteBuf.writeNullableLong(long: Long?) {
+        this.writeBoolean(long != null)
+        long?.let {
+            this.writeLong(it)
+        }
+    }
+
+    fun PacketByteBuf.readNullableLong() : Long? {
+        return if(this.readBoolean())
+            this.readLong()
+        else null
+    }
 
 }

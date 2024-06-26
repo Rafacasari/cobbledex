@@ -44,10 +44,8 @@ object CobblemonUtils {
 
     fun getPokemonDrops(species: Species) : List<ItemDropEntry> {
         val drops = species.drops.entries.filterIsInstance<ItemDropEntry>()
-
         return drops
     }
-
 
 
     fun drawBlackSilhouettePokemon(
@@ -87,7 +85,6 @@ object CobblemonUtils {
         val buffer = bufferSource.getBuffer(renderType)
 
         model.withLayerContext(bufferSource, null, PokemonModelRepository.getLayers(species, aspects)) {
-            //model.render(context, matrixStack, buffer, -100,-1, 1f, 1f, 1f, 1f)
             renderBlackModel(model, context, matrixStack, buffer, -100, -1)
             bufferSource.draw()
         }

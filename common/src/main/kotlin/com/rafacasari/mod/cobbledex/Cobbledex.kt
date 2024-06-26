@@ -10,14 +10,14 @@ import com.cobblemon.mod.common.api.text.onHover
 import com.cobblemon.mod.common.platform.events.PlatformEvents
 import com.cobblemon.mod.common.platform.events.ServerPlayerEvent
 import com.cobblemon.mod.common.pokemon.FormData
+import com.rafacasari.mod.cobbledex.api.CobbledexDiscovery
+import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexCollectionGUI
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
-import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.util.ActionResult
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import com.rafacasari.mod.cobbledex.cobblemon.extensions.PlayerDiscovery
 import com.rafacasari.mod.cobbledex.network.client.packets.OpenCobbledexPacket
 import com.rafacasari.mod.cobbledex.network.client.packets.AddToCollectionPacket
 import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCollectionDataPacket
@@ -51,24 +51,25 @@ object Cobbledex {
         // TODO: Make our own event so we don't need to depend on Cobblemon PlatformEvents
         PlatformEvents.SERVER_STARTED.subscribe { _ ->
             LOGGER.info("Cobbledex: Server initialized...")
-            PlayerDataExtensionRegistry.register(PlayerDiscovery.NAME_KEY, PlayerDiscovery::class.java)
+            //PlayerDataExtensionRegistry.register(PlayerDiscovery.NAME_KEY, PlayerDiscovery::class.java)
+            PlayerDataExtensionRegistry.register(CobbledexDiscovery.NAME_KEY, CobbledexDiscovery::class.java)
 
             if (!eventsCreated) {
                 CobblemonEvents.STARTER_CHOSEN.subscribe(Priority.LOW) {
-                    registerPlayerDiscovery(it.player, it.pokemon.form)
+                    registerPlayerDiscovery(it.player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
 
                     val itemStack = ItemStack(CobbledexConstants.Cobbledex_Item, 1)
                     it.player.giveItemStack(itemStack)
                 }
 
                 CobblemonEvents.POKEMON_CAPTURED.subscribe(Priority.LOW) {
-                    registerPlayerDiscovery(it.player, it.pokemon.form)
+                    registerPlayerDiscovery(it.player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
                 }
 
                 CobblemonEvents.EVOLUTION_COMPLETE.subscribe(Priority.LOW) {
                     val player = it.pokemon.getOwnerPlayer()
                     if (player != null) {
-                        registerPlayerDiscovery(player, it.pokemon.form)
+                        registerPlayerDiscovery(player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
                     }
                 }
 
@@ -79,7 +80,7 @@ object Cobbledex {
         }
 
         PlatformEvents.CLIENT_PLAYER_LOGOUT.subscribe {
-            CobbledexCollectionGUI.discoveredList = null
+            CobbledexCollectionGUI.discoveredList.clear()
         }
 
         PlatformEvents.CLIENT_PLAYER_LOGIN.subscribe {
@@ -89,14 +90,20 @@ object Cobbledex {
 
         PlatformEvents.SERVER_PLAYER_LOGIN.subscribe { login: ServerPlayerEvent.Login ->
 
-            val playerData = CobblemonPlayerData.get(login.player)
-            val cobbledexData = playerData.extraData[PlayerDiscovery.NAME_KEY] as PlayerDiscovery?
-            var totalPokemonDiscovered = 0
-            if (cobbledexData != null)
-                totalPokemonDiscovered = cobbledexData.caughtSpecies.size
+//            val playerData = CobblemonPlayerData.get(login.player)
+//            val cobbledexData = playerData.extraData[PlayerDiscovery.NAME_KEY] as PlayerDiscovery?
+//            var totalPokemonDiscovered = 0
+//            if (cobbledexData != null)
+//                totalPokemonDiscovered = cobbledexData.caughtSpecies.size
+//
+//            AddToCollectionPacket(totalPokemonDiscovered).sendToPlayer(login.player)
+//            ReceiveCollectionDataPacket(cobbledexData?.caughtSpecies?.toList() ?: listOf()).sendToPlayer(login.player)
 
-            AddToCollectionPacket(totalPokemonDiscovered).sendToPlayer(login.player)
-            ReceiveCollectionDataPacket(cobbledexData?.caughtSpecies?.toList() ?: listOf()).sendToPlayer(login.player)
+            val playerData = CobblemonPlayerData.get(login.player)
+            val cobbledexData = playerData.extraData[CobbledexDiscovery.NAME_KEY] as? CobbledexDiscovery?
+
+            val registers = cobbledexData?.registers ?: mutableMapOf()
+            ReceiveCollectionDataPacket(registers).sendToPlayer(login.player)
         }
     }
 
@@ -108,32 +115,20 @@ object Cobbledex {
         return implementation.environment() == Environment.SERVER
     }
 
-    fun registerPlayerDiscovery(player: PlayerEntity?, formData: FormData?): ActionResult
+    fun registerPlayerDiscovery(player: ServerPlayerEntity, formData: FormData?, isShiny: Boolean, type: DiscoveryRegister.RegisterType): ActionResult
     {
-        if (player == null || formData == null)
+        if (formData == null)
             return ActionResult.PASS
 
-        val playerData = CobblemonPlayerData.get(player)
-        val cobbledexData = playerData.extraData.getOrPut(PlayerDiscovery.NAME_KEY) {
-            // TODO: Maybe add the player PC/party pokemon in the first discover?
-            PlayerDiscovery()
-        } as PlayerDiscovery
-
-
-        if (!cobbledexData.caughtSpecies.contains(formData.species.nationalPokedexNumber)) {
-            cobbledexData.caughtSpecies.add(formData.species.nationalPokedexNumber)
-
+        if(CobbledexDiscovery.addOrUpdatePlayer(player, formData, isShiny, type) { newEntry ->
+            AddToCollectionPacket(formData, newEntry).sendToPlayer(player)
+        }) {
             val translation = cobbledexTextTranslation("new_pokemon_discovered", formData.species.translatedName.bold().formatted(Formatting.GREEN).onClick {
                 OpenCobbledexPacket(formData).sendToPlayer(it)
             }.onHover(cobbledexTextTranslation("click_to_open_cobbledex")))
 
             player.sendMessage(translation)
-
-            if (player is ServerPlayerEntity)
-                AddToCollectionPacket(formData.species.nationalPokedexNumber).sendToPlayer(player)
         }
-
-        CobblemonPlayerData.saveSingle(playerData)
 
         return ActionResult.SUCCESS
     }

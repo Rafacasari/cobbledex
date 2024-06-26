@@ -7,6 +7,6 @@ import net.minecraft.client.MinecraftClient
 
 object ReceiveCollectionDataHandler : IClientNetworkPacketHandler<ReceiveCollectionDataPacket> {
     override fun handle(packet: ReceiveCollectionDataPacket, client: MinecraftClient) {
-        CobbledexCollectionGUI.discoveredList = packet.discoveredList.toMutableList()
+        CobbledexCollectionGUI.discoveredList = packet.discoveredList
     }
 }
