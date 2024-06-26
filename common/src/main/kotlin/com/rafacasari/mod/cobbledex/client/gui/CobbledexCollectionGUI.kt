@@ -355,7 +355,6 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                                         tooltip.add(translation)
                                     }
 
-
                                     entryForm.getDiscoveredTimestamp()?.let { timestamp ->
                                         val translation = cobbledexTextTranslation("discovered_on", timestamp)
                                         tooltip.add(translation)
@@ -400,7 +399,6 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         {
             val species = if(filteredSpecies.size > entry) filteredSpecies[entry] else null
             if (species != null) {
-                close()
                 playSound(CobblemonSounds.PC_CLICK)
                 CobbledexGUI.openCobbledexScreen(species.standardForm, setOf(),
                     skipSound = true,

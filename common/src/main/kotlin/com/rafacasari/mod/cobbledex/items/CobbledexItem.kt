@@ -81,10 +81,12 @@ class CobbledexItem(settings: Settings) : Item(settings) {
 
                 val target = entity.pokemon
 
-                val discoveryRegister = CobbledexCollectionGUI.discoveredList[target.species.showdownId()]?.contains(target.form.formOnlyShowdownId())
-                if (world.isClient && discoveryRegister == true) {
-                    CobbledexGUI.openCobbledexScreen(target.form, target.aspects)
-                    return TypedActionResult.success(itemStack, false)
+                if (world.isClient) {
+                    val discoveryRegister = CobbledexCollectionGUI.discoveredList[target.species.showdownId()]?.contains(target.form.formOnlyShowdownId())
+                    if (discoveryRegister == true) {
+                        CobbledexGUI.openCobbledexScreen(target.form, target.aspects)
+                        return TypedActionResult.success(itemStack, false)
+                    }
                 }
 
                 if (user is ServerPlayerEntity) {

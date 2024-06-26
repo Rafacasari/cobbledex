@@ -110,9 +110,10 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         val y = (height - BASE_HEIGHT) / 2
 
         this.addDrawableChild(ExitButton(pX = x + 315, pY = y + 172) {
-            this.close()
             if (cameFromCollection)
                 CobbledexCollectionGUI.show(true)
+            else
+                this.close()
         })
 
         evolutionDisplay = PokemonEvolutionDisplay(x + 260, y + 37)
