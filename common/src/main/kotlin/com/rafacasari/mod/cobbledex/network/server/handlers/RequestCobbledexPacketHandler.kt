@@ -17,8 +17,11 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
         val pokemon = PokemonSpecies.getByIdentifier(packet.pokemon)
 
         if (pokemon != null ) {
+            val form = pokemon.getForm(packet.aspects)
+
             val serverConfig = Cobbledex.getConfig()
-            val evolutions = if (serverConfig.showEvolutions) pokemon.evolutions.mapNotNull {
+            
+            val evolutions = if (serverConfig.ShowEvolutions_IsEnabled) form.evolutions.mapNotNull {
                 it.result.species?.let { evoSpeciesName ->
                     val evoSpecies = PokemonSpecies.getByName(evoSpeciesName)
                     if(evoSpecies != null)
@@ -28,7 +31,7 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
             } else listOf()
 
             // Select all pre-evolution forms or just the default form
-            val preEvolutions = pokemon.preEvolution?.let { preEvolution ->
+            val preEvolutions = form.preEvolution?.let { preEvolution ->
                 val forms =
                     if (preEvolution.species.forms.isEmpty()) setOf(preEvolution.form)
                     else preEvolution.species.forms.toSet()
@@ -38,19 +41,13 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
                 }
             } ?: listOf()
 
-//
-//            val forms = pokemon.forms.map {
-//                val identifier = it.species.resourceIdentifier
-//                identifier to it.aspects.toSet()
-//            }
-
-            val spawnDetails = if(serverConfig.howToFindEnabled) CobblemonUtils.getSpawnDetails(pokemon, packet.aspects) else listOf()
+            val spawnDetails = if(serverConfig.HowToFind_IsEnabled) CobblemonUtils.getSpawnDetails(pokemon, packet.aspects) else listOf()
 
             val serializableSpawnDetails = spawnDetails.map {
                 SerializablePokemonSpawnDetail(it)
             }
 
-            val drops: List<SerializableItemDrop> = if(serverConfig.itemDropsEnabled) CobblemonUtils.getPokemonDrops(pokemon).map {
+            val drops: List<SerializableItemDrop> = if(serverConfig.ItemDrops_IsEnabled) CobblemonUtils.getPokemonDrops(pokemon).map {
                 SerializableItemDrop(it)
             } else listOf()
 

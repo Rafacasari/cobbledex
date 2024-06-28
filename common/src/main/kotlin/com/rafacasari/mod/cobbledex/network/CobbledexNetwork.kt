@@ -22,6 +22,7 @@ object CobbledexNetwork {
         createClientBound(AddToCollectionPacket.ID, AddToCollectionPacket::decode, AddToCollectionHandler)
         createClientBound(OpenCobbledexPacket.ID, OpenCobbledexPacket::decode, OpenCobbledexHandler)
         createClientBound(ReceiveCollectionDataPacket.ID, ReceiveCollectionDataPacket::decode, ReceiveCollectionDataHandler)
+        createClientBound(SyncServerSettingsPacket.ID, SyncServerSettingsPacket::decode, SyncServerSettingsHandler)
     }
 
     fun registerServerBound() {

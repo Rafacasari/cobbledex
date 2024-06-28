@@ -19,18 +19,25 @@
   "cobbledex.texts.tab.battle": "Battle",
   "cobbledex.texts.tab.evolve": "Evolve",
   "cobbledex.texts.search": "Search",
-
+  "cobbledex.texts.commands.current_setting": "%s is currently set to %s",
+  "cobbledex.texts.commands.successfully_applied": "§a✔ Applied:§r %s set to %s",
   "cobbledex.texts.discovery_status": "Status: %s",
   "cobbledex.texts.discovery_status.discovered": "Discovered",
   "cobbledex.texts.discovery_status.caught": "Caught",
-
   "cobbledex.texts.shiny": "Shiny!",
   "cobbledex.texts.discovered_on": "Discovered on: %s",
   "cobbledex.texts.caught_on": "Caught on: %s",
-
   "cobbledex.texts.info.height_value": "%sm",
   "cobbledex.texts.info.weight_value": "%skg",
+  "cobbledex.texts.no_drops_found": "No drops found",
+  "cobbledex.texts.blocked_by_server": "This feature is disabled in this server",
+  "cobbledex.texts.need_seen": "You must §lsee§r this Pokémon to be able to %s!",
+  "cobbledex.texts.need_catch": "You must §lcatch§r this Pokémon to be able to %s!",
+  "cobbledex.texts.need.view_evolutions": "view evolutions",
+  "cobbledex.texts.need.view_spawns": "view spawns",
+  "cobbledex.texts.need.view_drops": "view drops",
 
+  "cobbledex.texts.tooltip.hold_shift_timestamp": "Hold <Shift> for timestamps",
   "cobbledex.texts.new_pokemon_discovered": "You've discovered a new Pokémon: %s",
   "cobbledex.texts.click_to_open_cobbledex": "Click to open in Cobbledex",
   "cobbledex.texts.tooltip_description.discovered": "Discovered: %s/%s (%s)",
@@ -44,13 +51,11 @@
   "cobbledex.texts.weather.raining": "Raining",
   "cobbledex.texts.weather.thundering": "Thundering",
   "cobbledex.texts.weather.raining_and_thundering": "Clear",
-
   "cobbledex.texts.no_evolution_found": "No evolution found for %s",
-  "cobbledex.evolution.use_item": "Use a %s",
 
+  "cobbledex.evolution.use_item": "Use a %s",
   "cobbledex.evolution.trade_any": "Complete any trade or use a %s",
   "cobbledex.evolution.trade_specific": "Trade for an %s or use a %s",
-
   "cobbledex.evolution.damage_taken": "Need %s damage taken",
   "cobbledex.evolution.level": "Level: %s",
   "cobbledex.evolution.friendship": "Friendship: %s",

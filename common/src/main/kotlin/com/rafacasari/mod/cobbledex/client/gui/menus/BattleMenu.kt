@@ -5,7 +5,10 @@ import com.cobblemon.mod.common.api.text.bold
 import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.api.types.ElementalTypes
 import com.cobblemon.mod.common.pokemon.FormData
+import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
+import com.rafacasari.mod.cobbledex.client.gui.CobbledexCollectionGUI
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
+import com.rafacasari.mod.cobbledex.network.client.handlers.SyncServerSettingsHandler
 import com.rafacasari.mod.cobbledex.utils.TypeChartUtils
 import com.rafacasari.mod.cobbledex.utils.withRGBColor
 import net.minecraft.text.Text
@@ -13,6 +16,11 @@ import net.minecraft.text.Text
 object BattleMenu {
     fun drawText(longTextDisplay: LongTextDisplay?, pokemon: FormData?) {
         if (pokemon == null || longTextDisplay == null) return
+
+        val config = SyncServerSettingsHandler.config
+        val registerType = CobbledexCollectionGUI.discoveredList[pokemon.species.showdownId()]?.get(pokemon.formOnlyShowdownId())?.status
+        val hasCaught = registerType == DiscoveryRegister.RegisterType.CAUGHT
+        val hasSeen = hasCaught || registerType == DiscoveryRegister.RegisterType.SEEN
 
 
         val elementalMultipliers = ElementalTypes.all()

@@ -21,6 +21,7 @@ import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI.Companion.TYPE_SPACE
 import com.rafacasari.mod.cobbledex.client.widget.ImageButton
 import com.rafacasari.mod.cobbledex.client.widget.SearchWidget
 import com.rafacasari.mod.cobbledex.client.widget.SilhouetteModelWidget
+import com.rafacasari.mod.cobbledex.network.client.handlers.SyncServerSettingsHandler
 import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.drawBlackSilhouettePokemon
 import com.rafacasari.mod.cobbledex.utils.cobbledexResource
 import com.rafacasari.mod.cobbledex.utils.cobbledexTextTranslation
@@ -99,7 +100,6 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
             }
 
         var filteredSpecies: MutableList<Species> = mutableListOf()
-
     }
 
 
@@ -120,23 +120,23 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
 
         this.addDrawableChild(searchWidget)
 
-        addDrawableChild(ImageButton(DOUBLE_LEFT_ARROW, 14, 11, x + 170, y + 174) {
+        addDrawableChild(ImageButton(DOUBLE_LEFT_ARROW, 14, 11, x + 170, y + 175) {
             currentPage = 1
         })
 
-        addDrawableChild(ImageButton(LEFT_ARROW, 8, 11, x + 188, y + 174) {
+        addDrawableChild(ImageButton(LEFT_ARROW, 8, 11, x + 188, y + 175) {
             if (currentPage <= 1)
                 currentPage = maxPages
             else currentPage--
         })
 
-        addDrawableChild(ImageButton(RIGHT_ARROW, 8, 11, x + 268, y + 174) {
+        addDrawableChild(ImageButton(RIGHT_ARROW, 8, 11, x + 268, y + 175) {
             if (currentPage >= maxPages)
                 currentPage = 1
             else currentPage++
         })
 
-        addDrawableChild(ImageButton(DOUBLE_RIGHT_ARROW, 14, 11, x + 280, y + 174) {
+        addDrawableChild(ImageButton(DOUBLE_RIGHT_ARROW, 14, 11, x + 280, y + 175) {
             currentPage = maxPages
         })
 
@@ -338,41 +338,64 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                         discoveredList[species.showdownId()]?.let { entry ->
                             val tooltip: MutableList<Text> = mutableListOf()
 
-                            fun drawOnTooltip(form: FormData) {
+                            fun drawOnTooltip(form: FormData, addEmptyLine: Boolean) {
+
                                 entry[form.formOnlyShowdownId()]?.let { entryForm ->
 
-
                                     tooltip.add(form.name.text().bold())
-                                    val currentStatusTranslation = if(entryForm.status == DiscoveryRegister.RegisterType.CAUGHT)
-                                        cobbledexTextTranslation("discovery_status.caught").formatted(Formatting.GREEN)
-                                    else cobbledexTextTranslation("discovery_status.discovered").formatted(Formatting.GRAY)
+                                    val currentStatusTranslation =
+                                        if (entryForm.status == DiscoveryRegister.RegisterType.CAUGHT)
+                                            cobbledexTextTranslation("discovery_status.caught").formatted(Formatting.GREEN)
+                                        else cobbledexTextTranslation("discovery_status.discovered").formatted(
+                                            Formatting.GRAY
+                                        )
 
-                                    val statusTranslation = cobbledexTextTranslation("discovery_status", currentStatusTranslation)
+                                    val statusTranslation =
+                                        cobbledexTextTranslation("discovery_status", currentStatusTranslation)
                                     tooltip.add(statusTranslation)
 
                                     if (entryForm.isShiny) {
-                                        val translation = cobbledexTextTranslation("shiny").formatted(Formatting.YELLOW, Formatting.BOLD)
+                                        val translation = cobbledexTextTranslation("shiny").formatted(
+                                            Formatting.YELLOW,
+                                            Formatting.BOLD
+                                        )
                                         tooltip.add(translation)
                                     }
 
-                                    entryForm.getDiscoveredTimestamp()?.let { timestamp ->
-                                        val translation = cobbledexTextTranslation("discovered_on", timestamp)
-                                        tooltip.add(translation)
+                                    if (hasShiftDown()) {
+                                        entryForm.getDiscoveredTimestamp()?.let { timestamp ->
+                                            val translation = cobbledexTextTranslation("discovered_on", timestamp)
+                                            tooltip.add(translation)
+                                        }
+
+                                        entryForm.getCaughtTimestamp()?.let { timestamp ->
+                                            val translation = cobbledexTextTranslation("caught_on", timestamp)
+                                            tooltip.add(translation)
+                                        }
                                     }
 
-                                    entryForm.getCaughtTimestamp()?.let { timestamp ->
-                                        val translation = cobbledexTextTranslation("caught_on", timestamp)
-                                        tooltip.add(translation)
-                                    }
+                                    if(addEmptyLine)
+                                        tooltip.add(Text.empty())
                                 }
                             }
 
                             if (species.forms.isEmpty())
-                                drawOnTooltip(species.standardForm)
-                            else
-                                species.forms.forEach { form ->
-                                    drawOnTooltip(form)
+                                drawOnTooltip(species.standardForm, false)
+                            else {
+                                val filtered = species.forms.filter { form ->
+                                    entry.containsKey(form.formOnlyShowdownId())
                                 }
+
+                                filtered.forEachIndexed { index, form ->
+                                    drawOnTooltip(form, (index + 1) < filtered.size)
+                                }
+                            }
+
+                            if(!hasShiftDown())
+                            {
+                                tooltip.add(Text.empty())
+                                tooltip.add(cobbledexTextTranslation("tooltip.hold_shift_timestamp").formatted(Formatting.GREEN))
+                            }
 
                             currentTooltip = tooltip
                         }
@@ -399,11 +422,20 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         {
             val species = if(filteredSpecies.size > entry) filteredSpecies[entry] else null
             if (species != null) {
-                playSound(CobblemonSounds.PC_CLICK)
-                CobbledexGUI.openCobbledexScreen(species.standardForm, setOf(),
-                    skipSound = true,
-                    cameFromCollection = true
-                )
+
+                val config = SyncServerSettingsHandler.config
+                val registerType = discoveredList[species.showdownId()]?.get(species.standardForm.formOnlyShowdownId())?.status
+                val hasCaught = registerType == DiscoveryRegister.RegisterType.CAUGHT
+                val hasSeen = hasCaught || registerType == DiscoveryRegister.RegisterType.SEEN
+
+                if ((!config.Collection_NeedCatch || hasCaught) && (!config.Collection_NeedSeen || hasSeen)) {
+                    playSound(CobblemonSounds.PC_CLICK)
+                    CobbledexGUI.openCobbledexScreen(
+                        species.standardForm, setOf(),
+                        skipSound = true,
+                        cameFromCollection = true
+                    )
+                }
                 return true
             }
         }
@@ -435,7 +467,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         return -1
     }
 
-    fun loadSpecies(species: Species?, isDiscovered: Boolean = false)
+    private fun loadSpecies(species: Species?, isDiscovered: Boolean = false)
     {
         val x = (width - CobbledexGUI.BASE_WIDTH) / 2
         val y = (height - CobbledexGUI.BASE_HEIGHT) / 2

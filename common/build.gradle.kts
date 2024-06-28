@@ -21,6 +21,7 @@ dependencies {
     // alL fabric dependencies:
     modCompileOnly("net.fabricmc:fabric-loader:${property("fabric_loader_version")}")
     modCompileOnly("net.fabricmc.fabric-api:fabric-api:${property("fabric_version")}")
+    implementation(kotlin("reflect"))
 }
 
 sourceSets {

@@ -213,11 +213,8 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
             CobbledexMenu.Evolutions -> {
 
-                if (lastLoadedEvolutions.isNullOrEmpty())
-                    lastLoadedSpecies?.let { species ->
-                        longTextDisplay?.addText(Text.translatable("cobbledex.texts.no_evolution_found", species.translatedName))
-                    }
-                else lastLoadedEvolutions?.forEach { evolution -> EvolutionMenu.drawText(longTextDisplay, evolution) }
+                EvolutionMenu.drawText(longTextDisplay, lastLoadedForm, lastLoadedEvolutions)
+
             }
         }
     }
@@ -286,7 +283,14 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             CobbledexRelatedMenu.Forms -> cobbledexTranslation("cobbledex.texts.forms")
         }
 
-        drawScaledText(context = context, text = selectedRelatedMenuText.bold(), x = x + 302, y = y + 29.5f, centered = true, scale = 0.7F)
+        drawScaledText(
+            context = context,
+            text = selectedRelatedMenuText.bold(),
+            x = x + 302,
+            y = y + 29.5f,
+            centered = true,
+            scale = 0.7F
+        )
         drawScaledText(
             context = context,
             font = CobblemonResources.DEFAULT_LARGE,
@@ -328,7 +332,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
                 x = x + 12,
                 y = y + 143.5f,
                 shadow = false,
-                scale =  0.65f
+                scale = 0.65f
             )
 
 
@@ -354,27 +358,25 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
         super.render(context, mouseX, mouseY, delta)
 
-        if (previewPokemon != null && typeWidget != null) {
-            val typeX : Float? = typeWidget?.x?.toFloat()
-            val typeY : Float? = typeWidget?.y?.toFloat()
-            val space : Float = if(previewPokemon?.secondaryType != null) 16f else 8f
-            if (typeX != null && typeY != null) {
-                val itemHovered =
-                    mouseX.toFloat() in typeX - space..(typeX + space) && mouseY.toFloat() in typeY..(typeY + 16)
-                if (itemHovered) {
+        // Move to a special widget with tooltip :P
+        previewPokemon?.let { pokemon ->
+            if (typeWidget != null) {
+                val typeX: Float? = typeWidget?.x?.toFloat()
+                val typeY: Float? = typeWidget?.y?.toFloat()
+                val space: Float = if (previewPokemon?.secondaryType != null) 16f else 8f
+                if (typeX != null && typeY != null) {
+                    val itemHovered =
+                        mouseX.toFloat() in typeX - space..(typeX + space) && mouseY.toFloat() in typeY..(typeY + 16)
+                    if (itemHovered) {
+                        val typeText = pokemon.primaryType.displayName.setStyle(Style.EMPTY.withBold(true).withColor(pokemon.primaryType.hue))
 
+                        pokemon.secondaryType?.let { secondType ->
+                            typeText.append(Text.of(" & ").bold())
+                            typeText.append(secondType.displayName.setStyle(Style.EMPTY.withBold(true).withColor(secondType.hue)))
+                        }
 
-                    val stringBuilder = "".text()
-                    val primaryType = previewPokemon!!.primaryType
-                    stringBuilder.append(primaryType.displayName.setStyle(Style.EMPTY.withBold(true).withColor(primaryType.hue)))
-
-                    val secondType = previewPokemon!!.secondaryType
-                    if (secondType != null) {
-                        stringBuilder.append(" & ".text().setStyle(Style.EMPTY.withBold(true)))
-                        stringBuilder.append(secondType.displayName.setStyle(Style.EMPTY.withBold(true).withColor(secondType.hue)))
+                        context.drawTooltip(MinecraftClient.getInstance().textRenderer, typeText, mouseX, mouseY)
                     }
-
-                    context.drawTooltip(MinecraftClient.getInstance().textRenderer, stringBuilder, mouseX, mouseY)
                 }
             }
         }
@@ -468,7 +470,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             CobbledexRelatedMenu.Evolutions -> {
                 // TODO: Rework the evolution display
                 evolutionDisplay?.selectEvolutions(lastLoadedEvolutions?.mapNotNull {
-                    it.species?.let { species -> species to it.resultAspects }
+                    return@mapNotNull it.species?.let { species -> species to it.resultAspects }
                 })
             }
 
@@ -477,29 +479,17 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             }
 
             CobbledexRelatedMenu.Forms -> {
+                lastLoadedSpecies?.let {
+                    val forms = if (it.forms.isEmpty())
+                        listOf(it to it.standardForm.aspects.toSet())
+                    else
+                        it.forms.map { form -> it to form.aspects.toSet() }
 
-                val forms = lastLoadedSpecies?.forms?.map {  form ->
-                    form.species to form.aspects.toSet()
+                    evolutionDisplay?.selectEvolutions(forms)
                 }
-
-                evolutionDisplay?.selectEvolutions(forms)
             }
         }
     }
-
-//    fun setEvolutions(evolutions: List<Pair<Species, Set<String>>>?, fromCache: Boolean = false) {
-//        if (!fromCache)
-//            lastLoadedEvolutions = evolutions
-//
-//        if (fromCache)
-//        {
-//            evolutionDisplay?.selectEvolutions(evolutions ?: lastLoadedEvolutions)
-//            return
-//        }
-//
-//        evolutionDisplay?.selectEvolutions(evolutions)
-//    }
-
 
     fun updateInfoPage(species: Species?, spawnDetails: List<SerializablePokemonSpawnDetail>?, itemDrops: List<SerializableItemDrop>?, fromCache: Boolean = false) {
         if (!fromCache) {
@@ -516,11 +506,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
                 val details = if (previewPokemon!!.species == species) spawnDetails else null
                 val drops = if (previewPokemon!!.species == species) itemDrops else null
 
-                InfoMenu.drawText(
-                    longTextDisplay,
-                    previewPokemon,
-                    details, drops
-                )
+                InfoMenu.drawText(longTextDisplay, previewPokemon, details, drops)
             }
         }
     }

@@ -44,5 +44,4 @@ interface INetworkManager {
     fun sendPacketToServer(packet: INetworkPacket<*>)
 
     fun <T : INetworkPacket<*>> asVanillaClientBound(packet: T): Packet<ClientPlayPacketListener>
-
 }

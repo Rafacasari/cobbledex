@@ -47,16 +47,21 @@ class SearchWidget(val posX: Number, val posY: Number, val callback: (() -> Unit
 
         if (cursor != text.length) setCursorToEnd()
 
-        val input = if (!isFocused && text.isEmpty()) cobbledexTextTranslation("search") else text.text()
+        val input = if (text.isEmpty() || (!isFocused && text.isEmpty())) cobbledexTextTranslation("search") else text.text()
+
+        matrices.push()
+        matrices.translate(0.5f, 0.5f, 0f)
 
         drawScaledText(
             context = context,
             font = CobblemonResources.DEFAULT_LARGE,
             text = input,
-            x = posX.toFloat() + 11.5f,
-            y = posY.toFloat() + 3.5f,
+            x = posX.toFloat() + 11f,
+            y = posY.toFloat() + 3f,
             shadow = false,
-            opacity = if (!isFocused && text.isEmpty()) 0.15f else 1f
+            opacity = if (text.isEmpty() || (!isFocused && text.isEmpty())) 0.15f else 1f
         )
+
+        matrices.pop()
     }
 }

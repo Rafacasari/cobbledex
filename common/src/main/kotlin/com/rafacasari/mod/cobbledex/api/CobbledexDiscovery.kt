@@ -22,7 +22,7 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
             .disableHtmlEscaping()
             .create()
 
-        fun addOrUpdatePlayer(player: ServerPlayerEntity, form: FormData, isShiny: Boolean, status: DiscoveryRegister.RegisterType, update: (DiscoveryRegister) -> (Unit)): Boolean {
+        fun getPlayerData(player: ServerPlayerEntity): CobbledexDiscovery {
             val data = playerData.get(player)
 
             val cobbledexData = data.extraData.getOrPut(NAME_KEY) {
@@ -42,6 +42,14 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
                 logInfo("Added ${discovery.registers.size} entries in ${player.entityName}'s Cobbledex")
                 return@getOrPut discovery
             } as CobbledexDiscovery
+
+            return cobbledexData
+        }
+
+        fun addOrUpdatePlayer(player: ServerPlayerEntity, form: FormData, isShiny: Boolean, status: DiscoveryRegister.RegisterType, update: (DiscoveryRegister) -> (Unit)): Boolean {
+            val data = playerData.get(player)
+
+            val cobbledexData = getPlayerData(player)
 
             val isNewRegister = cobbledexData.addOrUpdate(form.species.showdownId(), form.formOnlyShowdownId(), isShiny, status, update)
 

@@ -7,6 +7,8 @@ import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
 import net.minecraft.util.Identifier
 import com.rafacasari.mod.cobbledex.Cobbledex.preInitialize
+import com.rafacasari.mod.cobbledex.commands.CobbledexCommands
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.minecraft.client.MinecraftClient
 import net.minecraft.server.MinecraftServer
@@ -23,7 +25,7 @@ object CobbledexFabric : CobbledexImplementation {
         networkManager.registerServerBound()
 
         // Register commands
-        //CommandRegistrationCallback.EVENT.register(CobbledexCommands::registerServer)
+        CommandRegistrationCallback.EVENT.register(CobbledexCommands::registerServer)
 
         ServerLifecycleEvents.SERVER_STARTING.register { server ->
             this.server = server

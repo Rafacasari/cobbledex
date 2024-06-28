@@ -17,6 +17,7 @@ import com.cobblemon.mod.common.util.asTranslated
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.network.IEncodable
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonEvolution.PokemonEvolutionType.*
+import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.getFormByName
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableIdentifier
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableString
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIdentifier
@@ -103,6 +104,7 @@ class SerializablePokemonEvolution() : IEncodable {
 
     private var speciesIdentifier: Identifier? = null
     lateinit var resultAspects: Set<String>
+    lateinit var formName: String
 
     var consumeHeldItem: Boolean = false
     var requiredContextIdentifier: Identifier? = null
@@ -117,6 +119,10 @@ class SerializablePokemonEvolution() : IEncodable {
         }
     }
 
+    val form by lazy {
+        species?.getFormByName(formName)
+    }
+
     val tradePokemon by lazy {
         tradePokemonString?.let {
             PokemonProperties.parse(it)
@@ -127,6 +133,7 @@ class SerializablePokemonEvolution() : IEncodable {
         // species should always have a value, but since it's not a guaranteed result \
         evolution.result.species?.let { speciesIdentifier = PokemonSpecies.getByName(it)?.resourceIdentifier }
         resultAspects = evolution.result.aspects
+        formName = evolution.result.form ?: ""
 
         // Common variables (available in all types-)
         consumeHeldItem = evolution.consumeHeldItem
@@ -176,6 +183,7 @@ class SerializablePokemonEvolution() : IEncodable {
         buffer.writeCollection(resultAspects) {
                 buff, value -> buff.writeString(value)
         }
+        buffer.writeString(formName)
 
         buffer.writeBoolean(consumeHeldItem)
         buffer.writeNullableIdentifier(requiredContextIdentifier)
@@ -195,6 +203,7 @@ class SerializablePokemonEvolution() : IEncodable {
             evolution.evolutionType = reader.readEnumConstant(PokemonEvolutionType::class.java)
             evolution.speciesIdentifier = reader.readNullableIdentifier()
             evolution.resultAspects = reader.readList { it.readString() }.toSet()
+            evolution.formName = reader.readString()
 
             evolution.consumeHeldItem = reader.readBoolean()
             evolution.requiredContextIdentifier = reader.readNullableIdentifier()

@@ -8,6 +8,7 @@ import com.cobblemon.mod.common.client.render.models.blockbench.pokemon.PokemonP
 import com.cobblemon.mod.common.client.render.models.blockbench.repository.PokemonModelRepository
 import com.cobblemon.mod.common.client.render.models.blockbench.repository.RenderContext
 import com.cobblemon.mod.common.entity.PoseType
+import com.cobblemon.mod.common.pokemon.FormData
 import com.cobblemon.mod.common.pokemon.Species
 import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
@@ -16,7 +17,12 @@ import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.Identifier
 import org.joml.Quaternionf
 
+
 object CobblemonUtils {
+
+    fun Species.getFormByName(name: String) : FormData {
+        return forms.find { it.name == name } ?: this.standardForm
+    }
 
     fun removeUnnecessaryAspects(pokeAspects: Set<String>) : Set<String> {
         return pokeAspects.filter {
@@ -55,7 +61,15 @@ object CobblemonUtils {
         rotation: Quaternionf,
         scale: Float = 20F
     ) {
-        val model = PokemonModelRepository.getPoser(species, aspects)
+        var model: PokemonPoseableModel? = null
+        try {
+            model = PokemonModelRepository.getPoser(species, aspects)
+        } catch (e: Exception) {
+            logError("Failed to load poser for $species")
+            e.printStackTrace()
+        }
+
+        if (model == null) return
         val texture = PokemonModelRepository.getTexture(species, aspects, 0F)
 
         val context = RenderContext()

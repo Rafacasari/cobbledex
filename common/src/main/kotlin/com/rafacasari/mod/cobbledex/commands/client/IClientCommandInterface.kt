@@ -1,4 +1,4 @@
-package com.rafacasari.mod.cobbledex.client.commands
+package com.rafacasari.mod.cobbledex.commands.client
 
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.ArgumentType

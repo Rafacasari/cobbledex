@@ -1,6 +1,5 @@
 package com.rafacasari.mod.cobbledex
 
-import com.cobblemon.mod.common.Cobblemon.playerData as CobblemonPlayerData
 import com.cobblemon.mod.common.api.Priority
 import com.cobblemon.mod.common.api.events.CobblemonEvents
 import com.cobblemon.mod.common.api.storage.player.PlayerDataExtensionRegistry
@@ -90,30 +89,20 @@ object Cobbledex {
 
         PlatformEvents.SERVER_PLAYER_LOGIN.subscribe { login: ServerPlayerEvent.Login ->
 
-//            val playerData = CobblemonPlayerData.get(login.player)
-//            val cobbledexData = playerData.extraData[PlayerDiscovery.NAME_KEY] as PlayerDiscovery?
-//            var totalPokemonDiscovered = 0
-//            if (cobbledexData != null)
-//                totalPokemonDiscovered = cobbledexData.caughtSpecies.size
-//
-//            AddToCollectionPacket(totalPokemonDiscovered).sendToPlayer(login.player)
-//            ReceiveCollectionDataPacket(cobbledexData?.caughtSpecies?.toList() ?: listOf()).sendToPlayer(login.player)
-
-            val playerData = CobblemonPlayerData.get(login.player)
-            val cobbledexData = playerData.extraData[CobbledexDiscovery.NAME_KEY] as? CobbledexDiscovery?
-
-            val registers = cobbledexData?.registers ?: mutableMapOf()
+            val cobbledexData = CobbledexDiscovery.getPlayerData(login.player)
+            val registers = cobbledexData.registers
             ReceiveCollectionDataPacket(registers).sendToPlayer(login.player)
+            getConfig().syncPlayer(login.player)
         }
     }
 
-    fun isClient() : Boolean {
-        return implementation.environment() == Environment.CLIENT
-    }
-
-    fun isServer() : Boolean {
-        return implementation.environment() == Environment.SERVER
-    }
+//    fun isClient() : Boolean {
+//        return implementation.environment() == Environment.CLIENT
+//    }
+//
+//    fun isServer() : Boolean {
+//        return implementation.environment() == Environment.SERVER
+//    }
 
     fun registerPlayerDiscovery(player: ServerPlayerEntity, formData: FormData?, isShiny: Boolean, type: DiscoveryRegister.RegisterType): ActionResult
     {
@@ -155,7 +144,7 @@ object Cobbledex {
         this.saveConfig()
     }
 
-    private fun saveConfig() {
+    fun saveConfig() {
         try {
             val fileWriter = FileWriter(File(CONFIG_PATH))
             CobbledexConfig.GSON.toJson(this.config, fileWriter)

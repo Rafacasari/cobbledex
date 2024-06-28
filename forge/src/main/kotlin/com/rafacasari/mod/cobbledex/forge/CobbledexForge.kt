@@ -9,6 +9,7 @@ import net.minecraft.util.Identifier
 import net.minecraftforge.api.distmarker.Dist
 import net.minecraftforge.client.event.RegisterClientCommandsEvent
 import net.minecraftforge.common.MinecraftForge
+import net.minecraftforge.event.RegisterCommandsEvent
 import net.minecraftforge.eventbus.api.IEventBus
 import net.minecraftforge.fml.DistExecutor
 import net.minecraftforge.fml.common.Mod
@@ -34,7 +35,7 @@ class CobbledexForge : CobbledexImplementation {
         modBus.addListener(this@CobbledexForge::initialize)
 
         // In the future we can use this other event to register server-sided commands
-        //MinecraftForge.EVENT_BUS.addListener(this@CobbledexForge::registerCommands)
+        MinecraftForge.EVENT_BUS.addListener(this@CobbledexForge::registerCommands)
         MinecraftForge.EVENT_BUS.addListener(this@CobbledexForge::registerClientCommands)
 
         DistExecutor.safeRunWhenOn(Dist.CLIENT) { DistExecutor.SafeRunnable(CobbledexForgeClient::init) }
@@ -59,9 +60,9 @@ class CobbledexForge : CobbledexImplementation {
         }
     }
 
-//    private fun registerCommands(e: RegisterCommandsEvent) {
-//        CobbledexCommands.registerServer(e.dispatcher, e.buildContext, e.commandSelection)
-//    }
+    private fun registerCommands(e: RegisterCommandsEvent) {
+        CobbledexCommands.registerServer(e.dispatcher, e.buildContext, e.commandSelection)
+    }
 
     private fun registerClientCommands(e: RegisterClientCommandsEvent) {
         try {
