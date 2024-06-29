@@ -28,6 +28,31 @@ class CobbledexItem(settings: Settings) : Item(settings) {
             get() {
                 return CobbledexConstants.Client.discoveredList.size
             }
+
+
+
+        val totalPokemonCaught: Int
+            get() {
+                return CobbledexConstants.Client.discoveredList.filter {
+                    it.value.any { form -> form.value.status == DiscoveryRegister.RegisterType.CAUGHT}
+                }.size
+            }
+
+//        val totalFormsDiscovered: Int
+//            get() {
+//                return CobbledexConstants.Client.discoveredList.flatMap {
+//                    it.value.values
+//                }.size
+//            }
+//
+//        val totalFormsCaught: Int
+//            get() {
+//                return CobbledexConstants.Client.discoveredList.flatMap {
+//                    it.value.values
+//                }.filter {
+//                    it.status == DiscoveryRegister.RegisterType.CAUGHT
+//                }.size
+//            }
     }
 
     private val totalPokemonCount: Int
@@ -36,11 +61,19 @@ class CobbledexItem(settings: Settings) : Item(settings) {
 
     override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext)
     {
+        val percentageDiscovered = "%.2f%%".format((totalPokemonDiscovered.toDouble() / totalPokemonCount) * 100)
+        val percentageCaught = "%.2f%%".format((totalPokemonCaught.toDouble() / totalPokemonCount) * 100)
+        val translationDiscovered = cobbledexTextTranslation("tooltip_description.discovered", totalPokemonDiscovered.toString().text().formatted(Formatting.GREEN), totalPokemonCount.toString(), percentageDiscovered)
+        val translationCaught = cobbledexTextTranslation("tooltip_description.caught", totalPokemonCaught.toString().text().formatted(Formatting.GREEN), totalPokemonCount.toString(), percentageCaught)
 
-        val percentage = "%.2f%%".format((totalPokemonDiscovered.toDouble() / totalPokemonCount) * 100)
-        val translation = cobbledexTextTranslation("tooltip_description.discovered", totalPokemonDiscovered.toString().text().formatted(Formatting.GREEN), totalPokemonCount.toString(), percentage)
-        tooltip.add(translation)
 
+        tooltip.add(translationDiscovered)
+        tooltip.add(translationCaught)
+
+//        val formsDiscoveredTranslation = cobbledexTextTranslation("tooltip_description.total_forms_discovered", totalFormsDiscovered.toString().text().formatted(Formatting.GREEN))
+//        val formsCaughtTranslation = cobbledexTextTranslation("tooltip_description.total_forms_caught", totalFormsCaught.toString().text().formatted(Formatting.GREEN))
+//        tooltip.add(formsDiscoveredTranslation)
+//        tooltip.add(formsCaughtTranslation)
 
         tooltip.add(MutableText.of(TextContent.EMPTY))
         if (Screen.hasShiftDown()) {
