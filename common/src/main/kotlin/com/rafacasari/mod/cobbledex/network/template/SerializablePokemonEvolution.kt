@@ -22,10 +22,10 @@ import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableIdentifier
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableString
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIdentifier
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableString
-import com.rafacasari.mod.cobbledex.utils.bold
-import com.rafacasari.mod.cobbledex.utils.cobbledexResource
-import com.rafacasari.mod.cobbledex.utils.logInfo
-import com.rafacasari.mod.cobbledex.utils.logWarn
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.bold
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.logInfo
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.logWarn
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack

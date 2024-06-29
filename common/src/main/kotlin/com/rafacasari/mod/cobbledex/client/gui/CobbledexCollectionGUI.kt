@@ -14,6 +14,7 @@ import com.cobblemon.mod.common.pokemon.FormData
 import com.cobblemon.mod.common.pokemon.RenderablePokemon
 import com.cobblemon.mod.common.pokemon.Species
 import com.cobblemon.mod.common.util.math.fromEulerXYZDegrees
+import com.rafacasari.mod.cobbledex.CobbledexConstants.Client.discoveredList
 import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI.Companion.SCALE
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI.Companion.TYPE_SPACER
@@ -23,9 +24,9 @@ import com.rafacasari.mod.cobbledex.client.widget.SearchWidget
 import com.rafacasari.mod.cobbledex.client.widget.SilhouetteModelWidget
 import com.rafacasari.mod.cobbledex.network.client.handlers.SyncServerSettingsHandler
 import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.drawBlackSilhouettePokemon
-import com.rafacasari.mod.cobbledex.utils.cobbledexResource
-import com.rafacasari.mod.cobbledex.utils.cobbledexTextTranslation
-import com.rafacasari.mod.cobbledex.utils.cobbledexTranslation
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTranslation
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -39,8 +40,6 @@ import org.joml.Vector3f
 
 class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
     companion object {
-        var discoveredList: MutableMap<String, MutableMap<String, DiscoveryRegister>> = mutableMapOf()
-
         const val BASE_WIDTH: Int = 349
         const val BASE_HEIGHT: Int = 205
         const val PORTRAIT_SIZE = 58F

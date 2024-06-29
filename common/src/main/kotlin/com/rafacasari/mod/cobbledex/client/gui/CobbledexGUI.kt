@@ -4,9 +4,9 @@ import com.cobblemon.mod.common.CobblemonSounds
 import com.cobblemon.mod.common.api.gui.blitk
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.api.text.*
+import com.cobblemon.mod.common.api.types.ElementalTypes
 import com.cobblemon.mod.common.client.CobblemonResources
 import com.cobblemon.mod.common.client.gui.ExitButton
-import com.cobblemon.mod.common.client.gui.TypeIcon
 import com.cobblemon.mod.common.client.gui.summary.widgets.ModelWidget
 import com.cobblemon.mod.common.client.render.drawScaledText
 import com.cobblemon.mod.common.pokemon.FormData
@@ -17,23 +17,21 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.sound.PositionedSoundInstance
 import net.minecraft.sound.SoundEvent
-import net.minecraft.text.Style
 import net.minecraft.util.Identifier
 import com.rafacasari.mod.cobbledex.client.gui.menus.BattleMenu
 import com.rafacasari.mod.cobbledex.client.gui.menus.EvolutionMenu
 import com.rafacasari.mod.cobbledex.client.gui.menus.InfoMenu
-import com.rafacasari.mod.cobbledex.client.widget.ArrowButton
-import com.rafacasari.mod.cobbledex.client.widget.CobbledexTab
-import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
-import com.rafacasari.mod.cobbledex.client.widget.PokemonEvolutionDisplay
+import com.rafacasari.mod.cobbledex.client.widget.*
 import com.rafacasari.mod.cobbledex.network.server.packets.RequestCobbledexPacket
 import com.rafacasari.mod.cobbledex.network.template.SerializableItemDrop
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonEvolution
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonSpawnDetail
-import com.rafacasari.mod.cobbledex.utils.*
-import net.minecraft.text.Text
+import com.rafacasari.mod.cobbledex.utils.CobblemonUtils
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.format
 
-class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<String>? = null, val cameFromCollection: Boolean = false) : Screen(
+class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<String>? = null) : Screen(
     cobbledexTextTranslation("cobbledex")
 ) {
 
@@ -65,7 +63,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         fun openCobbledexScreen(pokemon: FormData? = null, aspects: Set<String>? = null, skipSound: Boolean = false, cameFromCollection: Boolean = false) {
             if (!skipSound) playSound(CobblemonSounds.PC_ON)
 
-            Instance = CobbledexGUI(pokemon, aspects, cameFromCollection)
+            Instance = CobbledexGUI(pokemon, aspects)
             MinecraftClient.getInstance().setScreen(Instance)
         }
 
@@ -87,7 +85,6 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
         var lastLoadedEvolutions: List<SerializablePokemonEvolution>? = null
         var lastLoadedPreEvolutions: List<Pair<Species, Set<String>>>? = null
-        //var lastLoadedForms: List<Pair<Species, Set<String>>>? = null
 
         internal fun onServerJoin() {
             previewPokemon = null
@@ -97,7 +94,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
     private var modelWidget: ModelWidget? = null
     private var evolutionDisplay: PokemonEvolutionDisplay? = null
-    private var typeWidget: TypeIcon? = null
+    private lateinit var typeWidget: TypeIconTooltip
     private var longTextDisplay: LongTextDisplay? = null
 
     private lateinit var infoTabButton: CobbledexTab
@@ -110,10 +107,8 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         val y = (height - BASE_HEIGHT) / 2
 
         this.addDrawableChild(ExitButton(pX = x + 315, pY = y + 172) {
-            if (cameFromCollection)
-                CobbledexCollectionGUI.show(true)
-            else
-                this.close()
+            CobbledexCollectionGUI.show(true)
+            previewPokemon = null
         })
 
         evolutionDisplay = PokemonEvolutionDisplay(x + 260, y + 37)
@@ -122,6 +117,16 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
         longTextDisplay = LongTextDisplay(x + 79, y + 18, 179, 158, 2)
         addDrawableChild(longTextDisplay)
+
+        typeWidget = TypeIconTooltip(
+            x = x + 42, y = y + 111,
+            primaryType = ElementalTypes.GRASS, secondaryType = null,
+            doubleCenteredOffset = 15f / 2,
+            secondaryOffset = 15f,
+            small = false,
+            centeredX = true
+        )
+        addDrawableChild(typeWidget)
 
         super.init()
 
@@ -251,7 +256,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
         drawScaledText(
             context = context,
-            text = cobbledexTranslation("cobbledex.texts.pokedex_number").bold(),
+            text = cobbledexTextTranslation("pokedex_number").bold(),
             x = x + 12F,
             y = y + 134.5f,
             centered = false,
@@ -261,7 +266,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
         drawScaledText(
             context = context,
-            text = cobbledexTranslation("cobbledex.texts.height").bold(),
+            text = cobbledexTextTranslation("height").bold(),
             x = x + 12F,
             y = y + 156.5f,
             centered = false,
@@ -270,7 +275,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
         drawScaledText(
             context = context,
-            text = cobbledexTranslation("cobbledex.texts.weight").bold(),
+            text = cobbledexTextTranslation("weight").bold(),
             x = x + 12F,
             y = y + 178.5f,
             centered = false,
@@ -278,9 +283,9 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         )
 
         val selectedRelatedMenuText = when (selectedRelatedTab) {
-            CobbledexRelatedMenu.Evolutions -> cobbledexTranslation("cobbledex.texts.evolutions")
-            CobbledexRelatedMenu.PreEvolutions -> cobbledexTranslation("cobbledex.texts.preevolutions")
-            CobbledexRelatedMenu.Forms -> cobbledexTranslation("cobbledex.texts.forms")
+            CobbledexRelatedMenu.Evolutions -> cobbledexTextTranslation("evolutions")
+            CobbledexRelatedMenu.PreEvolutions -> cobbledexTextTranslation("preevolutions")
+            CobbledexRelatedMenu.Forms -> cobbledexTextTranslation("forms")
         }
 
         drawScaledText(
@@ -294,7 +299,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         drawScaledText(
             context = context,
             font = CobblemonResources.DEFAULT_LARGE,
-            text = cobbledexTranslation("cobbledex.texts.cobbledex").bold(),
+            text = cobbledexTextTranslation("cobbledex").bold(),
             x = x + 169.5F,
             y = y + 7.35F,
             shadow = true,
@@ -323,9 +328,6 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
                 scale = SCALE
             )
 
-
-            typeWidget?.render(context)
-
             drawScaledText(
                 context = context,
                 text = pokemon.species.nationalPokedexNumber.toString().text(),
@@ -353,33 +355,10 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
                 centered = false,
                 scale = 0.65F
             )
-
         }
 
         super.render(context, mouseX, mouseY, delta)
-
-        // Move to a special widget with tooltip :P
-        previewPokemon?.let { pokemon ->
-            if (typeWidget != null) {
-                val typeX: Float? = typeWidget?.x?.toFloat()
-                val typeY: Float? = typeWidget?.y?.toFloat()
-                val space: Float = if (previewPokemon?.secondaryType != null) 16f else 8f
-                if (typeX != null && typeY != null) {
-                    val itemHovered =
-                        mouseX.toFloat() in typeX - space..(typeX + space) && mouseY.toFloat() in typeY..(typeY + 16)
-                    if (itemHovered) {
-                        val typeText = pokemon.primaryType.displayName.setStyle(Style.EMPTY.withBold(true).withColor(pokemon.primaryType.hue))
-
-                        pokemon.secondaryType?.let { secondType ->
-                            typeText.append(Text.of(" & ").bold())
-                            typeText.append(secondType.displayName.setStyle(Style.EMPTY.withBold(true).withColor(secondType.hue)))
-                        }
-
-                        context.drawTooltip(MinecraftClient.getInstance().textRenderer, typeText, mouseX, mouseY)
-                    }
-                }
-            }
-        }
+        typeWidget.drawTooltip(context, mouseX, mouseY)
     }
 
     override fun shouldPause(): Boolean = false
@@ -439,21 +418,16 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             )
 
             val typeOffset = 14f
-            typeWidget = TypeIcon(
-                x = x + 39 + 3,
-                y = y + 97 + 14,
-                type = pokemon.primaryType,
-                secondaryType = pokemon.secondaryType,
-                doubleCenteredOffset = typeOffset / 2,
-                secondaryOffset = typeOffset,
-                small = false,
-                centeredX = true
-            )
+
+
+            typeWidget.primaryType = pokemon.primaryType
+            typeWidget.secondaryType = pokemon.secondaryType
+
 
         } else {
             previewPokemon = null
             modelWidget = null
-            typeWidget = null
+
         }
     }
 

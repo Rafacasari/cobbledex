@@ -1,12 +1,12 @@
 package com.rafacasari.mod.cobbledex.client.gui.menus
 
 import com.cobblemon.mod.common.pokemon.FormData
+import com.rafacasari.mod.cobbledex.CobbledexConstants.Client.discoveredList
 import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
-import com.rafacasari.mod.cobbledex.client.gui.CobbledexCollectionGUI
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.network.client.handlers.SyncServerSettingsHandler
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonEvolution
-import com.rafacasari.mod.cobbledex.utils.cobbledexTextTranslation
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
 
 object EvolutionMenu {
 
@@ -15,7 +15,7 @@ object EvolutionMenu {
         if (longTextDisplay == null || pokemon == null || evolutions == null) return
 
         val config = SyncServerSettingsHandler.config
-        val registerType = CobbledexCollectionGUI.discoveredList[pokemon.species.showdownId()]?.get(pokemon.formOnlyShowdownId())?.status
+        val registerType = discoveredList[pokemon.species.showdownId()]?.get(pokemon.formOnlyShowdownId())?.status
         val hasCaught = registerType == DiscoveryRegister.RegisterType.CAUGHT
         val hasSeen = hasCaught || registerType == DiscoveryRegister.RegisterType.SEEN
 

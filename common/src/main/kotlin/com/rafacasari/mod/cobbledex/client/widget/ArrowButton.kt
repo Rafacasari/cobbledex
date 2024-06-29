@@ -2,7 +2,7 @@ package com.rafacasari.mod.cobbledex.client.widget
 
 import com.cobblemon.mod.common.api.gui.blitk
 import com.cobblemon.mod.common.api.text.text
-import com.rafacasari.mod.cobbledex.utils.cobbledexResource
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.client.sound.SoundManager

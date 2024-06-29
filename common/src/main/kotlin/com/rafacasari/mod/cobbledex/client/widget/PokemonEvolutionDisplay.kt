@@ -11,8 +11,8 @@ import com.cobblemon.mod.common.pokemon.Species
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
-import com.rafacasari.mod.cobbledex.utils.cobbledexResource
-import com.rafacasari.mod.cobbledex.utils.cobbledexTranslation
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTranslation
 
 class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolutionDisplay.EvolveSlot>(x, y, SLOT_HEIGHT + SLOT_SPACING) {
     companion object {

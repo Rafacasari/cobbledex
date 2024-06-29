@@ -4,13 +4,17 @@ import com.cobblemon.mod.common.api.conditional.RegistryLikeTagCondition
 import com.cobblemon.mod.common.api.text.*
 import com.cobblemon.mod.common.pokemon.FormData
 import com.cobblemon.mod.common.util.asTranslated
+import com.rafacasari.mod.cobbledex.CobbledexConstants.Client.discoveredList
 import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
-import com.rafacasari.mod.cobbledex.client.gui.CobbledexCollectionGUI
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.network.client.handlers.SyncServerSettingsHandler
 import com.rafacasari.mod.cobbledex.network.template.SerializableItemDrop
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonSpawnDetail
-import com.rafacasari.mod.cobbledex.utils.*
+import com.rafacasari.mod.cobbledex.utils.BiomeUtils
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.addEmptyLine
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.format
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.toMutableText
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.item.ItemStack
@@ -34,7 +38,7 @@ object InfoMenu {
         }
 
         val config = SyncServerSettingsHandler.config
-        val registerType = CobbledexCollectionGUI.discoveredList[pokemon.species.showdownId()]?.get(pokemon.formOnlyShowdownId())?.status
+        val registerType = discoveredList[pokemon.species.showdownId()]?.get(pokemon.formOnlyShowdownId())?.status
         val hasCaught = registerType == DiscoveryRegister.RegisterType.CAUGHT
         val hasSeen = hasCaught || registerType == DiscoveryRegister.RegisterType.SEEN
 

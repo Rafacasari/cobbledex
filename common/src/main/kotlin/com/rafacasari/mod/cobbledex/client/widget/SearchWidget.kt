@@ -4,8 +4,8 @@ import com.cobblemon.mod.common.api.gui.blitk
 import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.client.CobblemonResources
 import com.cobblemon.mod.common.client.render.drawScaledText
-import com.rafacasari.mod.cobbledex.utils.cobbledexResource
-import com.rafacasari.mod.cobbledex.utils.cobbledexTextTranslation
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.TextFieldWidget

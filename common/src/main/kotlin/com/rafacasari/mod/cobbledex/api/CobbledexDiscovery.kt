@@ -10,7 +10,7 @@ import com.google.gson.JsonObject
 import com.rafacasari.mod.cobbledex.Cobbledex
 import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
 import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCollectionDataPacket
-import com.rafacasari.mod.cobbledex.utils.logInfo
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.logInfo
 import net.minecraft.server.network.ServerPlayerEntity
 
 class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, DiscoveryRegister>> = mutableMapOf()): PlayerDataExtension {

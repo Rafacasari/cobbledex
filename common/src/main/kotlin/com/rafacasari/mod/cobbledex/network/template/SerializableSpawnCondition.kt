@@ -13,7 +13,7 @@ import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableBool
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableFloat
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableInt
-import com.rafacasari.mod.cobbledex.utils.logError
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.logError
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.tag.TagKey

@@ -28,9 +28,9 @@ import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIdentifier
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableInt
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableString
-import com.rafacasari.mod.cobbledex.utils.cobbledexResource
-import com.rafacasari.mod.cobbledex.utils.logInfo
-import com.rafacasari.mod.cobbledex.utils.withRGBColor
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.logInfo
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.withRGBColor
 import net.minecraft.item.ItemStack
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries

@@ -2,8 +2,8 @@ package com.rafacasari.mod.cobbledex.forge
 
 import com.rafacasari.mod.cobbledex.*
 import com.rafacasari.mod.cobbledex.commands.CobbledexCommands
-import com.rafacasari.mod.cobbledex.utils.logError
-import com.rafacasari.mod.cobbledex.utils.logInfo
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.logError
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.logInfo
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
 import net.minecraftforge.api.distmarker.Dist
@@ -54,7 +54,7 @@ class CobbledexForge : CobbledexImplementation {
         with(modBus) {
             addListener<RegisterEvent> { event ->
                 event.register(ForgeRegistries.Keys.ITEMS) {
-                    it.register(Identifier(Cobbledex.MOD_ID, "cobbledex_item"), CobbledexConstants.Cobbledex_Item)
+                    it.register(Identifier(Cobbledex.MOD_ID, "cobbledex_item"), CobbledexConstants.COBBLEDEX_ITEM)
                 }
             }
         }

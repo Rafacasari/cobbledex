@@ -10,12 +10,12 @@ import net.minecraft.client.item.TooltipContext
 import net.minecraft.text.Text
 import net.minecraft.util.*
 import net.minecraft.world.World
-import com.rafacasari.mod.cobbledex.CobbledexConstants
 import com.rafacasari.mod.cobbledex.Cobbledex
+import com.rafacasari.mod.cobbledex.CobbledexConstants
 import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexCollectionGUI
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
-import com.rafacasari.mod.cobbledex.utils.cobbledexTextTranslation
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.MutableText
@@ -26,7 +26,7 @@ class CobbledexItem(settings: Settings) : Item(settings) {
     companion object {
         val totalPokemonDiscovered: Int
             get() {
-                return CobbledexCollectionGUI.discoveredList.size
+                return CobbledexConstants.Client.discoveredList.size
             }
     }
 
@@ -73,17 +73,15 @@ class CobbledexItem(settings: Settings) : Item(settings) {
 
             if (entity != null) {
                 if (entity !is PokemonEntity) {
-                    if (world.isClient)
-                        user.sendMessage(Text.translatable(CobbledexConstants.invalid_entity))
+                    if (world.isClient) user.sendMessage(cobbledexTextTranslation("not_a_pokemon"))
 
                     return TypedActionResult.fail(itemStack)
                 }
 
                 val target = entity.pokemon
-
                 if (world.isClient) {
-                    val discoveryRegister = CobbledexCollectionGUI.discoveredList[target.species.showdownId()]?.contains(target.form.formOnlyShowdownId())
-                    if (discoveryRegister == true) {
+                    val discoveryRegister = CobbledexConstants.Client.discoveredList[target.species.showdownId()]?.containsKey(target.form.formOnlyShowdownId()) ?: false
+                    if (discoveryRegister) {
                         CobbledexGUI.openCobbledexScreen(target.form, target.aspects)
                         return TypedActionResult.success(itemStack, false)
                     }

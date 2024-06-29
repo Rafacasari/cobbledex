@@ -1,5 +1,4 @@
 {
-  "cobbledex.errors.NotAPokemon": "That's not a Pokémon!",
   "item.cobbledex.cobbledex_item": "Cobbledex",
   "cobbledex.texts.cobbledex": "Cobbledex",
   "cobbledex.texts.weakness": "Is weak against",
@@ -36,6 +35,7 @@
   "cobbledex.texts.need.view_evolutions": "view evolutions",
   "cobbledex.texts.need.view_spawns": "view spawns",
   "cobbledex.texts.need.view_drops": "view drops",
+  "cobbledex.texts.not_a_pokemon": "That's not a Pokémon!",
 
   "cobbledex.texts.tooltip.hold_shift_timestamp": "Hold <Shift> for timestamps",
   "cobbledex.texts.new_pokemon_discovered": "You've discovered a new Pokémon: %s",

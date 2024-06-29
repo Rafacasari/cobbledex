@@ -11,6 +11,7 @@ import com.cobblemon.mod.common.entity.PoseType
 import com.cobblemon.mod.common.pokemon.FormData
 import com.cobblemon.mod.common.pokemon.Species
 import com.mojang.blaze3d.systems.RenderSystem
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.logError
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.util.math.MatrixStack

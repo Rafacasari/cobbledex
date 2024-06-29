@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.rafacasari.mod.cobbledex.utils.MiscUtilsKt.cobbledexResource;
+import com.rafacasari.mod.cobbledex.utils.MiscUtils;
 
 
 @Mixin(ItemRenderer.class)
@@ -34,7 +34,7 @@ public abstract class ItemRendererMixin {
     private void cobbledex$determineCobbledexModel(ItemStack stack, ModelTransformationMode renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, BakedModel model, CallbackInfo ci) {
         boolean shouldBe2d = renderMode == ModelTransformationMode.GUI || renderMode == ModelTransformationMode.FIXED;
         if (shouldBe2d && stack.getItem() instanceof CobbledexItem) {
-            BakedModel replacementModel = this.models.getModelManager().getModel(new ModelIdentifier(cobbledexResource("cobbledex_icon"), "inventory"));
+            BakedModel replacementModel = this.models.getModelManager().getModel(new ModelIdentifier(MiscUtils.INSTANCE.cobbledexResource("cobbledex_icon"), "inventory"));
             if (!model.equals(replacementModel)) {
                 ci.cancel();
                 renderItem(stack, renderMode, leftHanded, matrices, vertexConsumers, light, overlay, replacementModel);

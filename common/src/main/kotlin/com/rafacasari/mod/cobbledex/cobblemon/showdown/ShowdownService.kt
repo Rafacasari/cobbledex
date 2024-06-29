@@ -1,6 +1,6 @@
 package com.rafacasari.mod.cobbledex.cobblemon.showdown
 
-import com.rafacasari.mod.cobbledex.utils.*
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.logError
 import org.graalvm.polyglot.Context
 import java.io.File
 

@@ -1,6 +1,6 @@
 package com.rafacasari.mod.cobbledex.forge
-import com.rafacasari.mod.cobbledex.utils.cobbledexResource
-import com.rafacasari.mod.cobbledex.utils.logInfo
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.logInfo
 import net.minecraft.client.util.ModelIdentifier
 import net.minecraftforge.client.event.ModelEvent
 import net.minecraftforge.eventbus.api.IEventBus

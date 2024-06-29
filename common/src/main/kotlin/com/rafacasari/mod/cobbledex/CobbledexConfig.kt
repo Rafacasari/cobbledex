@@ -9,6 +9,8 @@ import net.minecraft.server.network.ServerPlayerEntity
 
 class CobbledexConfig : IEncodable {
 
+    var GiveCobbledexItemOnStarterChosen = true
+
     var HowToFind_IsEnabled = true
     var HowToFind_NeedSeen = false
     var HowToFind_NeedCatch = false

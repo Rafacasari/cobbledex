@@ -4,7 +4,7 @@ import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
 import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCobbledexPacket
 import com.rafacasari.mod.cobbledex.network.client.IClientNetworkPacketHandler
-import com.rafacasari.mod.cobbledex.utils.logError
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.logError
 import net.minecraft.client.MinecraftClient
 
 object ReceiveCobbledexHandler : IClientNetworkPacketHandler<ReceiveCobbledexPacket> {

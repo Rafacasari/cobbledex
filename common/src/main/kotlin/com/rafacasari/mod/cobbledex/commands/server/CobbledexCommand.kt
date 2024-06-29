@@ -17,8 +17,8 @@ import com.rafacasari.mod.cobbledex.Cobbledex
 import com.rafacasari.mod.cobbledex.CobbledexConfig
 import com.rafacasari.mod.cobbledex.commands.arguments.SettingArgumentSuggestion
 import com.rafacasari.mod.cobbledex.network.client.packets.OpenCobbledexPacket
-import com.rafacasari.mod.cobbledex.utils.cobbledexTextTranslation
-import com.rafacasari.mod.cobbledex.utils.logError
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.logError
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import kotlin.reflect.*

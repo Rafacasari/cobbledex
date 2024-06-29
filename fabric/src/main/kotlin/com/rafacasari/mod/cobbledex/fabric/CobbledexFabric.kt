@@ -43,6 +43,6 @@ object CobbledexFabric : CobbledexImplementation {
     }
 
     override fun registerItems() {
-        Registry.register(Registries.ITEM, Identifier(Cobbledex.MOD_ID, "cobbledex_item"), CobbledexConstants.Cobbledex_Item)
+        Registry.register(Registries.ITEM, Identifier(Cobbledex.MOD_ID, "cobbledex_item"), CobbledexConstants.COBBLEDEX_ITEM)
     }
 }

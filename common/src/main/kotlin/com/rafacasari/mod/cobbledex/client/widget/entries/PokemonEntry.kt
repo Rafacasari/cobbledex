@@ -5,11 +5,9 @@ import com.cobblemon.mod.common.api.gui.drawPortraitPokemon
 import com.cobblemon.mod.common.client.render.drawScaledText
 import com.cobblemon.mod.common.pokemon.Species
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
-import com.rafacasari.mod.cobbledex.utils.cobbledexResource
-import net.minecraft.client.MinecraftClient
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.text.OrderedText
-import net.minecraft.util.Colors
 
 class PokemonEntry(val species: Species, val aspects: Set<String>, val text: OrderedText) : LongTextDisplay.TextDisplayEntry() {
     companion object

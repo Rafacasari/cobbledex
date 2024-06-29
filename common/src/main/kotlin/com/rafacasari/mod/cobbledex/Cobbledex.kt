@@ -20,7 +20,8 @@ import org.slf4j.LoggerFactory
 import com.rafacasari.mod.cobbledex.network.client.packets.OpenCobbledexPacket
 import com.rafacasari.mod.cobbledex.network.client.packets.AddToCollectionPacket
 import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCollectionDataPacket
-import com.rafacasari.mod.cobbledex.utils.cobbledexTextTranslation
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.logInfo
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Formatting
 import java.io.File
@@ -41,37 +42,37 @@ object Cobbledex {
 
     private var eventsCreated: Boolean = false
     fun preInitialize(implementation: CobbledexImplementation) {
-        LOGGER.info("Initializing Cobbledex $VERSION...")
+        logInfo("Initializing Cobbledex $VERSION...")
         Cobbledex.implementation = implementation
 
         implementation.registerItems()
         loadConfig()
 
-        // TODO: Make our own event so we don't need to depend on Cobblemon PlatformEvents
         PlatformEvents.SERVER_STARTED.subscribe { _ ->
-            LOGGER.info("Cobbledex: Server initialized...")
-            //PlayerDataExtensionRegistry.register(PlayerDiscovery.NAME_KEY, PlayerDiscovery::class.java)
+            logInfo("Server initialized...")
+
             PlayerDataExtensionRegistry.register(CobbledexDiscovery.NAME_KEY, CobbledexDiscovery::class.java)
 
             if (!eventsCreated) {
                 CobblemonEvents.STARTER_CHOSEN.subscribe(Priority.LOW) {
                     registerPlayerDiscovery(it.player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
 
-                    val itemStack = ItemStack(CobbledexConstants.Cobbledex_Item, 1)
-                    it.player.giveItemStack(itemStack)
+                    if (getConfig().GiveCobbledexItemOnStarterChosen) {
+                        val itemStack = ItemStack(CobbledexConstants.COBBLEDEX_ITEM, 1)
+                        it.player.giveItemStack(itemStack)
+                    }
                 }
 
-                CobblemonEvents.POKEMON_CAPTURED.subscribe(Priority.LOW) {
+                CobblemonEvents.POKEMON_CAPTURED.subscribe(Priority.LOWEST) {
                     registerPlayerDiscovery(it.player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
                 }
 
                 CobblemonEvents.EVOLUTION_COMPLETE.subscribe(Priority.LOW) {
                     val player = it.pokemon.getOwnerPlayer()
-                    if (player != null) {
-                        registerPlayerDiscovery(player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
-                    }
-                }
 
+                    if (player != null)
+                        registerPlayerDiscovery(player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+                }
 
                 // This should prevent events from being added more than once
                 eventsCreated = true
@@ -79,7 +80,7 @@ object Cobbledex {
         }
 
         PlatformEvents.CLIENT_PLAYER_LOGOUT.subscribe {
-            CobbledexCollectionGUI.discoveredList.clear()
+            CobbledexConstants.Client.discoveredList.clear()
         }
 
         PlatformEvents.CLIENT_PLAYER_LOGIN.subscribe {
@@ -155,5 +156,4 @@ object Cobbledex {
             exception.printStackTrace()
         }
     }
-
 }

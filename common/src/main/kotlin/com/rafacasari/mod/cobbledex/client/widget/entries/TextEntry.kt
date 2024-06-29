@@ -1,7 +1,7 @@
 package com.rafacasari.mod.cobbledex.client.widget.entries
 
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
-import com.rafacasari.mod.cobbledex.utils.logError
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.logError
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.text.OrderedText
