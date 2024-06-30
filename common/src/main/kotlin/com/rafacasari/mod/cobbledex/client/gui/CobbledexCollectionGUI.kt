@@ -16,7 +16,6 @@ import com.cobblemon.mod.common.pokemon.Species
 import com.cobblemon.mod.common.util.math.fromEulerXYZDegrees
 import com.rafacasari.mod.cobbledex.CobbledexConstants.Client.discoveredList
 import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
-import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI.Companion.SCALE
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI.Companion.TYPE_SPACER
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI.Companion.TYPE_SPACER_DOUBLE
 import com.rafacasari.mod.cobbledex.client.widget.ImageButton
@@ -43,6 +42,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         const val BASE_WIDTH: Int = 349
         const val BASE_HEIGHT: Int = 205
         const val PORTRAIT_SIZE = 58F
+        const val SCALE = 0.5F
 
         const val LINES_SIZE = 6
         const val COLUMN_SIZE = 11
@@ -64,6 +64,9 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         private val DOUBLE_RIGHT_ARROW: Identifier = cobbledexResource("textures/gui/collection/double_right_arrow.png")
         private val LEFT_ARROW: Identifier = cobbledexResource("textures/gui/collection/left_arrow.png")
         private val RIGHT_ARROW: Identifier = cobbledexResource("textures/gui/collection/right_arrow.png")
+
+        private val CAUGHT_ICON: Identifier = cobbledexResource("textures/gui/collection/pokeball.png")
+        private val SHINY_ICON: Identifier = cobbledexResource("textures/gui/collection/shiny_icon.png")
 
         fun show(skipSound: Boolean = false) {
             if (!skipSound) playSound(CobblemonSounds.PC_ON)
@@ -270,6 +273,9 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                 species?.let {
                     val isMouseOver = mouseX.toDouble() in entryX .. (entryX + ENTRY_SIZE) && mouseY.toDouble() in entryY .. (entryY + ENTRY_SIZE)
                     val isDiscovered = discoveredList.contains(species.showdownId())
+                    val isCaught = discoveredList[species.showdownId()]?.any { x -> x.value.status == DiscoveryRegister.RegisterType.CAUGHT } == true
+                    val isShiny = discoveredList[species.showdownId()]?.any { x -> x.value.status == DiscoveryRegister.RegisterType.CAUGHT && x.value.isShiny } == true
+
                     if (lastHoveredEntry != species && isMouseOver) {
                         lastHoveredEntry = species
                         loadSpecies(species, isDiscovered)
@@ -321,6 +327,30 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
 
                     context.disableScissor()
 
+                    if (isCaught) {
+                        blitk(
+                            matrixStack = matrices,
+                            texture = CAUGHT_ICON,
+                            x = (entryX + ENTRY_SIZE - (11 * SCALE) - 1F) / SCALE,
+                            y = (entryY + 1F) / SCALE,
+                            width = 11,
+                            height = 11,
+                            scale = SCALE,
+                            alpha = 0.75f
+                        )
+
+                        if (isShiny)
+                            blitk(
+                                matrixStack = matrices,
+                                texture = SHINY_ICON,
+                                x = (entryX + ENTRY_SIZE - (11 * SCALE) - 1F) / SCALE,
+                                y = (entryY + ENTRY_SIZE - (11 * SCALE) - 1) / SCALE,
+                                width = 11,
+                                height = 11,
+                                scale = SCALE
+                            )
+                    }
+
                     drawScaledText(
                         context = context,
                         text = "${species.nationalPokedexNumber}".text(),
@@ -333,7 +363,6 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
 
 
                     if (isMouseOver && isDiscovered) {
-
                         discoveredList[species.showdownId()]?.let { entry ->
                             val tooltip: MutableList<Text> = mutableListOf()
 
@@ -429,11 +458,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
 
                 if ((!config.Collection_NeedCatch || hasCaught) && (!config.Collection_NeedSeen || hasSeen)) {
                     playSound(CobblemonSounds.PC_CLICK)
-                    CobbledexGUI.openCobbledexScreen(
-                        species.standardForm, setOf(),
-                        skipSound = true,
-                        cameFromCollection = true
-                    )
+                    CobbledexGUI.openCobbledexScreen(species.standardForm, species.standardForm.aspects.toSet(), skipSound = true)
                 }
                 return true
             }

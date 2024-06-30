@@ -43,8 +43,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         Evolutions, PreEvolutions, Forms
     }
 
-    companion object
-    {
+    companion object {
         const val BASE_WIDTH: Int = 349
         const val BASE_HEIGHT: Int = 205
         const val SCALE = 0.5F
@@ -57,10 +56,10 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         internal val TYPE_SPACER: Identifier = cobbledexResource("textures/gui/type_spacer.png")
         internal val TYPE_SPACER_DOUBLE: Identifier = cobbledexResource("textures/gui/type_spacer_double.png")
 
-        var Instance : CobbledexGUI? = null
+        var Instance: CobbledexGUI? = null
 
 
-        fun openCobbledexScreen(pokemon: FormData? = null, aspects: Set<String>? = null, skipSound: Boolean = false, cameFromCollection: Boolean = false) {
+        fun openCobbledexScreen(pokemon: FormData? = null, aspects: Set<String>? = null, skipSound: Boolean = false) {
             if (!skipSound) playSound(CobblemonSounds.PC_ON)
 
             Instance = CobbledexGUI(pokemon, aspects)
@@ -73,8 +72,8 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         }
 
         var previewPokemon: FormData? = null
-        var selectedTab : CobbledexMenu = CobbledexMenu.Info
-        var selectedRelatedTab : CobbledexRelatedMenu = CobbledexRelatedMenu.Evolutions
+        var selectedTab: CobbledexMenu = CobbledexMenu.Info
+        var selectedRelatedTab: CobbledexRelatedMenu = CobbledexRelatedMenu.Evolutions
 
         // Cache
         private var lastLoadedSpecies: Species? = null
@@ -111,9 +110,29 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             previewPokemon = null
         })
 
+        // Initialize Tabs
+        infoTabButton = CobbledexTab(x, y, x + 114, y + 178, cobbledexTextTranslation("tab.info")) {
+            selectedTab = CobbledexMenu.Info
+            defaultTabClickEvent()
+        }
+
+        battleTabButton = CobbledexTab(x, y, x + 151, y + 178, cobbledexTextTranslation("tab.battle")) {
+            selectedTab = CobbledexMenu.Battle
+            defaultTabClickEvent()
+        }
+
+        evolveTabButton = CobbledexTab(x, y, x + 188, y + 178, cobbledexTextTranslation("tab.evolve")) {
+            selectedTab = CobbledexMenu.Evolutions
+            defaultTabClickEvent()
+        }
+
+        // Add our tabs as a drawable child
+        addDrawableChild(infoTabButton)
+        addDrawableChild(battleTabButton)
+        addDrawableChild(evolveTabButton)
+
         evolutionDisplay = PokemonEvolutionDisplay(x + 260, y + 37)
         addDrawableChild(evolutionDisplay)
-
 
         longTextDisplay = LongTextDisplay(x + 79, y + 18, 179, 158, 2)
         addDrawableChild(longTextDisplay)
@@ -132,39 +151,16 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
         // setPreview to the target or cached Pokémon
         // Should be after essential widgets initialization (evolutionDisplay and longTextDisplay)
-        if (selectedPokemon == null)
-        {
+        if (selectedPokemon == null) {
             // If there is no selected Pokémon and no preview, set to default
             if (previewPokemon == null)
                 previewPokemon = PokemonSpecies.getByPokedexNumber(1)?.standardForm
 
             this.setPreviewPokemon(previewPokemon)
-        }
-        else {
+        } else {
             // selectedPokemon is null which means that it's from right-clicking a entity
             this.setPreviewPokemon(selectedPokemon, selectedAspects)
         }
-
-        // Initialize Tabs
-        infoTabButton = CobbledexTab(x, y,x + 114, y + 178, cobbledexTextTranslation("tab.info")) {
-            selectedTab = CobbledexMenu.Info
-            defaultTabClickEvent()
-        }
-
-        battleTabButton = CobbledexTab(x, y,x + 151, y + 178, cobbledexTextTranslation("tab.battle")) {
-            selectedTab = CobbledexMenu.Battle
-            defaultTabClickEvent()
-        }
-
-        evolveTabButton = CobbledexTab(x, y,x + 188, y + 178, cobbledexTextTranslation("tab.evolve")) {
-            selectedTab = CobbledexMenu.Evolutions
-            defaultTabClickEvent()
-        }
-
-        // Add our tabs as a drawable child
-        addDrawableChild(infoTabButton)
-        addDrawableChild(battleTabButton)
-        addDrawableChild(evolveTabButton)
 
         addDrawableChild(ArrowButton(true, x + 262, y + 28) {
             playSound(CobblemonSounds.GUI_CLICK)
@@ -180,7 +176,8 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             playSound(CobblemonSounds.GUI_CLICK)
 
             val newTab = selectedRelatedTab.ordinal + 1
-            selectedRelatedTab = if (newTab > CobbledexRelatedMenu.entries.size - 1)  CobbledexRelatedMenu.Evolutions else CobbledexRelatedMenu.entries[newTab]
+            selectedRelatedTab =
+                if (newTab > CobbledexRelatedMenu.entries.size - 1) CobbledexRelatedMenu.Evolutions else CobbledexRelatedMenu.entries[newTab]
 
             updateRelatedSpecies()
             evolutionDisplay?.resetScrollPosition()
@@ -205,7 +202,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         battleTabButton.setActive(selectedTab == CobbledexMenu.Battle)
         evolveTabButton.setActive(selectedTab == CobbledexMenu.Evolutions)
 
-        when(selectedTab) {
+        when (selectedTab) {
             CobbledexMenu.Info -> {
                 // Use cache to load spawnDetails
                 // We don't need to worry about being null, server should send information and packet handler will update automatically
@@ -370,8 +367,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         super.close()
     }
 
-    fun setPreviewPokemon(pokemon: FormData?, formAspects: Set<String>? = null)
-    {
+    fun setPreviewPokemon(pokemon: FormData?, formAspects: Set<String>? = null) {
         // TODO: Implement this when make the shiny/gender buttons
         //  This should be possible to get all possible choice-features
         //  Will be useful for Pokémon that have a lot of non-form variants (recolors)
@@ -417,30 +413,21 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
                 offsetY = -10.0
             )
 
-            val typeOffset = 14f
-
-
             typeWidget.primaryType = pokemon.primaryType
             typeWidget.secondaryType = pokemon.secondaryType
-
-
         } else {
             previewPokemon = null
             modelWidget = null
-
         }
     }
 
-
-
     fun updateRelatedSpecies() {
-        if (previewPokemon == null || previewPokemon?.species != lastLoadedSpecies)
-        {
+        if (previewPokemon == null || previewPokemon?.species != lastLoadedSpecies) {
             evolutionDisplay?.clearEvolutions()
             return
         }
 
-        when(selectedRelatedTab) {
+        when (selectedRelatedTab) {
             CobbledexRelatedMenu.Evolutions -> {
                 // TODO: Rework the evolution display
                 evolutionDisplay?.selectEvolutions(lastLoadedEvolutions?.mapNotNull {
@@ -465,7 +452,12 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         }
     }
 
-    fun updateInfoPage(species: Species?, spawnDetails: List<SerializablePokemonSpawnDetail>?, itemDrops: List<SerializableItemDrop>?, fromCache: Boolean = false) {
+    fun updateInfoPage(
+        species: Species?,
+        spawnDetails: List<SerializablePokemonSpawnDetail>?,
+        itemDrops: List<SerializableItemDrop>?,
+        fromCache: Boolean = false
+    ) {
         if (!fromCache) {
             // If our call isn't from cache, then we can update the current cache
             lastLoadedSpawnDetails = spawnDetails
