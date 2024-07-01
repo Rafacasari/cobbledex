@@ -62,7 +62,7 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
         return registers[showdownId]
     }
 
-    fun addOrUpdate(species: String, form: String, isShiny: Boolean, status: DiscoveryRegister.RegisterType, update: ((DiscoveryRegister) -> Unit)?): Boolean {
+    fun addOrUpdate(species: String, form: String, isShiny: Boolean, status: DiscoveryRegister.RegisterType, update: ((DiscoveryRegister) -> Unit)? = null): Boolean {
         val currentRegister = getRegister(species)
 
         val discoverTimestamp = System.currentTimeMillis()

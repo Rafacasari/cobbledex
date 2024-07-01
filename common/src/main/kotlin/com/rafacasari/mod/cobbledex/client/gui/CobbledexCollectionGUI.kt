@@ -119,8 +119,9 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         }
 
         searchWidget.text = lastSearch
-
         this.addDrawableChild(searchWidget)
+
+        setInitialFocus(searchWidget)
 
         addDrawableChild(ImageButton(DOUBLE_LEFT_ARROW, 14, 11, x + 170, y + 175) {
             currentPage = 1
@@ -331,10 +332,10 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                         blitk(
                             matrixStack = matrices,
                             texture = CAUGHT_ICON,
-                            x = (entryX + ENTRY_SIZE - (11 * SCALE) - 1F) / SCALE,
-                            y = (entryY + 1F) / SCALE,
-                            width = 11,
-                            height = 11,
+                            x = (entryX + ENTRY_SIZE - (11 * SCALE) - 1f) / SCALE,
+                            y = (entryY + 0.5F) / SCALE,
+                            width = 12,
+                            height = 12,
                             scale = SCALE,
                             alpha = 0.75f
                         )
@@ -343,11 +344,11 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                             blitk(
                                 matrixStack = matrices,
                                 texture = SHINY_ICON,
-                                x = (entryX + ENTRY_SIZE - (11 * SCALE) - 1F) / SCALE,
-                                y = (entryY + ENTRY_SIZE - (11 * SCALE) - 1) / SCALE,
-                                width = 11,
-                                height = 11,
-                                scale = SCALE
+                                x = (entryX + ENTRY_SIZE - (14 * SCALE) - 0.5F) / SCALE,
+                                y = (entryY + ENTRY_SIZE - (14 * SCALE) - 0.5F) / SCALE,
+                                width = 14,
+                                height = 14,
+                                scale = SCALE, alpha = 0.75f
                             )
                     }
 

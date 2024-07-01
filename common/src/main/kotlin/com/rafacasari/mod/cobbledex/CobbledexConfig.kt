@@ -9,6 +9,7 @@ import net.minecraft.server.network.ServerPlayerEntity
 
 class CobbledexConfig : IEncodable {
 
+    var CoopMode = false
     var GiveCobbledexItemOnStarterChosen = true
 
     var HowToFind_IsEnabled = true
@@ -35,6 +36,8 @@ class CobbledexConfig : IEncodable {
 
         fun decode(reader: PacketByteBuf) : CobbledexConfig {
             val config = CobbledexConfig()
+
+            config.CoopMode = reader.readBoolean()
 
             config.HowToFind_IsEnabled = reader.readBoolean()
             config.HowToFind_NeedSeen = reader.readBoolean()
@@ -67,6 +70,8 @@ class CobbledexConfig : IEncodable {
     }
 
     override fun encode(buffer: PacketByteBuf) {
+        buffer.writeBoolean(CoopMode)
+
         buffer.writeBoolean(HowToFind_IsEnabled)
         buffer.writeBoolean(HowToFind_NeedSeen)
         buffer.writeBoolean(HowToFind_NeedCatch)

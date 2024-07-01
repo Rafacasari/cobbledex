@@ -9,6 +9,8 @@ import com.cobblemon.mod.common.api.text.onHover
 import com.cobblemon.mod.common.platform.events.PlatformEvents
 import com.cobblemon.mod.common.platform.events.ServerPlayerEvent
 import com.cobblemon.mod.common.pokemon.FormData
+import com.cobblemon.mod.common.util.server
+import com.rafacasari.mod.cobbledex.api.CobbledexCoopDiscovery
 import com.rafacasari.mod.cobbledex.api.CobbledexDiscovery
 import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexCollectionGUI
@@ -23,10 +25,13 @@ import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCollectionData
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.logInfo
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import net.minecraft.util.WorldSavePath
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
+import java.nio.file.Paths
 
 object Cobbledex {
     private lateinit var config: CobbledexConfig
@@ -48,10 +53,12 @@ object Cobbledex {
         implementation.registerItems()
         loadConfig()
 
-        PlatformEvents.SERVER_STARTED.subscribe { _ ->
+        PlatformEvents.SERVER_STARTED.subscribe { serverEvent ->
             logInfo("Server initialized...")
 
             PlayerDataExtensionRegistry.register(CobbledexDiscovery.NAME_KEY, CobbledexDiscovery::class.java)
+            val serverPath = serverEvent.server.getSavePath(WorldSavePath.ROOT).toAbsolutePath()
+            CobbledexCoopDiscovery.load(Paths.get(serverPath.toString(), "cobbledex-coop.json").toString())
 
             if (!eventsCreated) {
                 CobblemonEvents.STARTER_CHOSEN.subscribe(Priority.LOW) {
@@ -74,6 +81,18 @@ object Cobbledex {
                         registerPlayerDiscovery(player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
                 }
 
+                CobblemonEvents.TRADE_COMPLETED.subscribe(Priority.LOW) {
+                    serverEvent.server.playerManager.getPlayer(it.tradeParticipant1.uuid)?.let { player ->
+                        val pokemon = it.tradeParticipant2Pokemon
+                        registerPlayerDiscovery(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+                    }
+
+                    serverEvent.server.playerManager.getPlayer(it.tradeParticipant2.uuid)?.let { player ->
+                        val pokemon = it.tradeParticipant1Pokemon
+                        registerPlayerDiscovery(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+                    }
+                }
+
                 // This should prevent events from being added more than once
                 eventsCreated = true
             }
@@ -89,10 +108,18 @@ object Cobbledex {
         }
 
         PlatformEvents.SERVER_PLAYER_LOGIN.subscribe { login: ServerPlayerEvent.Login ->
+            if (config.CoopMode) {
+                val discoveryData = CobbledexCoopDiscovery.getDiscovery()
+                if (discoveryData != null) {
+                    ReceiveCollectionDataPacket(discoveryData.registers).sendToPlayer(login.player)
+                }
+            }
+            else {
+                val cobbledexData = CobbledexDiscovery.getPlayerData(login.player)
+                val registers = cobbledexData.registers
+                ReceiveCollectionDataPacket(registers).sendToPlayer(login.player)
+            }
 
-            val cobbledexData = CobbledexDiscovery.getPlayerData(login.player)
-            val registers = cobbledexData.registers
-            ReceiveCollectionDataPacket(registers).sendToPlayer(login.player)
             getConfig().syncPlayer(login.player)
         }
     }
@@ -110,9 +137,28 @@ object Cobbledex {
         if (formData == null)
             return ActionResult.PASS
 
-        if(CobbledexDiscovery.addOrUpdatePlayer(player, formData, isShiny, type) { newEntry ->
+        val isANewDiscovery = CobbledexDiscovery.addOrUpdatePlayer(player, formData, isShiny, type) { newEntry ->
             AddToCollectionPacket(formData, newEntry).sendToPlayer(player)
-        }) {
+        }
+
+        val isANewCoopDiscovery = CobbledexCoopDiscovery.addOrUpdateCoop(formData, isShiny, type) { newEntry ->
+            if (config.CoopMode)
+                AddToCollectionPacket(formData, newEntry).sendToAllPlayers()
+        }
+
+        if(isANewCoopDiscovery && config.CoopMode) {
+            val translation = cobbledexTextTranslation("new_pokemon_discovered_coop", Text.literal(player.gameProfile.name).bold(), formData.species.translatedName.bold().formatted(Formatting.GREEN).onClick {
+                OpenCobbledexPacket(formData).sendToPlayer(it)
+            }.onHover(cobbledexTextTranslation("click_to_open_cobbledex")))
+
+            server()?.let { server ->
+                server.playerManager.playerList.forEach { serverPlayer ->
+                    serverPlayer.sendMessage(translation)
+                }
+            }
+        }
+
+        if(isANewDiscovery && !config.CoopMode) {
             val translation = cobbledexTextTranslation("new_pokemon_discovered", formData.species.translatedName.bold().formatted(Formatting.GREEN).onClick {
                 OpenCobbledexPacket(formData).sendToPlayer(it)
             }.onHover(cobbledexTextTranslation("click_to_open_cobbledex")))
