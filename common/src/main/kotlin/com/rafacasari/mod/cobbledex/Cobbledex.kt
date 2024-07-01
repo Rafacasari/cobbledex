@@ -83,12 +83,12 @@ object Cobbledex {
 
                 CobblemonEvents.TRADE_COMPLETED.subscribe(Priority.LOW) {
                     serverEvent.server.playerManager.getPlayer(it.tradeParticipant1.uuid)?.let { player ->
-                        val pokemon = it.tradeParticipant2Pokemon
+                        val pokemon = it.tradeParticipant1Pokemon
                         registerPlayerDiscovery(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
                     }
 
                     serverEvent.server.playerManager.getPlayer(it.tradeParticipant2.uuid)?.let { player ->
-                        val pokemon = it.tradeParticipant1Pokemon
+                        val pokemon = it.tradeParticipant2Pokemon
                         registerPlayerDiscovery(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
                     }
                 }
