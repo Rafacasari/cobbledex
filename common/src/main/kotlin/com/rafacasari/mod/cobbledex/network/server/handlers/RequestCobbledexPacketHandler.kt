@@ -41,17 +41,16 @@ object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobble
                 }
             } ?: listOf()
 
-            val spawnDetails = if(serverConfig.HowToFind_IsEnabled) CobblemonUtils.getSpawnDetails(pokemon, packet.aspects) else listOf()
-
-            val serializableSpawnDetails = spawnDetails.map {
+            val spawnDetails = CobblemonUtils.getSpawnDetails(pokemon, packet.aspects)
+            val serializableSpawnDetails = if(serverConfig.HowToFind_IsEnabled) spawnDetails.map {
                 SerializablePokemonSpawnDetail(it)
-            }
+            } else listOf()
 
-            val drops: List<SerializableItemDrop> = if(serverConfig.ItemDrops_IsEnabled) CobblemonUtils.getPokemonDrops(pokemon).map {
+            val serializableItemDrops: List<SerializableItemDrop> = if(serverConfig.ItemDrops_IsEnabled) CobblemonUtils.getPokemonDrops(form).map {
                 SerializableItemDrop(it)
             } else listOf()
 
-            ReceiveCobbledexPacket(pokemon, evolutions, preEvolutions, serializableSpawnDetails, drops).sendToPlayer(player)
+            ReceiveCobbledexPacket(pokemon, evolutions, preEvolutions, serializableSpawnDetails, serializableItemDrops).sendToPlayer(player)
         }
     }
 }

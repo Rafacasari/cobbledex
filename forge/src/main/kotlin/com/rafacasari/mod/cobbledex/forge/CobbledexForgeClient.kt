@@ -6,7 +6,6 @@ import net.minecraftforge.client.event.ModelEvent
 import net.minecraftforge.eventbus.api.IEventBus
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext
 
-
 object CobbledexForgeClient {
 
     private val modBus: IEventBus = FMLJavaModLoadingContext.get().modEventBus
@@ -18,8 +17,5 @@ object CobbledexForgeClient {
     private fun register2dModel(event: ModelEvent.RegisterAdditional) {
         logInfo("Registering client resources")
         event.register(ModelIdentifier(cobbledexResource("cobbledex_icon"), "inventory"))
-
     }
-
-
 }

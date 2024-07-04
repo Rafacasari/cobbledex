@@ -1,18 +1,24 @@
 package com.rafacasari.mod.cobbledex.client.widget
 
 import com.cobblemon.mod.common.api.gui.blitk
-import com.cobblemon.mod.common.api.gui.drawPortraitPokemon
 import com.cobblemon.mod.common.api.text.bold
+import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.client.CobblemonResources
 import com.cobblemon.mod.common.client.gui.summary.SummaryButton
 import com.cobblemon.mod.common.client.render.drawScaledText
 import com.cobblemon.mod.common.client.render.models.blockbench.repository.PokemonModelRepository
 import com.cobblemon.mod.common.pokemon.Species
+import com.rafacasari.mod.cobbledex.CobbledexConstants.Client.discoveredList
+import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
+import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI.CobbledexRelatedMenu
+import com.rafacasari.mod.cobbledex.network.client.handlers.SyncServerSettingsHandler
+import com.rafacasari.mod.cobbledex.utils.CobblemonUtils
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTranslation
+import java.util.*
 
 class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolutionDisplay.EvolveSlot>(x, y, SLOT_HEIGHT + SLOT_SPACING) {
     companion object {
@@ -36,8 +42,10 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
 
     fun clearEvolutions() = clearEntries()
 
+    var targetMenu: CobbledexRelatedMenu = CobbledexRelatedMenu.Evolutions
 
-    fun selectEvolutions(pokemonList: List<Pair<Species, Set<String>>>?) {
+    fun selectEvolutions(currentMenu: CobbledexRelatedMenu, pokemonList: List<Pair<Species, Set<String>>>?) {
+        targetMenu = currentMenu
 
         clearEntries()
 
@@ -49,14 +57,29 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
 
             it.second.isEmpty() || (filteredVariations != null && filteredVariations)
         }?.map {
-            EvolveSlot(it.first, it.second)
+            EvolveSlot(it.first, it.second, this)
         }?.forEach { entry ->
             this.addEntry(entry)
         }
     }
 
-    class EvolveSlot(private val evolution: Species, private val aspects: Set<String>) : Entry<EvolveSlot>() {
+    class EvolveSlot(private val evolution: Species, private val aspects: Set<String>, val display: PokemonEvolutionDisplay) : Entry<EvolveSlot>() {
+        private var isEnabled: Boolean
         val client: MinecraftClient = MinecraftClient.getInstance()
+
+        val form by lazy {
+            evolution.getForm(aspects)
+        }
+
+        init {
+            val evolutionForm = evolution.getForm(aspects)
+            val config = SyncServerSettingsHandler.config
+            val registerType = discoveredList[evolution.showdownId()]?.get(evolutionForm.formOnlyShowdownId())?.status
+            val hasCaught = registerType == DiscoveryRegister.RegisterType.CAUGHT
+            val hasSeen = hasCaught || registerType == DiscoveryRegister.RegisterType.SEEN
+            
+            isEnabled = (!config.Collection_NeedCatch || hasCaught) && (!config.Collection_NeedSeen || hasSeen)
+        }
 
         private val selectButton: SummaryButton = SummaryButton(
             buttonX = 0F,
@@ -64,14 +87,16 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
             buttonWidth = 40,
             buttonHeight = 10,
             clickAction = {
-                val form = evolution.getForm(aspects)
+                if (isEnabled) {
+                    val form = evolution.getForm(aspects)
 
-                CobbledexGUI.Instance?.selectedPokemon = form
-                CobbledexGUI.Instance?.selectedAspects = aspects
-                CobbledexGUI.Instance?.setPreviewPokemon(form, aspects)
+                    CobbledexGUI.Instance?.selectedPokemon = form
+                    CobbledexGUI.Instance?.selectedAspects = aspects
+                    CobbledexGUI.Instance?.setPreviewPokemon(form, aspects)
 
-                CobbledexGUI.Instance?.updateMenu()
-                CobbledexGUI.Instance?.updateRelatedSpecies()
+                    CobbledexGUI.Instance?.updateMenu()
+                    CobbledexGUI.Instance?.updateRelatedSpecies()
+                }
             },
             text = cobbledexTranslation("cobbledex.texts.select"),
             resource = buttonResource,
@@ -85,7 +110,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
         override fun render(
             context: DrawContext,
             index: Int,
-            rowTop: Int,
+            y: Int,
             rowLeft: Int,
             rowWidth: Int,
             rowHeight: Int,
@@ -95,7 +120,6 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
             partialTicks: Float
         ) {
             val x = rowLeft - 2
-            val y = rowTop
             val matrices = context.matrices
 
 
@@ -122,7 +146,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
                 0.0
             )
 
-            drawPortraitPokemon(evolution, aspects, matrices, partialTicks = partialTicks, reversed = true)
+            CobblemonUtils.drawPortraitPokemon(evolution, aspects, matrices, blackSilhouette = !isEnabled)
 
             matrices.pop()
             context.disableScissor()
@@ -137,20 +161,23 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
                 width = rowWidth
             )
 
+
             selectButton.setPosFloat(x + 4.5F, y + 14F)
             selectButton.render(context, mouseX, mouseY, partialTicks)
+
+            val speciesName = evolution.translatedName
+            val formName = form.name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }.text()
+            val targetName = if(this.display.targetMenu == CobbledexRelatedMenu.Forms) formName else speciesName
 
             drawScaledText(
                 context = context,
                 font = CobblemonResources.DEFAULT_LARGE,
-                text = evolution.translatedName.bold(),
+                text = if(isEnabled) targetName.bold() else "?????".text().bold(),
                 x = x + 3.7f,
                 y = y + 1f,
                 shadow = true,
                 centered = false
             )
-
-
         }
 
         override fun mouseClicked(d: Double, e: Double, i: Int): Boolean {

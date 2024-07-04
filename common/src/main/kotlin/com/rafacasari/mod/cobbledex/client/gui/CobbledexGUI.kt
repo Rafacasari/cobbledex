@@ -71,7 +71,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             MinecraftClient.getInstance().soundManager.play(PositionedSoundInstance.master(soundEvent, 1f))
         }
 
-        var previewPokemon: FormData? = null
+        var previewForm: FormData? = null
         var selectedTab: CobbledexMenu = CobbledexMenu.Info
         var selectedRelatedTab: CobbledexRelatedMenu = CobbledexRelatedMenu.Evolutions
 
@@ -86,7 +86,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         var lastLoadedPreEvolutions: List<Pair<Species, Set<String>>>? = null
 
         internal fun onServerJoin() {
-            previewPokemon = null
+            previewForm = null
         }
     }
 
@@ -107,7 +107,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
         this.addDrawableChild(ExitButton(pX = x + 315, pY = y + 172) {
             CobbledexCollectionGUI.show(true)
-            previewPokemon = null
+            previewForm = null
         })
 
         // Initialize Tabs
@@ -153,12 +153,12 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         // Should be after essential widgets initialization (evolutionDisplay and longTextDisplay)
         if (selectedPokemon == null) {
             // If there is no selected Pokémon and no preview, set to default
-            if (previewPokemon == null)
-                previewPokemon = PokemonSpecies.getByPokedexNumber(1)?.standardForm
+            if (previewForm == null)
+                previewForm = PokemonSpecies.getByPokedexNumber(1)?.standardForm
 
-            this.setPreviewPokemon(previewPokemon)
+            this.setPreviewPokemon(previewForm)
         } else {
-            // selectedPokemon is null which means that it's from right-clicking a entity
+            // selectedPokemon is null which means that it's from right-clicking an entity
             this.setPreviewPokemon(selectedPokemon, selectedAspects)
         }
 
@@ -210,13 +210,11 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             }
 
             CobbledexMenu.Battle -> {
-                BattleMenu.drawText(longTextDisplay, previewPokemon)
+                BattleMenu.drawText(longTextDisplay, previewForm)
             }
 
             CobbledexMenu.Evolutions -> {
-
                 EvolutionMenu.drawText(longTextDisplay, lastLoadedForm, lastLoadedEvolutions)
-
             }
         }
     }
@@ -304,12 +302,12 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             scale = 1.06f
         )
 
-        previewPokemon?.let { pokemon ->
+        previewForm?.let { form ->
 
             drawScaledText(
                 context = context,
                 font = CobblemonResources.DEFAULT_LARGE,
-                text = pokemon.species.translatedName.bold(),
+                text = form.species.translatedName.bold(),
                 x = x + 13,
                 y = y + 28.3F,
                 shadow = false
@@ -317,7 +315,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
             blitk(
                 matrixStack = matrices,
-                texture = if (pokemon.secondaryType == null) TYPE_SPACER else TYPE_SPACER_DOUBLE,
+                texture = if (form.secondaryType == null) TYPE_SPACER else TYPE_SPACER_DOUBLE,
                 x = (x + 5.5 + 3) / SCALE,
                 y = (y + 100 + 14) / SCALE,
                 width = 134,
@@ -327,7 +325,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
             drawScaledText(
                 context = context,
-                text = pokemon.species.nationalPokedexNumber.toString().text(),
+                text = form.species.nationalPokedexNumber.toString().text(),
                 x = x + 12,
                 y = y + 143.5f,
                 shadow = false,
@@ -337,7 +335,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
             drawScaledText(
                 context = context,
-                text = cobbledexTextTranslation("info.height_value", (pokemon.height / 10).format()),
+                text = cobbledexTextTranslation("info.height_value", (form.height / 10).format()),
                 x = x + 12,
                 y = y + 165.5f,
                 centered = false,
@@ -346,7 +344,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
             drawScaledText(
                 context = context,
-                text = cobbledexTextTranslation("info.weight_value", (pokemon.weight / 10).format()),
+                text = cobbledexTextTranslation("info.weight_value", (form.weight / 10).format()),
                 x = x + 12,
                 y = y + 187.5f,
                 centered = false,
@@ -400,7 +398,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         }
 
         if (pokemon != null) {
-            previewPokemon = pokemon
+            previewForm = pokemon
 
             modelWidget = ModelWidget(
                 pX = x + 13,
@@ -416,27 +414,26 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             typeWidget.primaryType = pokemon.primaryType
             typeWidget.secondaryType = pokemon.secondaryType
         } else {
-            previewPokemon = null
+            previewForm = null
             modelWidget = null
         }
     }
 
     fun updateRelatedSpecies() {
-        if (previewPokemon == null || previewPokemon?.species != lastLoadedSpecies) {
+        if (previewForm == null || previewForm?.species != lastLoadedSpecies) {
             evolutionDisplay?.clearEvolutions()
             return
         }
 
         when (selectedRelatedTab) {
             CobbledexRelatedMenu.Evolutions -> {
-                // TODO: Rework the evolution display
-                evolutionDisplay?.selectEvolutions(lastLoadedEvolutions?.mapNotNull {
+                evolutionDisplay?.selectEvolutions(CobbledexRelatedMenu.Evolutions, lastLoadedEvolutions?.mapNotNull {
                     return@mapNotNull it.species?.let { species -> species to it.resultAspects }
                 })
             }
 
             CobbledexRelatedMenu.PreEvolutions -> {
-                evolutionDisplay?.selectEvolutions(lastLoadedPreEvolutions)
+                evolutionDisplay?.selectEvolutions(CobbledexRelatedMenu.PreEvolutions, lastLoadedPreEvolutions)
             }
 
             CobbledexRelatedMenu.Forms -> {
@@ -446,7 +443,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
                     else
                         it.forms.map { form -> it to form.aspects.toSet() }
 
-                    evolutionDisplay?.selectEvolutions(forms)
+                    evolutionDisplay?.selectEvolutions(CobbledexRelatedMenu.Forms, forms)
                 }
             }
         }
@@ -468,11 +465,11 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             updateMenu()
         } else {
             // We should make sure that the current cache is actually the selected Pokémon
-            if (previewPokemon != null) {
-                val details = if (previewPokemon!!.species == species) spawnDetails else null
-                val drops = if (previewPokemon!!.species == species) itemDrops else null
+            if (previewForm != null) {
+                val details = if (previewForm!!.species == species) spawnDetails else null
+                val drops = if (previewForm!!.species == species) itemDrops else null
 
-                InfoMenu.drawText(longTextDisplay, previewPokemon, details, drops)
+                InfoMenu.drawText(longTextDisplay, previewForm, details, drops)
             }
         }
     }

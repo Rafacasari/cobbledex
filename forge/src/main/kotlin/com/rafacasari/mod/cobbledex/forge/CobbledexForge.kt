@@ -28,13 +28,10 @@ class CobbledexForge : CobbledexImplementation {
     override fun server(): MinecraftServer? = ServerLifecycleHooks.getCurrentServer()
 
     init {
-        //EventBuses.registerModEventBus(Cobbledex.MOD_ID, FMLJavaModLoadingContext.get().modEventBus)
-
         Cobbledex.preInitialize(this@CobbledexForge)
         MinecraftForge.EVENT_BUS.register(this)
         modBus.addListener(this@CobbledexForge::initialize)
 
-        // In the future we can use this other event to register server-sided commands
         MinecraftForge.EVENT_BUS.addListener(this@CobbledexForge::registerCommands)
         MinecraftForge.EVENT_BUS.addListener(this@CobbledexForge::registerClientCommands)
 

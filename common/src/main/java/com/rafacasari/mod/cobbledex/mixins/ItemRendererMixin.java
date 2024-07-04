@@ -8,7 +8,11 @@ import net.minecraft.client.render.model.BakedModel;
 import net.minecraft.client.render.model.json.ModelTransformationMode;
 import net.minecraft.client.util.ModelIdentifier;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Identifier;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -17,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.rafacasari.mod.cobbledex.utils.MiscUtils;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 
 @Mixin(ItemRenderer.class)
@@ -24,6 +29,18 @@ public abstract class ItemRendererMixin {
 
     @Shadow @Final private ItemModels models;
     @Shadow public abstract void renderItem(ItemStack stack, ModelTransformationMode renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, BakedModel model);
+
+    // TODO: Need to change cobbledex_item to be 2d as default and 3d should come here? May fix some modpacks
+    @Inject(method = "getModel", at = @At("HEAD"), cancellable = true)
+    private void cobbledex$bakeCobbledexItem(ItemStack stack, World world, LivingEntity entity, int seed, CallbackInfoReturnable<BakedModel> cir) {
+        if (stack.getItem() instanceof CobbledexItem) {
+            Identifier identifier = MiscUtils.INSTANCE.cobbledexResource("cobbledex_item");
+            BakedModel model = this.models.getModelManager().getModel(new ModelIdentifier(identifier, "inventory"));
+            ClientWorld clientWorld = world instanceof ClientWorld ? (ClientWorld) world : null;
+            BakedModel overriddenModel = model.getOverrides().apply(model, stack, clientWorld, entity, seed);
+            cir.setReturnValue(overriddenModel == null ? this.models.getModelManager().getMissingModel() : overriddenModel);
+        }
+    }
 
 
     @Inject(

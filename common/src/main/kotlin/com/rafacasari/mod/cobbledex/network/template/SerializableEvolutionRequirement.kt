@@ -16,6 +16,7 @@ import com.cobblemon.mod.common.registry.ItemIdentifierCondition
 import com.cobblemon.mod.common.util.asTranslated
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.network.IEncodable
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.appendWithSeparator
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableBool
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableIdentifier
@@ -36,6 +37,7 @@ import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
+import net.minecraft.text.TextContent
 import net.minecraft.util.Identifier
 import net.minecraft.world.biome.Biome
 import net.minecraft.world.gen.structure.Structure
@@ -97,9 +99,7 @@ class SerializableEvolutionRequirement(): IEncodable {
                 longTextDisplay.addText(Text.translatable("cobbledex.evolution.blocks_traveled", value.toString().text().bold()), false)
             }
 
-            EvolutionRequirementType.DEFEAT -> {
-                longTextDisplay.addText(Text.translatable("cobbledex.evolution.defeat", value.toString().text().bold()), false)
-            }
+
 
             EvolutionRequirementType.LEVEL -> {
                 intRange?.let {
@@ -135,15 +135,87 @@ class SerializableEvolutionRequirement(): IEncodable {
                 }
             }
 
-            EvolutionRequirementType.PARTY_MEMBER -> {
+            EvolutionRequirementType.DEFEAT, EvolutionRequirementType.PARTY_MEMBER, EvolutionRequirementType.POKEMON_PROPERTIES -> {
+
+
                 stringValue?.let { propertiesString ->
                     val properties = PokemonProperties.parse(propertiesString)
+
+                    val text: MutableList<MutableText> = mutableListOf()
+                    var containsSpecies = false
+
                     properties.species?.let { speciesName ->
                         val species = PokemonSpecies.getByName(speciesName)
-                        if (species != null)
-                            longTextDisplay.addText(Text.translatable("cobbledex.evolution.party_member", species.translatedName.bold()), false)
+                        if (species != null) {
+                            containsSpecies = true
+                            text.add(species.translatedName.bold())
+                        }
+                    }
+
+                    if (!containsSpecies)
+                        properties.teraType?.let { teraType ->
+                            ElementalTypes.get(teraType)?.let { type ->
+                                text.add(
+                                    Text.translatable(
+                                        "cobbledex.evolution.party_member.type",
+                                        type.displayName.bold().withRGBColor(type.hue)
+                                    )
+                                )
+                            }
+                        }
+
+                    properties.gender?.let { gender ->
+                        text.add(text(gender.name))
+                    }
+
+                    properties.shiny?.let { shiny ->
+                        text.add(text(if (shiny) "Shiny" else "Non-Shiny"))
+                    }
+
+                    properties.friendship?.let { friendship ->
+                        text.add(text("Friendship: $friendship"))
+                    }
+
+                    properties.level?.let { level ->
+                        text.add(text("Level: $level"))
+                    }
+
+
+
+                    if (text.isNotEmpty()) {
+                        if (type == EvolutionRequirementType.DEFEAT)
+                        {
+                            longTextDisplay.addText(Text.translatable(
+                                "cobbledex.evolution.defeat_specific",
+                                text.appendWithSeparator(" "),
+                                value.toString().text()), false)
+                        }
+                        else if (type == EvolutionRequirementType.PARTY_MEMBER)
+                            longTextDisplay.addText(
+                                Text.translatable(
+                                    "cobbledex.evolution.party_member",
+                                    text.appendWithSeparator(" ")
+                                ), false
+                            )
+                        else
+                            longTextDisplay.addText(
+                                Text.translatable(
+                                    "cobbledex.evolution.properties",
+                                    text.appendWithSeparator(", ")
+                                ), false
+                            )
+                    } else {
+                        when (type) {
+                            EvolutionRequirementType.DEFEAT -> longTextDisplay.addText(Text.translatable("cobbledex.evolution.defeat", value.toString().text().bold()), false)
+                            EvolutionRequirementType.PARTY_MEMBER -> longTextDisplay.addText(Text.translatable("cobbledex.evolution.party_member", propertiesString), false)
+                            EvolutionRequirementType.POKEMON_PROPERTIES -> longTextDisplay.addText(Text.translatable("cobbledex.evolution.properties", propertiesString), false)
+                            else -> {}
+                        }
+
+                        logInfo("Seems text for $type is empty.\n${propertiesString}")
                     }
                 }
+
             }
 
             EvolutionRequirementType.PLAYER_HAS_ADVANCEMENT -> {
@@ -151,18 +223,6 @@ class SerializableEvolutionRequirement(): IEncodable {
                     longTextDisplay.addText(Text.translatable("cobbledex.evolution.player_has_advancement", advancement.toTranslationKey().asTranslated().bold()), false)
                 }
             }
-
-            // TODO: Implement this...
-//            EvolutionRequirementType.POKEMON_PROPERTIES -> {
-//                stringValue?.let { propertiesString ->
-//                    val properties = PokemonProperties.parse(propertiesString)
-//                    // omg this will take so long time to code, lets skip for now
-//                    properties.level?.let {}
-//                    properties.shiny?.let {}
-//                    properties.gender?.let {}
-//                    properties.form?.let {}
-//                }
-//            }
 
             EvolutionRequirementType.PROPERTY_RANGE -> {
                 // Need stringValue between intRange
@@ -178,15 +238,13 @@ class SerializableEvolutionRequirement(): IEncodable {
                 longTextDisplay.addText(Text.translatable("cobbledex.evolution.recoil", value.toString().text().bold()), false)
             }
 
-            // TODO: Use Stats.getStat(string) to get the translated stat name
-            //  Will need to separate two nullable strings into buffer
             EvolutionRequirementType.STAT_EQUAL -> {
                 val statOne = stringValue?.let { stat -> Stats.getStat(stat) }
                 val statTwo = extraStringValue?.let { stat -> Stats.getStat(stat) }
 
                 if (statOne != null && statTwo != null) {
-                    val stat1 = (statOne.displayName as MutableText).bold()
-                    val stat2 = (statTwo.displayName as MutableText).bold()
+                    val stat1 = MutableText.of(TextContent.EMPTY).append(statOne.displayName).bold()
+                    val stat2 = MutableText.of(TextContent.EMPTY).append(statTwo.displayName).bold()
                     longTextDisplay.addText(Text.translatable("cobbledex.evolution.stat_equal", stat1, stat2), false)
                 }
             }
@@ -196,8 +254,8 @@ class SerializableEvolutionRequirement(): IEncodable {
                 val statTwo = extraStringValue?.let { stat -> Stats.getStat(stat) }
 
                 if (statOne != null && statTwo != null) {
-                    val statLow = (statOne.displayName as MutableText).bold()
-                    val statHigher = (statTwo.displayName as MutableText).bold()
+                    val statLow = MutableText.of(TextContent.EMPTY).append(statOne.displayName).bold()
+                    val statHigher = MutableText.of(TextContent.EMPTY).append(statTwo.displayName).bold()
                     longTextDisplay.addText(Text.translatable("cobbledex.evolution.stat_compare", statHigher, statLow), false)
                 }
             }
@@ -406,6 +464,7 @@ class SerializableEvolutionRequirement(): IEncodable {
             is DefeatRequirement -> {
                 type = EvolutionRequirementType.DEFEAT
                 value = requirement.amount
+                stringValue = requirement.target.originalString
             }
 
             is LevelRequirement -> {
@@ -426,7 +485,8 @@ class SerializableEvolutionRequirement(): IEncodable {
             is PartyMemberRequirement -> {
                 type = EvolutionRequirementType.PARTY_MEMBER
                 // Should use PokemonProperties.parse(stringValue) to read!
-                stringValue = requirement.target.asString()
+
+                stringValue = requirement.target.originalString
             }
 
             is PlayerHasAdvancementRequirement -> {
@@ -437,7 +497,7 @@ class SerializableEvolutionRequirement(): IEncodable {
             is PokemonPropertiesRequirement -> {
                 type = EvolutionRequirementType.POKEMON_PROPERTIES
                 // Should use PokemonProperties.parse(stringValue) to read!
-                stringValue = requirement.target.asString()
+                stringValue = requirement.target.originalString
             }
 
             is PropertyRangeRequirement -> {

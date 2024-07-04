@@ -32,6 +32,15 @@ object MiscUtils {
             }
         }
 
+    fun MutableList<MutableText>.appendWithSeparator(separator: String): MutableText =
+        MutableText.of(TextContent.EMPTY).also {
+            this.forEachIndexed { index, x ->
+                it.append(x)
+                // Add new line
+                if (index + 1 < this.size) it.append(separator)
+            }
+        }
+
     fun MutableList<MutableText>.addEmptyLine() = this.add(Text.empty())
     fun MutableList<Text>.emptyLine() = this.add(Text.empty())
 }

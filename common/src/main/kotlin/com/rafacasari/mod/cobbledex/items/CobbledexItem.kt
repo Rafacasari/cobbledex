@@ -1,6 +1,5 @@
 package com.rafacasari.mod.cobbledex.items
 
-import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.util.isLookingAt
@@ -12,6 +11,9 @@ import net.minecraft.util.*
 import net.minecraft.world.World
 import com.rafacasari.mod.cobbledex.Cobbledex
 import com.rafacasari.mod.cobbledex.CobbledexConstants
+import com.rafacasari.mod.cobbledex.CobbledexConstants.Client.totalPokemonCaught
+import com.rafacasari.mod.cobbledex.CobbledexConstants.Client.totalPokemonCount
+import com.rafacasari.mod.cobbledex.CobbledexConstants.Client.totalPokemonDiscovered
 import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexCollectionGUI
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
@@ -23,41 +25,6 @@ import net.minecraft.text.TextContent
 import net.minecraft.util.math.Box
 
 class CobbledexItem(settings: Settings) : Item(settings) {
-    companion object {
-        val totalPokemonDiscovered: Int
-            get() {
-                return CobbledexConstants.Client.discoveredList.size
-            }
-
-
-
-        val totalPokemonCaught: Int
-            get() {
-                return CobbledexConstants.Client.discoveredList.filter {
-                    it.value.any { form -> form.value.status == DiscoveryRegister.RegisterType.CAUGHT}
-                }.size
-            }
-
-//        val totalFormsDiscovered: Int
-//            get() {
-//                return CobbledexConstants.Client.discoveredList.flatMap {
-//                    it.value.values
-//                }.size
-//            }
-//
-//        val totalFormsCaught: Int
-//            get() {
-//                return CobbledexConstants.Client.discoveredList.flatMap {
-//                    it.value.values
-//                }.filter {
-//                    it.status == DiscoveryRegister.RegisterType.CAUGHT
-//                }.size
-//            }
-    }
-
-    private val totalPokemonCount: Int
-        get() = PokemonSpecies.implemented.size
-
 
     override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext)
     {
@@ -66,14 +33,8 @@ class CobbledexItem(settings: Settings) : Item(settings) {
         val translationDiscovered = cobbledexTextTranslation("tooltip_description.discovered", totalPokemonDiscovered.toString().text().formatted(Formatting.GREEN), totalPokemonCount.toString(), percentageDiscovered)
         val translationCaught = cobbledexTextTranslation("tooltip_description.caught", totalPokemonCaught.toString().text().formatted(Formatting.GREEN), totalPokemonCount.toString(), percentageCaught)
 
-
         tooltip.add(translationDiscovered)
         tooltip.add(translationCaught)
-
-//        val formsDiscoveredTranslation = cobbledexTextTranslation("tooltip_description.total_forms_discovered", totalFormsDiscovered.toString().text().formatted(Formatting.GREEN))
-//        val formsCaughtTranslation = cobbledexTextTranslation("tooltip_description.total_forms_caught", totalFormsCaught.toString().text().formatted(Formatting.GREEN))
-//        tooltip.add(formsDiscoveredTranslation)
-//        tooltip.add(formsCaughtTranslation)
 
         tooltip.add(MutableText.of(TextContent.EMPTY))
         if (Screen.hasShiftDown()) {
@@ -84,7 +45,6 @@ class CobbledexItem(settings: Settings) : Item(settings) {
         } else {
             tooltip.add(cobbledexTextTranslation("tooltip_description.press_shift").formatted(Formatting.GREEN))
         }
-
 
         super.appendTooltip(stack, world, tooltip, context)
     }
@@ -125,7 +85,7 @@ class CobbledexItem(settings: Settings) : Item(settings) {
                     return TypedActionResult.success(itemStack)
                 }
             } else if(world.isClient) {
-                if (CobbledexGUI.previewPokemon != null)
+                if (CobbledexGUI.previewForm != null)
                     CobbledexGUI.openCobbledexScreen()
                 else CobbledexCollectionGUI.show()
             }

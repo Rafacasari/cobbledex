@@ -36,6 +36,7 @@
   "cobbledex.texts.need.view_spawns": "view spawns",
   "cobbledex.texts.need.view_drops": "view drops",
   "cobbledex.texts.not_a_pokemon": "That's not a Pokémon!",
+  "cobbledex.texts.discover.selected_form": "Selected form: %s",
 
   "cobbledex.texts.battle.title": "Damage Multipliers",
   "cobbledex.texts.battle.damage_from.multiplier_4": "%sx | §lSuper Weak§r against:",
@@ -81,6 +82,7 @@
   "cobbledex.evolution.move_set": "Need %s move",
   "cobbledex.evolution.move_type": "Need any type %s move",
   "cobbledex.evolution.party_member": "Need a %s in your party",
+  "cobbledex.evolution.party_member.type": "%s Pokémon",
   "cobbledex.evolution.player_has_advancement": "Trainer need %s advancement",
   "cobbledex.evolution.property_range": "Need %s between %s",
   "cobbledex.evolution.recoil": "Need %s recoil",
@@ -95,6 +97,8 @@
   "cobbledex.evolution.moon_phase": "Need Moon phase: %s",
   "cobbledex.evolution.structure.condition": "Need structure: %s",
   "cobbledex.evolution.structure.anti_condition": "Blacklisted structure: %s",
+  "cobbledex.evolution.properties": "Need: %s",
+  "cobbledex.evolution.defeat_specific": "Need to defeat %s %s times",
 
   "cobblemon.evolution/alolan": "Alolan",
   "cobblemon.evolution/hisui": "Hisui",

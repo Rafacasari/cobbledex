@@ -26,6 +26,7 @@ class CobbledexConfig : IEncodable {
 
     var Collection_NeedSeen = false
     var Collection_NeedCatch = false
+    var Collection_DisableBlackSilhouette = false
 
 
     companion object {
@@ -53,6 +54,7 @@ class CobbledexConfig : IEncodable {
 
             config.Collection_NeedSeen = reader.readBoolean()
             config.Collection_NeedCatch = reader.readBoolean()
+            config.Collection_DisableBlackSilhouette = reader.readBoolean()
 
             return config
         }
@@ -86,6 +88,7 @@ class CobbledexConfig : IEncodable {
 
         buffer.writeBoolean(Collection_NeedSeen)
         buffer.writeBoolean(Collection_NeedCatch)
+        buffer.writeBoolean(Collection_DisableBlackSilhouette)
     }
 
 }
