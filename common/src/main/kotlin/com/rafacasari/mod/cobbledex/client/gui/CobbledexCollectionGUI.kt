@@ -26,11 +26,11 @@ import com.rafacasari.mod.cobbledex.client.widget.SearchWidget
 import com.rafacasari.mod.cobbledex.client.widget.SilhouetteModelWidget
 import com.rafacasari.mod.cobbledex.network.client.handlers.SyncServerSettingsHandler
 import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.drawBlackSilhouettePokemon
+import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.getValidForms
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTranslation
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.emptyLine
-import com.rafacasari.mod.cobbledex.utils.MiscUtils.logInfo
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -91,7 +91,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         internal var needReload = true
         private var implementedSpeciesInternal: List<Species>? = null
 
-        var lastHoveredEntry: Species? = null
+        private var lastHoveredEntry: Species? = null
         var lastHoveredForm: FormData? = null
         val implementedSpecies: List<Species>
             get() {
@@ -172,7 +172,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         lastSearch = searchWidget.text
 
         filteredSpecies = if(lastSearch.isNotEmpty())
-            implementedSpecies.filter { it.name.lowercase().contains(lastSearch.lowercase()) }.toMutableList()
+            implementedSpecies.filter {  it.translatedName.string.lowercase().contains(lastSearch.lowercase()) }.toMutableList()
         else
             implementedSpecies.toMutableList()
 
@@ -351,8 +351,8 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
 
                 species?.let {
                     // TODO: If selected form is null, use the first discovered/caught form, if also is empty, use standardForm
-                    val selectedForm = selectedFormMap[it.resourceIdentifier]?.let { formId -> species.forms[formId] }
-                        ?: it.standardForm
+                    val validForms = species.getValidForms()
+                    val selectedForm = selectedFormMap[it.resourceIdentifier]?.let { formId -> validForms[formId] } ?: it.standardForm
 
                     val isMouseOver =
                         mouseX.toDouble() in entryX..(entryX + ENTRY_SIZE) && mouseY.toDouble() in entryY..(entryY + ENTRY_SIZE)
@@ -502,18 +502,18 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, amount: Double): Boolean {
         currentHoveredEntry?.let {
-            if (it.forms.size > 0) {
-                logInfo(amount.toString())
+            val validForms = it.getValidForms()
+            if (validForms.isNotEmpty()) {
                 var current = selectedFormMap[it.resourceIdentifier] ?: 0
                 if (amount > 0) {
                     current++
-                    if (current >= it.forms.size)
+                    if (current >= validForms.size)
                         selectedFormMap.remove(it.resourceIdentifier)
                     else selectedFormMap[it.resourceIdentifier] = current
                 } else {
                     current--
                     if (current < 0)
-                        selectedFormMap[it.resourceIdentifier] = it.forms.size - 1
+                        selectedFormMap[it.resourceIdentifier] = validForms.size - 1
                     else selectedFormMap[it.resourceIdentifier] = current
                 }
             }
@@ -525,7 +525,8 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         currentHoveredEntry?.let { species ->
-            val selectedForm = selectedFormMap[species.resourceIdentifier]?.let { formId -> species.forms[formId] } ?: species.standardForm
+            val validForms = species.getValidForms()
+            val selectedForm = selectedFormMap[species.resourceIdentifier]?.let { formId -> validForms[formId] } ?: species.standardForm
             val config = SyncServerSettingsHandler.config
             val registerType = discoveredList[species.showdownId()]?.get(selectedForm.formOnlyShowdownId())?.status
             val hasCaught = registerType == DiscoveryRegister.RegisterType.CAUGHT

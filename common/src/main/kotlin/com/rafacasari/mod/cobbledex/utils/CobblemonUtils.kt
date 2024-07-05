@@ -53,6 +53,32 @@ object CobblemonUtils {
         return spawnDetails
     }
 
+    private val validFormsCache: MutableMap<Identifier, List<FormData>> = mutableMapOf()
+    fun Species.getValidForms() : List<FormData> {
+        if (validFormsCache[this.resourceIdentifier] == null) {
+            val forms = this.forms.filter {
+                PokemonModelRepository.variations[this.resourceIdentifier]?.variations?.any { x ->
+                    x.model != null && x.aspects.containsAll(it.aspects)
+                } == true
+            }
+
+            // Add to cache
+            validFormsCache[this.resourceIdentifier] = forms
+        }
+
+        return validFormsCache[this.resourceIdentifier]!!
+    }
+
+    private val canSpawnCache: MutableMap<String, Boolean> = mutableMapOf()
+    fun FormData.canSpawn() : Boolean {
+        if (canSpawnCache[this.name] == null)
+            canSpawnCache[this.name] = CobblemonSpawnPools.WORLD_SPAWN_POOL.filterIsInstance<PokemonSpawnDetail>().any {
+                it.pokemon.aspects == this.aspects
+            }
+
+        return canSpawnCache[this.name]!!
+    }
+
 
     fun getPokemonDrops(form: FormData) : List<ItemDropEntry> {
         return form.drops.entries.filterIsInstance<ItemDropEntry>()
@@ -62,13 +88,7 @@ object CobblemonUtils {
     // TODO: Implement cache to prevent pokedex FPS lag
     // private val cachedPortrait: MutableMap<String, Framebuffer> = mutableMapOf()
 
-    fun drawBlackSilhouettePokemon(
-        species: Identifier,
-        aspects: Set<String>,
-        matrixStack: MatrixStack,
-        rotation: Quaternionf,
-        scale: Float = 20F
-    ) {
+    fun drawBlackSilhouettePokemon(species: Identifier, aspects: Set<String>, matrixStack: MatrixStack, rotation: Quaternionf, scale: Float = 20F) {
         var model: PokemonPoseableModel? = null
         try {
             model = PokemonModelRepository.getPoser(species, aspects)
