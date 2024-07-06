@@ -31,12 +31,26 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
 
                 val pc = player.pc()
                 pc.forEach { pokemon ->
-                    discovery.addOrUpdate(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT, null)
+                    discovery.addOrUpdate(
+                        player,
+                        pokemon.form,
+                        pokemon.shiny,
+                        DiscoveryRegister.RegisterType.CAUGHT,
+                        null,
+                        fireEvents = false
+                    )
                 }
 
                 val party = player.party()
                 party.forEach { pokemon ->
-                    discovery.addOrUpdate(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT, null)
+                    discovery.addOrUpdate(
+                        player,
+                        pokemon.form,
+                        pokemon.shiny,
+                        DiscoveryRegister.RegisterType.CAUGHT,
+                        null,
+                        fireEvents = false
+                    )
                 }
 
                 ReceiveCollectionDataPacket(discovery.registers).sendToPlayer(player)
@@ -52,7 +66,13 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
 
             val cobbledexData = getPlayerData(player)
 
-            val isNewRegister = cobbledexData.addOrUpdate(player, form, isShiny, status, update)
+            val isNewRegister = cobbledexData.addOrUpdate(
+                player,
+                form,
+                isShiny,
+                status,
+                update
+            )
 
             playerData.saveSingle(data)
             return isNewRegister
@@ -71,7 +91,7 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
         return registers.values.flatMap { it.values }.count { it.status == DiscoveryRegister.RegisterType.CAUGHT }
     }
 
-    fun addOrUpdate(player: ServerPlayerEntity, formData: FormData, isShiny: Boolean, status: DiscoveryRegister.RegisterType, update: ((DiscoveryRegister) -> Unit)? = null): Boolean {
+    fun addOrUpdate(player: ServerPlayerEntity, formData: FormData, isShiny: Boolean, status: DiscoveryRegister.RegisterType, update: ((DiscoveryRegister) -> Unit)? = null, fireEvents: Boolean = true): Boolean {
         val species = formData.species.showdownId()
         val form = formData.formOnlyShowdownId()
 
@@ -92,7 +112,8 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
                     formRegister.status = DiscoveryRegister.RegisterType.CAUGHT
                     formRegister.caughtTimestamp = caughtTimestamp
 
-                    CobbledexEvents.NEW_FORM_CAUGHT.post(DiscoveryEvent.OnFormDiscoveryEvent(player, formRegister, formData))
+                    if (fireEvents)
+                        CobbledexEvents.NEW_FORM_CAUGHT.post(DiscoveryEvent.OnFormDiscoveryEvent(player, formRegister, formData))
                 }
 
                 update?.invoke(formRegister)
@@ -103,10 +124,11 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
                 currentRegister[form] = newRegister
                 update?.invoke(newRegister)
 
-                CobbledexEvents.NEW_FORM_DISCOVERED.post(DiscoveryEvent.OnFormDiscoveryEvent(player, newRegister, formData))
-                if (status == DiscoveryRegister.RegisterType.CAUGHT)
-                    CobbledexEvents.NEW_FORM_CAUGHT.post(DiscoveryEvent.OnFormDiscoveryEvent(player, newRegister, formData))
-
+                if (fireEvents) {
+                    CobbledexEvents.NEW_FORM_DISCOVERED.post(DiscoveryEvent.OnFormDiscoveryEvent(player, newRegister, formData))
+                    if (status == DiscoveryRegister.RegisterType.CAUGHT)
+                        CobbledexEvents.NEW_FORM_CAUGHT.post(DiscoveryEvent.OnFormDiscoveryEvent(player, newRegister, formData))
+                }
                 return true
             }
         } else {
@@ -118,7 +140,7 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
             CobbledexEvents.NEW_SPECIES_DISCOVERED.post(DiscoveryEvent.OnSpeciesDiscoveryEvent(player, newRegister, formData.species))
             CobbledexEvents.NEW_FORM_DISCOVERED.post(DiscoveryEvent.OnFormDiscoveryEvent(player, newRegister, formData))
 
-            if (status == DiscoveryRegister.RegisterType.CAUGHT) {
+            if (fireEvents && status == DiscoveryRegister.RegisterType.CAUGHT) {
                 CobbledexEvents.NEW_SPECIES_CAUGHT.post(DiscoveryEvent.OnSpeciesDiscoveryEvent(player, newRegister, formData.species))
                 CobbledexEvents.NEW_FORM_CAUGHT.post(DiscoveryEvent.OnFormDiscoveryEvent(player, newRegister, formData))
             }

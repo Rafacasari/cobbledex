@@ -18,6 +18,7 @@ import com.rafacasari.mod.cobbledex.CobbledexBuildDetails
 import com.rafacasari.mod.cobbledex.CobbledexConfig
 import com.rafacasari.mod.cobbledex.api.CobbledexCoopDiscovery
 import com.rafacasari.mod.cobbledex.api.CobbledexDiscovery
+import com.rafacasari.mod.cobbledex.api.PokedexRewardHistory
 import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
 import com.rafacasari.mod.cobbledex.commands.arguments.SettingArgumentSuggestion
 import com.rafacasari.mod.cobbledex.network.client.packets.OpenCobbledexPacket
@@ -135,13 +136,25 @@ object CobbledexCommand : IServerCommandInterface {
 
                 val pc = player.pc()
                 pc.forEach { pokemon ->
-                    discovery.addOrUpdate(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+                    discovery.addOrUpdate(
+                        player,
+                        pokemon.form,
+                        pokemon.shiny,
+                        DiscoveryRegister.RegisterType.CAUGHT,
+                        fireEvents = false
+                    )
                     CobbledexCoopDiscovery.addOrUpdateCoopWithoutSaving(pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
                 }
 
                 val party = player.party()
                 party.forEach { pokemon ->
-                    discovery.addOrUpdate(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+                    discovery.addOrUpdate(
+                        player,
+                        pokemon.form,
+                        pokemon.shiny,
+                        DiscoveryRegister.RegisterType.CAUGHT,
+                        fireEvents = false
+                    )
                     CobbledexCoopDiscovery.addOrUpdateCoopWithoutSaving(pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
                 }
 
@@ -154,6 +167,8 @@ object CobbledexCommand : IServerCommandInterface {
             } catch (_: Exception) {
                 // Suppress any error
             }
+
+            PokedexRewardHistory.checkRewards(player)
         }
 
         CobbledexCoopDiscovery.save()

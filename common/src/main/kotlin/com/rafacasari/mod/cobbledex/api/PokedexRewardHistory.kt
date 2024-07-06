@@ -35,7 +35,7 @@ class PokedexRewardHistory(val received: MutableList<String> = mutableListOf()) 
         }
 
         fun checkRewards(player: ServerPlayerEntity) {
-            if(!Cobbledex.getConfig().CaughtRewards)
+            if(!Cobbledex.getConfig().CaughtRewards || !Cobbledex.serverInitialized)
                 return
 
             val playerData= CobblemonPlayerData.get(player)

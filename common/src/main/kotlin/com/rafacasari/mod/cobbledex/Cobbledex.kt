@@ -47,6 +47,7 @@ object Cobbledex {
 
     val LOGGER: Logger = LoggerFactory.getLogger("Cobbledex")
     lateinit var implementation: CobbledexImplementation
+    var serverInitialized = false
 
     fun preInitialize(implementation: CobbledexImplementation) {
         logInfo("Initializing Cobbledex $VERSION...")
@@ -67,6 +68,12 @@ object Cobbledex {
             // Initialize CO-OP Discovery. Save inside world-root path to work on LAN servers without overlaps
             val serverPath = serverEvent.server.getSavePath(WorldSavePath.ROOT).toAbsolutePath()
             CobbledexCoopDiscovery.load(Paths.get(serverPath.toString(), "cobbledex-coop.json").toString())
+
+            serverInitialized = true
+        }
+
+        PlatformEvents.SERVER_STOPPED.subscribe {
+            serverInitialized = false
         }
 
         CobblemonEvents.STARTER_CHOSEN.subscribe(Priority.LOW) {
@@ -83,10 +90,9 @@ object Cobbledex {
         }
 
         CobblemonEvents.EVOLUTION_COMPLETE.subscribe(Priority.LOW) {
-            val player = it.pokemon.getOwnerPlayer()
-
-            if (player != null)
-                registerPlayerDiscovery(player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+            it.pokemon.getOwnerPlayer()?.let {
+                    player -> registerPlayerDiscovery(player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+            }
         }
 
         CobblemonEvents.TRADE_COMPLETED.subscribe(Priority.LOW) {
@@ -106,18 +112,6 @@ object Cobbledex {
                 registerPlayerDiscovery(player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
             }
         }
-
-//                CobblemonEvents.BATTLE_STARTED_PRE.subscribe(Priority.LOW) { event ->
-//                    val pokemonList = event.battle.activePokemon
-//
-//                    event.battle.players.forEach { player ->
-//                        pokemonList.forEach {
-//                            val pokemon = it.battlePokemon?.entity?.pokemon
-//                            if (pokemon != null)
-//                                registerPlayerDiscovery(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.SEEN)
-//                        }
-//                    }
-//                }
 
         CobbledexEvents.NEW_FORM_CAUGHT.subscribe {
             PokedexRewardHistory.checkRewards(it.player)
