@@ -37,6 +37,9 @@
   "cobbledex.texts.need.view_drops": "view drops",
   "cobbledex.texts.not_a_pokemon": "That's not a Pokémon!",
   "cobbledex.texts.discover.selected_form": "Selected form: %s",
+  "cobbledex.texts.discover.discovered": "Discovered",
+  "cobbledex.texts.discover.caught": "Caught",
+  "cobbledex.texts.reward_received": "§lCongrats!§r You received %s for catching %s Pokemon!",
 
   "cobbledex.texts.battle.title": "Damage Multipliers",
   "cobbledex.texts.battle.damage_from.multiplier_4": "%sx | §lSuper Weak§r against:",

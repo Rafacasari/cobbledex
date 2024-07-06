@@ -3,6 +3,7 @@ package com.rafacasari.mod.cobbledex.utils
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import com.rafacasari.mod.cobbledex.Cobbledex
+import net.minecraft.text.ClickEvent
 import net.minecraft.text.MutableText
 import net.minecraft.text.TextContent
 
@@ -18,6 +19,8 @@ object MiscUtils {
     fun Text.bold() = also { (it as MutableText).style = it.style.withBold(true) }
 
     fun Float.format(): String = if (this % 1 == 0f) this.toInt().toString() else this.toString()
+
+    fun MutableText.openUrl(url: String) = also { it.style = it.style.withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, url)) }
 
     fun cobbledexTextTranslation(key: String, vararg arg: Any): MutableText {
         return Text.translatable("cobbledex.texts.$key", *arg)

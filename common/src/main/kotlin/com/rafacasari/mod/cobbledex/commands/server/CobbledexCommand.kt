@@ -3,10 +3,7 @@ package com.rafacasari.mod.cobbledex.commands.server
 import com.cobblemon.mod.common.api.permission.CobblemonPermission
 import com.cobblemon.mod.common.api.permission.PermissionLevel
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
-import com.cobblemon.mod.common.api.text.bold
-import com.cobblemon.mod.common.api.text.green
-import com.cobblemon.mod.common.api.text.red
-import com.cobblemon.mod.common.api.text.text
+import com.cobblemon.mod.common.api.text.*
 import com.cobblemon.mod.common.command.argument.PokemonPropertiesArgumentType
 import com.cobblemon.mod.common.util.party
 import com.cobblemon.mod.common.util.pc
@@ -17,6 +14,7 @@ import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType
 import com.rafacasari.mod.cobbledex.Cobbledex
+import com.rafacasari.mod.cobbledex.CobbledexBuildDetails
 import com.rafacasari.mod.cobbledex.CobbledexConfig
 import com.rafacasari.mod.cobbledex.api.CobbledexCoopDiscovery
 import com.rafacasari.mod.cobbledex.api.CobbledexDiscovery
@@ -25,12 +23,17 @@ import com.rafacasari.mod.cobbledex.commands.arguments.SettingArgumentSuggestion
 import com.rafacasari.mod.cobbledex.network.client.packets.OpenCobbledexPacket
 import com.rafacasari.mod.cobbledex.network.client.packets.OpenDiscoveryPacket
 import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCollectionDataPacket
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.appendWithSeparator
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.logError
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.openUrl
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.toMutableText
 import net.minecraft.command.argument.EntityArgumentType
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.text.MutableText
 import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import kotlin.reflect.*
 import kotlin.reflect.full.memberProperties
 
@@ -52,7 +55,9 @@ object CobbledexCommand : IServerCommandInterface {
             val playersArgument = CommandManager.argument("players", EntityArgumentType.players())
 
             val command = createLiteralArgument("cobbledex")
-
+                .executes {
+                    ctx -> executeCreditCommand(ctx)
+                }
                 // Add config options here
                 .then(
                     CommandManager.literal("config").permission(CONFIG_COBBLEDEX_PERMISSION)
@@ -90,6 +95,32 @@ object CobbledexCommand : IServerCommandInterface {
         }
     }
 
+    private fun executeCreditCommand(ctx: CommandContext<ServerCommandSource>): Int {
+        val creditsMessage: MutableList<MutableText> = mutableListOf()
+        creditsMessage.add("Cobblemon Pokedex ".text().formatted(Formatting.BOLD, Formatting.RED) + "v${CobbledexBuildDetails.VERSION}".text().formatted(Formatting.WHITE, Formatting.BOLD))
+
+        val creditBuilder: MutableList<MutableText> = mutableListOf()
+        creditBuilder.add(Text.literal("Made with"))
+        creditBuilder.add(Text.literal("❤").formatted(Formatting.RED))
+        creditBuilder.add(Text.literal("by"))
+        creditBuilder.add(Text.literal("Rafa").formatted(Formatting.RED, Formatting.BOLD))
+        creditBuilder.add(Text.literal("and"))
+        creditBuilder.add(Text.literal("Cobblemon Community").formatted(Formatting.RED, Formatting.BOLD))
+        creditsMessage.add(creditBuilder.appendWithSeparator(" "))
+
+        val downloadLine: MutableList<MutableText> = mutableListOf()
+        downloadLine.add(Text.literal("Download at:"))
+        downloadLine.add(Text.literal("GitHub").bold().aqua().openUrl("https://github.com/rafacasari/cobbledex/releases"))
+        downloadLine.add(Text.literal("|"))
+        downloadLine.add(Text.literal("Modrinth").bold().aqua().openUrl("https://modrinth.com/mod/cobblemon-pokedex"))
+        downloadLine.add(Text.literal("|"))
+        downloadLine.add(Text.literal("CurseForge").bold().aqua().openUrl("https://curseforge.com/minecraft/mc-mods/cobbledex"))
+        creditsMessage.add(downloadLine.appendWithSeparator(" "))
+
+        ctx.source.sendMessage(creditsMessage.toMutableText())
+        return Command.SINGLE_SUCCESS
+    }
+
     private fun executeAuto(ctx: CommandContext<ServerCommandSource>): Int {
         val players = EntityArgumentType.getPlayers(ctx, "players")
         players.forEach { player ->
@@ -104,13 +135,13 @@ object CobbledexCommand : IServerCommandInterface {
 
                 val pc = player.pc()
                 pc.forEach { pokemon ->
-                    discovery.addOrUpdate(pokemon.species.showdownId(), pokemon.form.formOnlyShowdownId(), pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+                    discovery.addOrUpdate(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
                     CobbledexCoopDiscovery.addOrUpdateCoopWithoutSaving(pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
                 }
 
                 val party = player.party()
                 party.forEach { pokemon ->
-                    discovery.addOrUpdate(pokemon.species.showdownId(), pokemon.form.formOnlyShowdownId(), pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+                    discovery.addOrUpdate(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
                     CobbledexCoopDiscovery.addOrUpdateCoopWithoutSaving(pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
                 }
 
@@ -123,7 +154,6 @@ object CobbledexCommand : IServerCommandInterface {
             } catch (_: Exception) {
                 // Suppress any error
             }
-
         }
 
         CobbledexCoopDiscovery.save()

@@ -26,7 +26,7 @@ import com.rafacasari.mod.cobbledex.client.widget.SearchWidget
 import com.rafacasari.mod.cobbledex.client.widget.SilhouetteModelWidget
 import com.rafacasari.mod.cobbledex.network.client.handlers.SyncServerSettingsHandler
 import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.drawBlackSilhouettePokemon
-import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.getValidForms
+import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.validForms
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTranslation
@@ -117,6 +117,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
     private var typeWidget: TypeIcon? = null
     private lateinit var searchWidget: SearchWidget
     private var currentHoveredEntry: Species? = null
+    //private lateinit var rewardWidget: DiscoveryRewardWidget
 
     override fun init() {
         val x = (width - CobbledexGUI.BASE_WIDTH) / 2
@@ -151,6 +152,9 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         addDrawableChild(ImageButton(DOUBLE_RIGHT_ARROW, 14, 11, x + 280, y + 175) {
             currentPage = maxPages
         })
+
+//        rewardWidget = DiscoveryRewardWidget(x + 5, y + 170)
+//        addDrawableChild(rewardWidget)
 
 //        val totalItems = (COLUMN_SIZE * LINES_SIZE)
 //        // Get total items
@@ -238,7 +242,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         // Discovered
         drawScaledText(
             context = context,
-            text = Text.literal("Discovered").bold(),
+            text = cobbledexTextTranslation("discover.discovered").bold(),
             x = x + 13,
             y = y + 135f,
             centered = false,
@@ -258,7 +262,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         drawScaledText(
             context = context,
             text = percentageDiscovered.text().bold(),
-            x = x + 64F,
+            x = x + 64.5F,
             y = y + 138f,
             centered = true,
             scale = 0.5F
@@ -267,7 +271,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         // Caught
         drawScaledText(
             context = context,
-            text = Text.literal("Caught").bold(),
+            text = cobbledexTextTranslation("discover.caught").bold(),
             x = x + 13,
             y = y + 154f,
             centered = false,
@@ -283,11 +287,10 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
             scale = 0.5F
         )
 
-
         drawScaledText(
             context = context,
             text = percentageCaught.text().bold(),
-            x = x + 64F,
+            x = x + 64.5F,
             y = y + 157f,
             centered = true,
             scale = 0.5F
@@ -329,7 +332,6 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                     scale = SCALE
                 )
 
-
         }
 
         // Render widgets
@@ -351,7 +353,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
 
                 species?.let {
                     // TODO: If selected form is null, use the first discovered/caught form, if also is empty, use standardForm
-                    val validForms = species.getValidForms()
+                    val validForms = species.validForms
                     val selectedForm = selectedFormMap[it.resourceIdentifier]?.let { formId -> validForms[formId] } ?: it.standardForm
 
                     val isMouseOver =
@@ -451,7 +453,6 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                         scale = SCALE, opacity = 0.3
                     )
 
-
                     if (isMouseOver) {
                         //val formName = if (entryForm != null) selectedForm.name else "???"
                         tooltip.add(cobbledexTextTranslation("discover.selected_form", selectedForm.name.text().bold()).formatted(Formatting.GRAY))
@@ -488,7 +489,6 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                 }
 
                 currentIndex++
-
             }
         }
 
@@ -502,7 +502,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, amount: Double): Boolean {
         currentHoveredEntry?.let {
-            val validForms = it.getValidForms()
+            val validForms = it.validForms
             if (validForms.isNotEmpty()) {
                 var current = selectedFormMap[it.resourceIdentifier] ?: 0
                 if (amount > 0) {
@@ -525,7 +525,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         currentHoveredEntry?.let { species ->
-            val validForms = species.getValidForms()
+            val validForms = species.validForms
             val selectedForm = selectedFormMap[species.resourceIdentifier]?.let { formId -> validForms[formId] } ?: species.standardForm
             val config = SyncServerSettingsHandler.config
             val registerType = discoveredList[species.showdownId()]?.get(selectedForm.formOnlyShowdownId())?.status

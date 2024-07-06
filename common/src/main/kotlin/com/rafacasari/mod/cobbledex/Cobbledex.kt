@@ -9,9 +9,9 @@ import com.cobblemon.mod.common.api.text.onHover
 import com.cobblemon.mod.common.platform.events.PlatformEvents
 import com.cobblemon.mod.common.platform.events.ServerPlayerEvent
 import com.cobblemon.mod.common.pokemon.FormData
+import com.cobblemon.mod.common.util.giveOrDropItemStack
 import com.cobblemon.mod.common.util.server
-import com.rafacasari.mod.cobbledex.api.CobbledexCoopDiscovery
-import com.rafacasari.mod.cobbledex.api.CobbledexDiscovery
+import com.rafacasari.mod.cobbledex.api.*
 import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexCollectionGUI
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
@@ -35,7 +35,10 @@ import java.nio.file.Paths
 
 object Cobbledex {
     private lateinit var config: CobbledexConfig
+    private lateinit var rewardManager: PokedexRewards
+
     fun getConfig() : CobbledexConfig = config
+    fun getRewardManager(): PokedexRewards = rewardManager
 
     const val MOD_ID : String = "cobbledex"
 
@@ -45,57 +48,79 @@ object Cobbledex {
     val LOGGER: Logger = LoggerFactory.getLogger("Cobbledex")
     lateinit var implementation: CobbledexImplementation
 
-    private var eventsCreated: Boolean = false
     fun preInitialize(implementation: CobbledexImplementation) {
         logInfo("Initializing Cobbledex $VERSION...")
         Cobbledex.implementation = implementation
 
         implementation.registerItems()
+        rewardManager = PokedexRewards.getInstance()
+
         loadConfig()
+
+        // Register our custom extension data
+        PlayerDataExtensionRegistry.register(CobbledexDiscovery.NAME_KEY, CobbledexDiscovery::class.java)
+        PlayerDataExtensionRegistry.register(PokedexRewardHistory.NAME_KEY, PokedexRewardHistory::class.java)
 
         PlatformEvents.SERVER_STARTED.subscribe { serverEvent ->
             logInfo("Server initialized...")
 
-            PlayerDataExtensionRegistry.register(CobbledexDiscovery.NAME_KEY, CobbledexDiscovery::class.java)
+            // Initialize CO-OP Discovery. Save inside world-root path to work on LAN servers without overlaps
             val serverPath = serverEvent.server.getSavePath(WorldSavePath.ROOT).toAbsolutePath()
             CobbledexCoopDiscovery.load(Paths.get(serverPath.toString(), "cobbledex-coop.json").toString())
+        }
 
-            if (!eventsCreated) {
-                CobblemonEvents.STARTER_CHOSEN.subscribe(Priority.LOW) {
-                    registerPlayerDiscovery(it.player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+        CobblemonEvents.STARTER_CHOSEN.subscribe(Priority.LOW) {
+            registerPlayerDiscovery(it.player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
 
-                    if (getConfig().GiveCobbledexItemOnStarterChosen) {
-                        val itemStack = ItemStack(CobbledexConstants.COBBLEDEX_ITEM, 1)
-                        it.player.giveItemStack(itemStack)
-                    }
-                }
-
-                CobblemonEvents.POKEMON_CAPTURED.subscribe(Priority.LOWEST) {
-                    registerPlayerDiscovery(it.player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
-                }
-
-                CobblemonEvents.EVOLUTION_COMPLETE.subscribe(Priority.LOW) {
-                    val player = it.pokemon.getOwnerPlayer()
-
-                    if (player != null)
-                        registerPlayerDiscovery(player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
-                }
-
-                CobblemonEvents.TRADE_COMPLETED.subscribe(Priority.LOW) {
-                    serverEvent.server.playerManager.getPlayer(it.tradeParticipant1.uuid)?.let { player ->
-                        val pokemon = it.tradeParticipant1Pokemon
-                        registerPlayerDiscovery(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
-                    }
-
-                    serverEvent.server.playerManager.getPlayer(it.tradeParticipant2.uuid)?.let { player ->
-                        val pokemon = it.tradeParticipant2Pokemon
-                        registerPlayerDiscovery(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
-                    }
-                }
-
-                // This should prevent events from being added more than once
-                eventsCreated = true
+            if (getConfig().GiveCobbledexItemOnStarterChosen) {
+                val itemStack = ItemStack(CobbledexConstants.COBBLEDEX_ITEM, 1)
+                it.player.giveOrDropItemStack(itemStack)
             }
+        }
+
+        CobblemonEvents.POKEMON_CAPTURED.subscribe(Priority.LOWEST) {
+            registerPlayerDiscovery(it.player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+        }
+
+        CobblemonEvents.EVOLUTION_COMPLETE.subscribe(Priority.LOW) {
+            val player = it.pokemon.getOwnerPlayer()
+
+            if (player != null)
+                registerPlayerDiscovery(player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+        }
+
+        CobblemonEvents.TRADE_COMPLETED.subscribe(Priority.LOW) {
+            it.tradeParticipant1Pokemon.getOwnerPlayer()?.let { player ->
+                val pokemon = it.tradeParticipant1Pokemon
+                registerPlayerDiscovery(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+            }
+
+            it.tradeParticipant2Pokemon.getOwnerPlayer()?.let { player ->
+                val pokemon = it.tradeParticipant2Pokemon
+                registerPlayerDiscovery(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+            }
+        }
+
+        CobblemonEvents.FOSSIL_REVIVED.subscribe(Priority.LOW) {
+            it.player?.let { player ->
+                registerPlayerDiscovery(player, it.pokemon.form, it.pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
+            }
+        }
+
+//                CobblemonEvents.BATTLE_STARTED_PRE.subscribe(Priority.LOW) { event ->
+//                    val pokemonList = event.battle.activePokemon
+//
+//                    event.battle.players.forEach { player ->
+//                        pokemonList.forEach {
+//                            val pokemon = it.battlePokemon?.entity?.pokemon
+//                            if (pokemon != null)
+//                                registerPlayerDiscovery(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.SEEN)
+//                        }
+//                    }
+//                }
+
+        CobbledexEvents.NEW_FORM_CAUGHT.subscribe {
+            PokedexRewardHistory.checkRewards(it.player)
         }
 
         PlatformEvents.CLIENT_PLAYER_LOGOUT.subscribe {
@@ -121,6 +146,8 @@ object Cobbledex {
             }
 
             getConfig().syncPlayer(login.player)
+
+            PokedexRewardHistory.checkRewards(login.player)
         }
     }
 

@@ -7,7 +7,6 @@ import net.minecraft.world.World
 import net.minecraft.world.biome.Biome
 
 object BiomeUtils {
-
     data class CobbledexBiome(val identifier: Identifier, val biome: Biome)
 
     fun getBiomesRegistry(world: World) : Registry<Biome> {

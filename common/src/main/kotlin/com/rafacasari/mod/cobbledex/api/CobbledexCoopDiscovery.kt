@@ -18,26 +18,22 @@ class CobbledexCoopDiscovery(val registers: MutableMap<String, MutableMap<String
             .setPrettyPrinting()
             .create()
 
-        private var isInitialized: Boolean =false
-        private lateinit var discovery: CobbledexCoopDiscovery
+        private var discovery: CobbledexCoopDiscovery? = null
 
-        private lateinit var filePath: String
+        private var filePath: String = ""
         fun getDiscovery() : CobbledexCoopDiscovery?
         {
-            if (!isInitialized)
-                logWarn("Called getDiscovery before initialization")
-
-            return if (this::discovery.isInitialized) discovery else null
+            return discovery
         }
 
         fun load(path: String) {
-            if (isInitialized) {
-                logWarn("CobbledexCoopDiscovery.load was called twice!")
+            filePath = path
+
+            if (filePath.isEmpty())
+            {
+                logError("Failed to load Cobbledex COOP Discovery! filePath is empty!")
                 return
             }
-
-            isInitialized = true
-            filePath = path
 
             logInfo("Loading CobbledexCoopDiscovery at \"${filePath}\"...")
             val configFile = File(path)
@@ -61,15 +57,10 @@ class CobbledexCoopDiscovery(val registers: MutableMap<String, MutableMap<String
         }
 
         fun save() {
-            if (!isInitialized)
-            {
-                logWarn("Tried to save CobbledexCoopDiscovery without loading it first")
-                return
-            }
 
-            if (!this::filePath.isInitialized)
+            if (filePath.isEmpty())
             {
-                logWarn("Tried to save CobbledexCoopDiscovery without filePath being initialized")
+                logWarn("Tried to save CobbledexCoopDiscovery without a valid filePath")
                 return
             }
 

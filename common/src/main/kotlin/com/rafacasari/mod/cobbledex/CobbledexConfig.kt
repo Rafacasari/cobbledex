@@ -28,6 +28,8 @@ class CobbledexConfig : IEncodable {
     var Collection_NeedCatch = false
     var Collection_DisableBlackSilhouette = false
 
+    var CaughtRewards = true
+
 
     companion object {
         val GSON: Gson = GsonBuilder()

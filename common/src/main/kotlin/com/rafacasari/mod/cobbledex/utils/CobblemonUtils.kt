@@ -53,21 +53,15 @@ object CobblemonUtils {
         return spawnDetails
     }
 
-    private val validFormsCache: MutableMap<Identifier, List<FormData>> = mutableMapOf()
-    fun Species.getValidForms() : List<FormData> {
-        if (validFormsCache[this.resourceIdentifier] == null) {
-            val forms = this.forms.filter {
+    private val formCache = mutableMapOf<Identifier, List<FormData>>()
+    val Species.validForms: List<FormData>
+        get() = formCache.getOrPut(this.resourceIdentifier) {
+            this.forms.filter {
                 PokemonModelRepository.variations[this.resourceIdentifier]?.variations?.any { x ->
                     x.model != null && x.aspects.containsAll(it.aspects)
-                } == true
+                } ?: false
             }
-
-            // Add to cache
-            validFormsCache[this.resourceIdentifier] = forms
         }
-
-        return validFormsCache[this.resourceIdentifier]!!
-    }
 
     private val canSpawnCache: MutableMap<String, Boolean> = mutableMapOf()
     fun FormData.canSpawn() : Boolean {

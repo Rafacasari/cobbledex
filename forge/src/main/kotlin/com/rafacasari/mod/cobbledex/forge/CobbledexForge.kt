@@ -4,11 +4,13 @@ import com.rafacasari.mod.cobbledex.*
 import com.rafacasari.mod.cobbledex.commands.CobbledexCommands
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.logError
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.logInfo
+import net.minecraft.item.ItemGroups
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
 import net.minecraftforge.api.distmarker.Dist
 import net.minecraftforge.client.event.RegisterClientCommandsEvent
 import net.minecraftforge.common.MinecraftForge
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent
 import net.minecraftforge.event.RegisterCommandsEvent
 import net.minecraftforge.eventbus.api.IEventBus
 import net.minecraftforge.fml.DistExecutor
@@ -52,6 +54,12 @@ class CobbledexForge : CobbledexImplementation {
             addListener<RegisterEvent> { event ->
                 event.register(ForgeRegistries.Keys.ITEMS) {
                     it.register(Identifier(Cobbledex.MOD_ID, "cobbledex_item"), CobbledexConstants.COBBLEDEX_ITEM)
+                }
+            }
+
+            addListener<BuildCreativeModeTabContentsEvent> { event ->
+                if (event.tabKey == ItemGroups.TOOLS) {
+                    event.accept(CobbledexConstants::COBBLEDEX_ITEM)
                 }
             }
         }

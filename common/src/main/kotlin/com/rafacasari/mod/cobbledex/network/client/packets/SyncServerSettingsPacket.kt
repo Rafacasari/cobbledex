@@ -6,10 +6,6 @@ import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.Identifier
 
 class SyncServerSettingsPacket internal constructor(val config: CobbledexConfig): INetworkPacket<SyncServerSettingsPacket> {
-
-
-
-
     override val id = ID
 
     override fun encode(buffer: PacketByteBuf) {
