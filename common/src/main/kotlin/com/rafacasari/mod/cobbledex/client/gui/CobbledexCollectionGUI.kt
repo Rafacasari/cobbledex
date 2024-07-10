@@ -29,7 +29,6 @@ import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.drawBlackSilhouettePoke
 import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.validForms
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
-import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTranslation
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.emptyLine
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
@@ -217,7 +216,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         drawScaledText(
             context = context,
             font = CobblemonResources.DEFAULT_LARGE,
-            text = cobbledexTranslation("cobbledex.texts.cobbledex").bold(),
+            text = cobbledexTextTranslation("cobbledex").bold(),
             x = x + 200.25F,
             y = y + 13.25F,
             shadow = true,

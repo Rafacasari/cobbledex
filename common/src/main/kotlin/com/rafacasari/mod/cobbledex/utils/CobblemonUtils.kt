@@ -24,12 +24,19 @@ import net.minecraft.util.math.RotationAxis
 import org.joml.Quaternionf
 import org.joml.Vector3f
 
+@Suppress("unused")
+/**
+ * A utility class for Cobblemon-specific functions. This class also adds extensions for Species and Forms classes in Cobblemon.
+ */
 object CobblemonUtils {
 
     fun Species.getFormByName(name: String) : FormData {
         return forms.find { it.name == name } ?: this.standardForm
     }
 
+    /**
+     This doesn't should be really needed, since aspects are always directly from **[FormData]**
+    **/
     fun removeUnnecessaryAspects(pokeAspects: Set<String>) : Set<String> {
         return pokeAspects.filter {
             (it != "male" && it != "female" && it != "shiny")
@@ -77,10 +84,6 @@ object CobblemonUtils {
     fun getPokemonDrops(form: FormData) : List<ItemDropEntry> {
         return form.drops.entries.filterIsInstance<ItemDropEntry>()
     }
-
-
-    // TODO: Implement cache to prevent pokedex FPS lag
-    // private val cachedPortrait: MutableMap<String, Framebuffer> = mutableMapOf()
 
     fun drawBlackSilhouettePokemon(species: Identifier, aspects: Set<String>, matrixStack: MatrixStack, rotation: Quaternionf, scale: Float = 20F) {
         var model: PokemonPoseableModel? = null

@@ -7,16 +7,26 @@ import net.minecraft.text.ClickEvent
 import net.minecraft.text.MutableText
 import net.minecraft.text.TextContent
 
+@Suppress("unused")
+/**
+ * A utility class with functions for Cobbledex or un-categorized functions
+ */
 object MiscUtils {
+    /**
+     * Returns an [Identifier] using **Cobbledex MOD ID** as namespace
+     */
     fun cobbledexResource(path: String): Identifier = Identifier(Cobbledex.MOD_ID, path)
-    fun cobbledexTranslation(key: String): MutableText = Text.translatable(key)
+    fun translatable(key: String): MutableText = Text.translatable(key)
+
     fun logInfo(text: String) = Cobbledex.LOGGER.info(text)
     fun logWarn(text: String) = Cobbledex.LOGGER.warn(text)
     fun logError(text: String) = Cobbledex.LOGGER.error(text)
     fun logDebug(text: String) = Cobbledex.LOGGER.debug(text)
 
     fun MutableText.withRGBColor(color: Int) = also { it.style = it.style.withColor(color) }
-    fun Text.bold() = also { (it as MutableText).style = it.style.withBold(true) }
+    fun Text.bold(): MutableText = MutableText.of(this.content).also {
+        it.style = it.style.withBold(true)
+    }
 
     fun Float.format(): String = if (this % 1 == 0f) this.toInt().toString() else this.toString()
 

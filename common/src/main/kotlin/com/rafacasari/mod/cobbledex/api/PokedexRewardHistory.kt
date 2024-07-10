@@ -25,6 +25,9 @@ class PokedexRewardHistory(val received: MutableList<String> = mutableListOf()) 
             .disableHtmlEscaping()
             .create()
 
+        /**
+         * Get [PokedexRewardHistory] for [player]
+         */
         fun getPlayerRewards(player: ServerPlayerEntity): PokedexRewardHistory {
             val playerData= CobblemonPlayerData.get(player)
             val history = playerData.extraData.getOrPut(NAME_KEY) {
@@ -34,7 +37,11 @@ class PokedexRewardHistory(val received: MutableList<String> = mutableListOf()) 
             return history
         }
 
-        fun checkRewards(player: ServerPlayerEntity) {
+
+        /**
+         * Check available rewards for [player] and automatically give it
+         */
+        internal fun checkRewards(player: ServerPlayerEntity) {
             if(!Cobbledex.getConfig().CaughtRewards || !Cobbledex.serverInitialized)
                 return
 

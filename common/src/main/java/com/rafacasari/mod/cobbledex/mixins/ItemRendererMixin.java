@@ -30,11 +30,10 @@ public abstract class ItemRendererMixin {
     @Shadow @Final private ItemModels models;
     @Shadow public abstract void renderItem(ItemStack stack, ModelTransformationMode renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, BakedModel model);
 
-    // TODO: Need to change cobbledex_item to be 2d as default and 3d should come here? May fix some modpacks
     @Inject(method = "getModel", at = @At("HEAD"), cancellable = true)
     private void cobbledex$bakeCobbledexItem(ItemStack stack, World world, LivingEntity entity, int seed, CallbackInfoReturnable<BakedModel> cir) {
         if (stack.getItem() instanceof CobbledexItem) {
-            Identifier identifier = MiscUtils.INSTANCE.cobbledexResource("cobbledex_item");
+            Identifier identifier = MiscUtils.INSTANCE.cobbledexResource("cobbledex_model");
             BakedModel model = this.models.getModelManager().getModel(new ModelIdentifier(identifier, "inventory"));
             ClientWorld clientWorld = world instanceof ClientWorld ? (ClientWorld) world : null;
             BakedModel overriddenModel = model.getOverrides().apply(model, stack, clientWorld, entity, seed);
@@ -51,7 +50,7 @@ public abstract class ItemRendererMixin {
     private void cobbledex$determineCobbledexModel(ItemStack stack, ModelTransformationMode renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, BakedModel model, CallbackInfo ci) {
         boolean shouldBe2d = renderMode == ModelTransformationMode.GUI || renderMode == ModelTransformationMode.FIXED;
         if (shouldBe2d && stack.getItem() instanceof CobbledexItem) {
-            BakedModel replacementModel = this.models.getModelManager().getModel(new ModelIdentifier(MiscUtils.INSTANCE.cobbledexResource("cobbledex_icon"), "inventory"));
+            BakedModel replacementModel = this.models.getModelManager().getModel(new ModelIdentifier(MiscUtils.INSTANCE.cobbledexResource("cobbledex_item"), "inventory"));
             if (!model.equals(replacementModel)) {
                 ci.cancel();
                 renderItem(stack, renderMode, leftHanded, matrices, vertexConsumers, light, overlay, replacementModel);

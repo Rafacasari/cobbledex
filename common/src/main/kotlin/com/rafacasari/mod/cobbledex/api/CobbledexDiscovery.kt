@@ -1,3 +1,5 @@
+
+
 package com.rafacasari.mod.cobbledex.api
 
 import com.cobblemon.mod.common.Cobblemon.playerData
@@ -14,6 +16,13 @@ import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCollectionData
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.logInfo
 import net.minecraft.server.network.ServerPlayerEntity
 
+@Suppress("unused")
+/**
+ * A player-data that contains all Pokédex data (discovered/caught list)
+ *
+ * [registers] = MutableMap<**Species.showdownId**, MutableMap<**FormData.formOnlyShowdownId**, **DiscoveryRegister**>>
+ *
+ */
 class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, DiscoveryRegister>> = mutableMapOf()): PlayerDataExtension {
 
     companion object {
@@ -23,6 +32,9 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
             .disableHtmlEscaping()
             .create()
 
+        /**
+         * Get [CobbledexDiscovery] for [player]
+         */
         fun getPlayerData(player: ServerPlayerEntity): CobbledexDiscovery {
             val data = playerData.get(player)
 
@@ -79,18 +91,41 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
         }
     }
 
+    /**
+     * Return true if player caught the given [FormData]
+     */
+    fun caught(form: FormData): Boolean = registers[form.species.showdownId()]?.get(form.formOnlyShowdownId())?.status == DiscoveryRegister.RegisterType.CAUGHT
+
+    /**
+     * Return true if player discovered/seen the given [FormData]
+     */
+    fun discovered(form: FormData): Boolean = registers[form.species.showdownId()]?.get(form.formOnlyShowdownId())?.status == DiscoveryRegister.RegisterType.SEEN
+
     private fun getRegister(showdownId: String): MutableMap<String, DiscoveryRegister>? {
         return registers[showdownId]
     }
 
+    /**
+     * Get player total number of Forms discovered
+     */
     fun getTotalDiscovered(): Int {
         return registers.values.flatMap { it.values }.count()
     }
 
+    /**
+     * Get player total number of Forms caught
+     */
     fun getTotalCaught(): Int {
         return registers.values.flatMap { it.values }.count { it.status == DiscoveryRegister.RegisterType.CAUGHT }
     }
 
+    /**
+     * Add or update a player discovery
+     *
+     * [update] is **optional** and is a callback called after adding into list
+     *
+     * [fireEvents] determine if events in [CobbledexEvents] should be fired
+     */
     fun addOrUpdate(player: ServerPlayerEntity, formData: FormData, isShiny: Boolean, status: DiscoveryRegister.RegisterType, update: ((DiscoveryRegister) -> Unit)? = null, fireEvents: Boolean = true): Boolean {
         val species = formData.species.showdownId()
         val form = formData.formOnlyShowdownId()

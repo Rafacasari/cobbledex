@@ -16,6 +16,6 @@ object CobbledexForgeClient {
 
     private fun register2dModel(event: ModelEvent.RegisterAdditional) {
         logInfo("Registering client resources")
-        event.register(ModelIdentifier(cobbledexResource("cobbledex_icon"), "inventory"))
+        event.register(ModelIdentifier(cobbledexResource("cobbledex_model"), "inventory"))
     }
 }

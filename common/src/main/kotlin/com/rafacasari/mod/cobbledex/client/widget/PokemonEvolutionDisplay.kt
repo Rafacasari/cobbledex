@@ -17,7 +17,7 @@ import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI.CobbledexRelatedMenu
 import com.rafacasari.mod.cobbledex.network.client.handlers.SyncServerSettingsHandler
 import com.rafacasari.mod.cobbledex.utils.CobblemonUtils
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
-import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTranslation
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
 import java.util.*
 
 class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolutionDisplay.EvolveSlot>(x, y, SLOT_HEIGHT + SLOT_SPACING) {
@@ -98,7 +98,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
                     CobbledexGUI.Instance?.updateRelatedSpecies()
                 }
             },
-            text = cobbledexTranslation("cobbledex.texts.select"),
+            text = cobbledexTextTranslation("select"),
             resource = buttonResource,
             boldText = true,
             largeText = false,

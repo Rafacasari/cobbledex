@@ -52,7 +52,8 @@ class CobbledexTab(
             x = x + (width / 2),
             y = y + 1,
             centered = true,
-            shadow = true
+            shadow = true,
+            maxCharacterWidth = BUTTON_WIDTH
         )
     }
 
