@@ -2,11 +2,11 @@ package com.rafacasari.mod.cobbledex.network
 
 import com.rafacasari.mod.cobbledex.Cobbledex
 import io.netty.buffer.Unpooled
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.RegistryKey
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.util.Identifier
-import net.minecraft.world.World
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
+import net.minecraft.resources.ResourceKey as RegistryKey
+import net.minecraft.server.level.ServerPlayer as ServerPlayerEntity
+import net.minecraft.resources.ResourceLocation as Identifier
+import net.minecraft.world.level.Level as World
 
 interface INetworkPacket<T: INetworkPacket<T>> : IEncodable {
 
@@ -24,7 +24,7 @@ interface INetworkPacket<T: INetworkPacket<T>> : IEncodable {
 
     fun sendToPlayersAround(x: Double, y: Double, z: Double, distance: Double, worldKey: RegistryKey<World>, exclusionCondition: (ServerPlayerEntity) -> Boolean = { false }) {
         val server = Cobbledex.implementation.server() ?: return
-        server.playerManager.playerList.filter { player ->
+        server.playerList.players.filter { player ->
             if (exclusionCondition.invoke(player))
                 return@filter false
             val xDiff = x - player.x

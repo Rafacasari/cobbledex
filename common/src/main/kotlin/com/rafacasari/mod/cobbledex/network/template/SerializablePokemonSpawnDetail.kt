@@ -4,7 +4,7 @@ import com.cobblemon.mod.common.api.spawning.detail.PokemonSpawnDetail
 import com.rafacasari.mod.cobbledex.network.IEncodable
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIntRange
-import net.minecraft.network.PacketByteBuf
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
 
 class SerializablePokemonSpawnDetail() : IEncodable {
 
@@ -29,7 +29,7 @@ class SerializablePokemonSpawnDetail() : IEncodable {
     }
 
     override fun encode(buffer: PacketByteBuf) {
-        buffer.writeString(id)
+        buffer.writeUtf(id)
         buffer.writeFloat(weight)
         buffer.writeNullableIntRange(levelRange)
 
@@ -46,7 +46,7 @@ class SerializablePokemonSpawnDetail() : IEncodable {
         fun decode(buffer: PacketByteBuf) : SerializablePokemonSpawnDetail {
             val spawnDetail = SerializablePokemonSpawnDetail()
 
-            spawnDetail.id = buffer.readString()
+            spawnDetail.id = buffer.readUtf()
             spawnDetail.weight = buffer.readFloat()
             spawnDetail.levelRange = buffer.readNullableIntRange()
 

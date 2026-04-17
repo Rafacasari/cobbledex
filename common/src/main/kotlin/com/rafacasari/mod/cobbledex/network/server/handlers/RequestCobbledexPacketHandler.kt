@@ -10,7 +10,7 @@ import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonEvolutio
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonSpawnDetail
 import com.rafacasari.mod.cobbledex.utils.CobblemonUtils
 import net.minecraft.server.MinecraftServer
-import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.level.ServerPlayer as ServerPlayerEntity
 
 object RequestCobbledexPacketHandler : IServerNetworkPacketHandler<RequestCobbledexPacket> {
     override fun handle(packet: RequestCobbledexPacket, server: MinecraftServer, player: ServerPlayerEntity) {

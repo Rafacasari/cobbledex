@@ -1,11 +1,10 @@
 package com.rafacasari.mod.cobbledex.utils
 
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
 import com.rafacasari.mod.cobbledex.Cobbledex
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.MutableText
-import net.minecraft.text.TextContent
+import net.minecraft.network.chat.Component as Text
+import net.minecraft.network.chat.MutableComponent as MutableText
+import net.minecraft.resources.ResourceLocation as Identifier
+import net.minecraft.network.chat.ClickEvent
 
 @Suppress("unused")
 /**
@@ -15,7 +14,7 @@ object MiscUtils {
     /**
      * Returns an [Identifier] using **Cobbledex MOD ID** as namespace
      */
-    fun cobbledexResource(path: String): Identifier = Identifier(Cobbledex.MOD_ID, path)
+    fun cobbledexResource(path: String): Identifier = Identifier.fromNamespaceAndPath(Cobbledex.MOD_ID, path)
     fun translatable(key: String): MutableText = Text.translatable(key)
 
     fun logInfo(text: String) = Cobbledex.LOGGER.info(text)
@@ -23,21 +22,22 @@ object MiscUtils {
     fun logError(text: String) = Cobbledex.LOGGER.error(text)
     fun logDebug(text: String) = Cobbledex.LOGGER.debug(text)
 
-    fun MutableText.withRGBColor(color: Int) = also { it.style = it.style.withColor(color) }
-    fun Text.bold(): MutableText = MutableText.of(this.content).also {
-        it.style = it.style.withBold(true)
-    }
+    fun MutableText.withRGBColor(color: Int): MutableText = setStyle(style.withColor(color))
+    fun Text.bold(): MutableText = copy().withStyle { it.withBold(true) }
 
     fun Float.format(): String = if (this % 1 == 0f) this.toInt().toString() else this.toString()
 
-    fun MutableText.openUrl(url: String) = also { it.style = it.style.withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, url)) }
+    fun MutableText.openUrl(url: String): MutableText =
+        setStyle(style.withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, url)))
+
+    fun Identifier.toTranslationKey(): String = "$namespace.${path.replace('/', '.')}"
 
     fun cobbledexTextTranslation(key: String, vararg arg: Any): MutableText {
         return Text.translatable("cobbledex.texts.$key", *arg)
     }
 
     fun MutableList<MutableText>.toMutableText(skipLine: Boolean = true): MutableText =
-        MutableText.of(TextContent.EMPTY).also {
+        Text.empty().also {
             this.forEachIndexed { index, x ->
                 it.append(x)
                 // Add new line
@@ -46,7 +46,7 @@ object MiscUtils {
         }
 
     fun MutableList<MutableText>.appendWithSeparator(separator: String): MutableText =
-        MutableText.of(TextContent.EMPTY).also {
+        Text.empty().also {
             this.forEachIndexed { index, x ->
                 it.append(x)
                 // Add new line

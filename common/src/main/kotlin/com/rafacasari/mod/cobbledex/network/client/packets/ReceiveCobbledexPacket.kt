@@ -6,8 +6,8 @@ import com.rafacasari.mod.cobbledex.network.INetworkPacket
 import com.rafacasari.mod.cobbledex.network.template.SerializableItemDrop
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonEvolution
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonSpawnDetail
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.util.Identifier
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
+import net.minecraft.resources.ResourceLocation as Identifier
 
 class ReceiveCobbledexPacket internal constructor(
     val species: Species?,
@@ -23,23 +23,23 @@ class ReceiveCobbledexPacket internal constructor(
     override fun encode(buffer: PacketByteBuf) {
         buffer.writeBoolean(species != null)
         if (species != null)
-            buffer.writeIdentifier(species.resourceIdentifier)
+            buffer.writeResourceLocation(species.resourceIdentifier)
 
         buffer.writeCollection(evolutionList) { buff, value ->
             value.encode(buff)
         }
 
         buffer.writeCollection(preevolutionList) { buff, value ->
-            buff.writeIdentifier(value.first)
+            buff.writeResourceLocation(value.first)
             buff.writeCollection(value.second) { aspectBuffer, aspect ->
-                aspectBuffer.writeString(aspect)
+                aspectBuffer.writeUtf(aspect)
             }
         }
 
 //        buffer.writeCollection(formList) { buff, value ->
-//            buff.writeIdentifier(value.first)
+//            buff.writeResourceLocation(value.first)
 //            buff.writeCollection(value.second) { aspectBuffer, aspect ->
-//                aspectBuffer.writeString(aspect)
+//                aspectBuffer.writeUtf(aspect)
 //            }
 //        }
 
@@ -53,15 +53,15 @@ class ReceiveCobbledexPacket internal constructor(
     }
 
     companion object{
-        val ID = Identifier("cobbledex", "receive_cobbledex")
+        val ID = Identifier.fromNamespaceAndPath("cobbledex", "receive_cobbledex")
         fun decode(buffer: PacketByteBuf) : ReceiveCobbledexPacket {
             var bufferSpecies: Species? = null
             if (buffer.readBoolean())
-                bufferSpecies = PokemonSpecies.getByIdentifier(buffer.readIdentifier())
+                bufferSpecies = PokemonSpecies.getByIdentifier(buffer.readResourceLocation())
 
 //            val evolutionList = buffer.readList { value ->
-//                Pair(value.readIdentifier(), value.readList { aspect ->
-//                    aspect.readString()
+//                Pair(value.readResourceLocation(), value.readList { aspect ->
+//                    aspect.readUtf()
 //                }.toSet())
 //            }
 
@@ -70,14 +70,14 @@ class ReceiveCobbledexPacket internal constructor(
             }
 
             val preEvolutionList = buffer.readList { value ->
-                Pair(value.readIdentifier(), value.readList { aspect ->
-                    aspect.readString()
+                Pair(value.readResourceLocation(), value.readList { aspect ->
+                    aspect.readUtf()
                 }.toSet())
             }
 
 //            val formsList = buffer.readList { value ->
-//                Pair(value.readIdentifier(), value.readList { aspect ->
-//                    aspect.readString()
+//                Pair(value.readResourceLocation(), value.readList { aspect ->
+//                    aspect.readUtf()
 //                }.toSet())
 //            }
 

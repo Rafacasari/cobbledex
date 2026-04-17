@@ -9,21 +9,26 @@
   "license": "",
   "environment": "*",
   "mixins": [
-    "cobbledex-common.mixins.json",
-    "fabric.mixins.json"
+    "cobbledex-common.mixins.json"
   ],
   "entrypoints": {
     "main": [
-      "com.rafacasari.mod.cobbledex.fabric.CobbledexFabricCommon"
+      {
+        "value": "com.rafacasari.mod.cobbledex.fabric.CobbledexFabricCommon",
+        "adapter": "kotlin"
+      }
     ],
     "client": [
-      "com.rafacasari.mod.cobbledex.fabric.CobbledexFabricClient"
+      {
+        "value": "com.rafacasari.mod.cobbledex.fabric.CobbledexFabricClient",
+        "adapter": "kotlin"
+      }
     ]
   },
   "depends": {
-    "fabricloader": "*",
-    "fabric": "*",
-    "minecraft": "1.20.1",
-    "cobblemon": ">=1.5.0"
+    "fabricloader": ">=0.17.2",
+    "fabric-api": "*",
+    "minecraft": "1.21.1",
+    "cobblemon": ">=1.7.3 <1.8.0"
   }
 }

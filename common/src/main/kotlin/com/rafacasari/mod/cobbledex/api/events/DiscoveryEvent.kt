@@ -3,7 +3,7 @@ package com.rafacasari.mod.cobbledex.api.events
 import com.cobblemon.mod.common.pokemon.FormData
 import com.cobblemon.mod.common.pokemon.Species
 import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
-import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.level.ServerPlayer as ServerPlayerEntity
 
 interface DiscoveryEvent {
     val player: ServerPlayerEntity

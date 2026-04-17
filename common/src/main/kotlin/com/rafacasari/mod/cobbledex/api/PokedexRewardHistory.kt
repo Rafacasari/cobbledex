@@ -1,7 +1,8 @@
 package com.rafacasari.mod.cobbledex.api
 
-import com.cobblemon.mod.common.Cobblemon.playerData as CobblemonPlayerData
+import com.cobblemon.mod.common.Cobblemon
 import com.cobblemon.mod.common.api.storage.player.PlayerDataExtension
+import com.cobblemon.mod.common.api.storage.player.PlayerInstancedDataStoreTypes
 import com.cobblemon.mod.common.api.text.bold
 import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.util.giveOrDropItemStack
@@ -10,11 +11,10 @@ import com.google.gson.JsonObject
 import com.rafacasari.mod.cobbledex.Cobbledex
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.appendWithSeparator
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.MutableText
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries as Registries
+import net.minecraft.resources.ResourceLocation as Identifier
+import net.minecraft.server.level.ServerPlayer as ServerPlayerEntity
 
 class PokedexRewardHistory(val received: MutableList<String> = mutableListOf()) : PlayerDataExtension {
     override fun name(): String = NAME_KEY
@@ -29,7 +29,7 @@ class PokedexRewardHistory(val received: MutableList<String> = mutableListOf()) 
          * Get [PokedexRewardHistory] for [player]
          */
         fun getPlayerRewards(player: ServerPlayerEntity): PokedexRewardHistory {
-            val playerData= CobblemonPlayerData.get(player)
+            val playerData = Cobblemon.playerDataManager.getGenericData(player)
             val history = playerData.extraData.getOrPut(NAME_KEY) {
                 PokedexRewardHistory(mutableListOf())
             } as PokedexRewardHistory
@@ -45,7 +45,7 @@ class PokedexRewardHistory(val received: MutableList<String> = mutableListOf()) 
             if(!Cobbledex.getConfig().CaughtRewards || !Cobbledex.serverInitialized)
                 return
 
-            val playerData= CobblemonPlayerData.get(player)
+            val playerData = Cobblemon.playerDataManager.getGenericData(player)
             var needToSave = false
 
             val history = playerData.extraData.getOrPut(NAME_KEY) {
@@ -62,18 +62,18 @@ class PokedexRewardHistory(val received: MutableList<String> = mutableListOf()) 
             possibleRewards.forEach { reward ->
                 if (!history.received.contains(reward.id))
                 {
-                    val identifier = Identifier(reward.itemId)
+                    val identifier = Identifier.parse(reward.itemId)
                     val item = Registries.ITEM.get(identifier)
                     val itemStack = ItemStack(item, reward.quantity)
 
                     player.giveOrDropItemStack(itemStack)
                     val itemNameBuilder = mutableListOf(
                         "${reward.quantity}x".text().bold(),
-                        MutableText.of(item.name.content).bold()
+                        itemStack.hoverName.copy().bold()
                     ).appendWithSeparator(" ")
 
                     val message = cobbledexTextTranslation("reward_received", itemNameBuilder, reward.pokemonCaught.toString().text().bold())
-                    player.sendMessage(message)
+                    player.sendSystemMessage(message)
                     history.received.add(reward.id)
                     // Give item
                     needToSave = true
@@ -81,7 +81,7 @@ class PokedexRewardHistory(val received: MutableList<String> = mutableListOf()) 
             }
 
             if (needToSave)
-                CobblemonPlayerData.saveSingle(playerData)
+                Cobblemon.playerDataManager.saveSingle(playerData, PlayerInstancedDataStoreTypes.GENERAL)
         }
     }
 

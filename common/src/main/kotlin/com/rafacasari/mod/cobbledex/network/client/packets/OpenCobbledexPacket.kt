@@ -5,8 +5,8 @@ import com.cobblemon.mod.common.pokemon.FormData
 import com.rafacasari.mod.cobbledex.network.INetworkPacket
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableIdentifier
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIdentifier
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.util.Identifier
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
+import net.minecraft.resources.ResourceLocation as Identifier
 
 class OpenCobbledexPacket internal constructor(val formData: FormData?): INetworkPacket<OpenCobbledexPacket> {
 
@@ -16,20 +16,20 @@ class OpenCobbledexPacket internal constructor(val formData: FormData?): INetwor
 
         val aspects = formData?.aspects ?: listOf()
         buffer.writeCollection(aspects) {
-            bff, value -> bff.writeString(value)
+            bff, value -> bff.writeUtf(value)
         }
 
     }
 
     companion object{
-        val ID = Identifier("cobbledex", "force_open_cobbledex")
+        val ID = Identifier.fromNamespaceAndPath("cobbledex", "force_open_cobbledex")
         fun decode(reader: PacketByteBuf) : OpenCobbledexPacket {
             val species = reader.readNullableIdentifier()?.let {
                 PokemonSpecies.getByIdentifier(it)
             }
 
             val aspects = reader.readList {
-                listReader -> listReader.readString()
+                listReader -> listReader.readUtf()
             }.toSet()
 
             val form= species?.getForm(aspects)

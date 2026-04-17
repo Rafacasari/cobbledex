@@ -4,8 +4,8 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.rafacasari.mod.cobbledex.network.IEncodable
 import com.rafacasari.mod.cobbledex.network.client.packets.SyncServerSettingsPacket
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
+import net.minecraft.server.level.ServerPlayer as ServerPlayerEntity
 
 class CobbledexConfig : IEncodable {
 
@@ -92,5 +92,4 @@ class CobbledexConfig : IEncodable {
         buffer.writeBoolean(Collection_NeedCatch)
         buffer.writeBoolean(Collection_DisableBlackSilhouette)
     }
-
 }

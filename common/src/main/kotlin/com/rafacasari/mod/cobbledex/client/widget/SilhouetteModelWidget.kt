@@ -1,56 +1,56 @@
 package com.rafacasari.mod.cobbledex.client.widget
+
 import com.cobblemon.mod.common.client.gui.drawProfilePokemon
 import com.cobblemon.mod.common.client.gui.summary.widgets.SoundlessWidget
-import com.cobblemon.mod.common.client.render.models.blockbench.pokemon.PokemonFloatingState
+import com.cobblemon.mod.common.client.render.models.blockbench.FloatingState
 import com.cobblemon.mod.common.pokemon.RenderablePokemon
 import com.cobblemon.mod.common.util.math.fromEulerXYZDegrees
 import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.drawBlackSilhouettePokemon
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.text.Text
+import net.minecraft.client.gui.GuiGraphics as DrawContext
+import net.minecraft.client.gui.narration.NarrationElementOutput as NarrationMessageBuilder
+import net.minecraft.network.chat.Component as Text
 import org.joml.Quaternionf
 import org.joml.Vector3f
 
 class SilhouetteModelWidget(
-    pX: Int, pY: Int,
-    pWidth: Int, pHeight: Int,
+    pX: Int,
+    pY: Int,
+    pWidth: Int,
+    pHeight: Int,
     var pokemon: RenderablePokemon,
     val baseScale: Float = 2.7F,
     var rotationY: Float = 35F,
     var offsetY: Double = 0.0,
     var isDiscovered: Boolean = false
-): SoundlessWidget(pX, pY, pWidth, pHeight, Text.literal("Summary - ModelWidget")) {
+) : SoundlessWidget(pX, pY, pWidth, pHeight, Text.literal("Summary - ModelWidget")) {
 
     companion object {
         var render = true
     }
 
-    var state = PokemonFloatingState()
-    val rotVec = Vector3f(13F, rotationY, 0F)
+    var state = FloatingState()
+    private val rotVec = Vector3f(13F, rotationY, 0F)
 
-    override fun renderButton(context: DrawContext, pMouseX: Int, pMouseY: Int, partialTicks: Float) {
+    override fun renderWidget(context: DrawContext, mouseX: Int, mouseY: Int, partialTicks: Float) {
         if (!render) {
             return
         }
-        hovered = pMouseX >= x && pMouseY >= y && pMouseX < x + width && pMouseY < y + height
-        renderPKM(context, partialTicks)
+
+        isHovered = mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height
+        renderPokemon(context, partialTicks)
     }
 
-    private fun renderPKM(context: DrawContext, partialTicks: Float) {
-        val matrices = context.matrices
-        matrices.push()
+    private fun renderPokemon(context: DrawContext, partialTicks: Float) {
+        val matrices = context.pose()
+        matrices.pushPose()
 
-        context.enableScissor(
-            x,
-            y,
-            x + width,
-            y +  height
-        )
+        context.enableScissor(x, y, x + width, y + height)
 
         matrices.translate(x + width * 0.5, y.toDouble() + offsetY, 0.0)
         matrices.scale(baseScale, baseScale, baseScale)
-        matrices.push()
+        matrices.pushPose()
 
-        if (isDiscovered)
+        if (isDiscovered) {
             drawProfilePokemon(
                 renderablePokemon = pokemon,
                 matrixStack = matrices,
@@ -58,20 +58,24 @@ class SilhouetteModelWidget(
                 state = state,
                 partialTicks = partialTicks
             )
-        else
+        } else {
             drawBlackSilhouettePokemon(
                 species = pokemon.species.resourceIdentifier,
                 aspects = pokemon.aspects,
                 matrixStack = matrices,
                 rotation = Quaternionf().fromEulerXYZDegrees(rotVec)
             )
+        }
 
-        matrices.pop()
+        matrices.popPose()
         context.disableScissor()
-
-        matrices.pop()
+        matrices.popPose()
     }
 
-    override fun onClick(pMouseX: Double, pMouseY: Double) {
+    override fun updateWidgetNarration(builder: NarrationMessageBuilder) {
+        defaultButtonNarrationText(builder)
+    }
+
+    override fun onClick(mouseX: Double, mouseY: Double) {
     }
 }

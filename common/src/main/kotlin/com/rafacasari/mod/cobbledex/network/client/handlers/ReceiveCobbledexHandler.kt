@@ -5,7 +5,7 @@ import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
 import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCobbledexPacket
 import com.rafacasari.mod.cobbledex.network.client.IClientNetworkPacketHandler
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.logError
-import net.minecraft.client.MinecraftClient
+import net.minecraft.client.Minecraft as MinecraftClient
 
 object ReceiveCobbledexHandler : IClientNetworkPacketHandler<ReceiveCobbledexPacket> {
     override fun handle(packet: ReceiveCobbledexPacket, client: MinecraftClient) {

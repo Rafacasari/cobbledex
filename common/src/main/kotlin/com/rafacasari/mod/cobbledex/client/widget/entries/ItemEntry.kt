@@ -1,65 +1,38 @@
 package com.rafacasari.mod.cobbledex.client.widget.entries
 
-
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.DiffuseLighting
-import net.minecraft.client.render.OverlayTexture
-import net.minecraft.client.render.model.BakedModel
-import net.minecraft.client.render.model.json.ModelTransformationMode
-import net.minecraft.item.ItemStack
-import net.minecraft.text.OrderedText
-import net.minecraft.util.Colors
-import org.joml.Matrix4f
+import net.minecraft.client.Minecraft as MinecraftClient
+import net.minecraft.client.gui.GuiGraphics as DrawContext
+import net.minecraft.util.FormattedCharSequence as OrderedText
+import net.minecraft.world.item.ItemStack
 
 class ItemEntry(val item: ItemStack, val text: OrderedText, val disableTooltip: Boolean = false) : LongTextDisplay.TextDisplayEntry() {
-    companion object
-    {
-        const val ITEM_SIZE = 10.5F
+    companion object {
+        const val ITEM_SCALE = 0.5F
+        const val ITEM_RENDER_SIZE = 8
+        const val ITEM_OFFSET_Y = 1
+        const val TEXT_OFFSET_X = 11
     }
 
-    private fun drawItemName(context: DrawContext, text: OrderedText, x: Number, y: Number, pMouseX: Int? = null, pMouseY: Int? = null): Boolean {
-        val textRenderer = MinecraftClient.getInstance().textRenderer
-        val width = textRenderer.getWidth(text)
+    private fun drawItemName(context: DrawContext, text: OrderedText, x: Int, y: Int, mouseX: Int?, mouseY: Int?): Boolean {
+        val textRenderer = MinecraftClient.getInstance().font
+        val width = textRenderer.width(text)
 
-        context.drawText(textRenderer, text, x.toInt(), y.toInt(), Colors.WHITE, false)
+        context.drawString(textRenderer, text, x, y, 0xFFFFFF, false)
 
-        // Return isHovered
-        return pMouseY != null && pMouseX != null &&
-                pMouseX.toInt() >= x.toInt() && pMouseX.toInt() <= x.toInt() + width &&
-                pMouseY.toInt() >= y.toInt() && pMouseY.toInt() <= y.toInt() + textRenderer.fontHeight
+        return mouseX != null && mouseY != null &&
+            mouseX >= x && mouseX <= x + width &&
+            mouseY >= y && mouseY <= y + textRenderer.lineHeight
     }
 
     private fun drawItem(context: DrawContext, stack: ItemStack, x: Int, y: Int) {
         if (!stack.isEmpty) {
-            val bakedModel: BakedModel =  MinecraftClient.getInstance().itemRenderer.getModel(stack, null, null, 0)
-            context.matrices.push()
-            context.matrices.translate(
-                (x + 3).toFloat(),
-                (y + 3.5).toFloat(),
-                150.toFloat()
-            )
-
-            try {
-                context.matrices.multiplyPositionMatrix(Matrix4f().scaling(1.0f, -1.0f, 1.0f))
-                context.matrices.scale(ITEM_SIZE, ITEM_SIZE, ITEM_SIZE)
-                val bl = !bakedModel.isSideLit
-                if (bl) DiffuseLighting.disableGuiDepthLighting()
-
-                MinecraftClient.getInstance().itemRenderer.renderItem(
-                    stack, ModelTransformationMode.GUI, false,
-                    context.matrices,
-                    context.vertexConsumers, 15728880, OverlayTexture.DEFAULT_UV, bakedModel
-                )
-                context.draw()
-                if (bl) DiffuseLighting.enableGuiDepthLighting()
-
-            } catch (_: Exception) {
-
-            }
-
-            context.matrices.pop()
+            val matrices = context.pose()
+            matrices.pushPose()
+            matrices.translate(x.toDouble(), (y + ITEM_OFFSET_Y).toDouble(), 0.0)
+            matrices.scale(ITEM_SCALE, ITEM_SCALE, 1F)
+            context.renderItem(stack, 0, 0)
+            matrices.popPose()
         }
     }
 
@@ -67,7 +40,7 @@ class ItemEntry(val item: ItemStack, val text: OrderedText, val disableTooltip: 
     var isNameHovered = false
 
     override fun render(
-        context: DrawContext?,
+        context: DrawContext,
         index: Int,
         y: Int,
         x: Int,
@@ -78,25 +51,17 @@ class ItemEntry(val item: ItemStack, val text: OrderedText, val disableTooltip: 
         hovered: Boolean,
         tickDelta: Float
     ) {
-        if (context == null) return
-
         drawItem(context, item, x, y)
-        isNameHovered = drawItemName(context, text, x + ITEM_SIZE, y, mouseX, mouseY)
-
-//        val offset = 0.5f
-        isItemHovered = mouseX.toFloat() in ((x.toFloat() - 1)..(x.toFloat() - 2 + ITEM_SIZE))
-                                && mouseY.toFloat() in ((y.toFloat() - 1)..(y.toFloat() - 2 + ITEM_SIZE))
-//        if (hovered) context.drawItemTooltip(MinecraftClient.getInstance().textRenderer, item, mouseX, mouseY)
-
-
+        isNameHovered = drawItemName(context, text, x + TEXT_OFFSET_X, y, mouseX, mouseY)
+        isItemHovered = mouseX in x..<(x + ITEM_RENDER_SIZE) &&
+            mouseY in (y + ITEM_OFFSET_Y)..<(y + ITEM_OFFSET_Y + ITEM_RENDER_SIZE)
     }
 
     override fun drawTooltip(context: DrawContext, mouseX: Int, mouseY: Int) {
-        if (!disableTooltip)
-            context.drawItemTooltip(MinecraftClient.getInstance().textRenderer, item, mouseX, mouseY)
+        if (!disableTooltip) {
+            context.renderTooltip(MinecraftClient.getInstance().font, item, mouseX, mouseY)
+        }
     }
 
-    override fun isMouseOver(mouseX: Double, mouseY: Double): Boolean {
-        return isItemHovered || isNameHovered
-    }
+    override fun isMouseOver(mouseX: Double, mouseY: Double): Boolean = isItemHovered || isNameHovered
 }

@@ -5,17 +5,18 @@ import com.cobblemon.mod.common.api.text.bold
 import com.cobblemon.mod.common.client.CobblemonResources
 import com.cobblemon.mod.common.client.render.drawScaledText
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.widget.ButtonWidget
-import net.minecraft.client.sound.SoundManager
-import net.minecraft.text.MutableText
+import net.minecraft.client.gui.GuiGraphics as DrawContext
+import net.minecraft.client.gui.narration.NarrationElementOutput as NarrationMessageBuilder
+import net.minecraft.client.gui.components.Button as ButtonWidget
+import net.minecraft.client.sounds.SoundManager
+import net.minecraft.network.chat.MutableComponent as MutableText
 
 class CobbledexTab(
     private val xOffset: Int, private val yOffset: Int,
     pX: Int, pY: Int,
     private val label: MutableText,
-    onPress: PressAction
-): ButtonWidget(pX, pY, BUTTON_WIDTH, BUTTON_HEIGHT, label, onPress, DEFAULT_NARRATION_SUPPLIER) {
+    onPress: ButtonWidget.OnPress
+): ButtonWidget(pX, pY, BUTTON_WIDTH, BUTTON_HEIGHT, label, onPress, DEFAULT_NARRATION) {
 
     companion object {
         const val TAB_WIDTH = 110
@@ -26,8 +27,8 @@ class CobbledexTab(
 
     private var isActive = false
 
-    override fun renderButton(context: DrawContext, pMouseX: Int, pMouseY: Int, pPartialTicks: Float) {
-        val matrices = context.matrices
+    override fun renderWidget(context: DrawContext, pMouseX: Int, pMouseY: Int, pPartialTicks: Float) {
+        val matrices = context.pose()
 
         // Draw Highlight if is active
         if (isActive) {
@@ -55,6 +56,10 @@ class CobbledexTab(
             shadow = true,
             maxCharacterWidth = BUTTON_WIDTH
         )
+    }
+
+    override fun updateWidgetNarration(builder: NarrationMessageBuilder) {
+        defaultButtonNarrationText(builder)
     }
 
     override fun playDownSound(soundManager: SoundManager) {

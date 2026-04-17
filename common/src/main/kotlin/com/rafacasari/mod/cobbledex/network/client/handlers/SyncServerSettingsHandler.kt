@@ -3,7 +3,7 @@ package com.rafacasari.mod.cobbledex.network.client.handlers
 import com.rafacasari.mod.cobbledex.CobbledexConfig
 import com.rafacasari.mod.cobbledex.network.client.IClientNetworkPacketHandler
 import com.rafacasari.mod.cobbledex.network.client.packets.SyncServerSettingsPacket
-import net.minecraft.client.MinecraftClient
+import net.minecraft.client.Minecraft as MinecraftClient
 
 object SyncServerSettingsHandler : IClientNetworkPacketHandler<SyncServerSettingsPacket> {
     var config = CobbledexConfig()

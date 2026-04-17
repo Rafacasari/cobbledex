@@ -2,7 +2,7 @@ package com.rafacasari.mod.cobbledex.client.widget.entries
 
 
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
-import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.GuiGraphics as DrawContext
 class EmptyEntry : LongTextDisplay.TextDisplayEntry() {
 
     override fun drawTooltip(context: DrawContext, mouseX: Int, mouseY: Int) {
@@ -10,7 +10,7 @@ class EmptyEntry : LongTextDisplay.TextDisplayEntry() {
     }
 
     override fun render(
-        context: DrawContext?,
+        context: DrawContext,
         index: Int,
         y: Int,
         x: Int,

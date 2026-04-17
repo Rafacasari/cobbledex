@@ -3,9 +3,9 @@ package com.rafacasari.mod.cobbledex.api.classes
 import com.rafacasari.mod.cobbledex.network.IEncodable
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableLong
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableLong
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
+import net.minecraft.network.chat.Component as Text
+import net.minecraft.ChatFormatting as Formatting
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -21,19 +21,19 @@ class DiscoveryRegister(var isShiny: Boolean, var status: RegisterType, var disc
         if (discoveredTimestamp == null) return null
 
         val localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(discoveredTimestamp!!), ZoneId.systemDefault())
-        return Text.literal(localDateTime.format(TIME_FORMAT)).formatted(Formatting.ITALIC, Formatting.GRAY)
+        return Text.literal(localDateTime.format(TIME_FORMAT)).withStyle(Formatting.ITALIC, Formatting.GRAY)
     }
 
     fun getCaughtTimestamp(): Text? {
         if (caughtTimestamp == null) return null
 
         val localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(caughtTimestamp!!), ZoneId.systemDefault())
-        return Text.literal(localDateTime.format(TIME_FORMAT)).formatted(Formatting.ITALIC, Formatting.GRAY)
+        return Text.literal(localDateTime.format(TIME_FORMAT)).withStyle(Formatting.ITALIC, Formatting.GRAY)
     }
 
     override fun encode(buffer: PacketByteBuf) {
         buffer.writeBoolean(isShiny)
-        buffer.writeString(status.name)
+        buffer.writeUtf(status.name)
         buffer.writeNullableLong(discoveredTimestamp)
         buffer.writeNullableLong(caughtTimestamp)
     }
@@ -43,7 +43,7 @@ class DiscoveryRegister(var isShiny: Boolean, var status: RegisterType, var disc
 
         fun decode(reader: PacketByteBuf) : DiscoveryRegister {
             val isShiny = reader.readBoolean()
-            val status = RegisterType.valueOf(reader.readString())
+            val status = RegisterType.valueOf(reader.readUtf())
             val discoveredTimestamp = reader.readNullableLong()
             val caughtTimestamp = reader.readNullableLong()
 

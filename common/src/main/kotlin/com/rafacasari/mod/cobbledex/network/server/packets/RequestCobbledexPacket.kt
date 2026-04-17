@@ -1,29 +1,29 @@
 package com.rafacasari.mod.cobbledex.network.server.packets
 
 import com.rafacasari.mod.cobbledex.network.INetworkPacket
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.util.Identifier
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
+import net.minecraft.resources.ResourceLocation as Identifier
 
 class RequestCobbledexPacket internal constructor(val pokemon: Identifier, val aspects: Set<String>, val form: String = ""):
     INetworkPacket<RequestCobbledexPacket> {
     override val id = ID
 
     override fun encode(buffer: PacketByteBuf) {
-        buffer.writeIdentifier(pokemon)
+        buffer.writeResourceLocation(pokemon)
         buffer.writeCollection(aspects) {
-            buff, value -> buff.writeString(value)
+            buff, value -> buff.writeUtf(value)
         }
-        buffer.writeString(form)
+        buffer.writeUtf(form)
     }
 
     companion object{
-        val ID = Identifier("cobbledex", "request_cobbledex")
+        val ID = Identifier.fromNamespaceAndPath("cobbledex", "request_cobbledex")
         fun decode(buffer: PacketByteBuf) : RequestCobbledexPacket {
-            val identifier = buffer.readIdentifier()
+            val identifier = buffer.readResourceLocation()
             val aspects = buffer.readList {
-                buff -> buff.readString()
+                buff -> buff.readUtf()
             }.toSet()
-            val form = buffer.readString()
+            val form = buffer.readUtf()
             return RequestCobbledexPacket(identifier, aspects, form)
         }
     }

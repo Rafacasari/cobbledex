@@ -11,12 +11,11 @@ import com.rafacasari.mod.cobbledex.network.server.packets.ClaimRewardPacket
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.appendWithSeparator
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.logWarn
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
 import net.minecraft.server.MinecraftServer
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.MutableText
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries as Registries
+import net.minecraft.resources.ResourceLocation as Identifier
+import net.minecraft.server.level.ServerPlayer as ServerPlayerEntity
 
 object ClaimRewardPacketHandler: IServerNetworkPacketHandler<ClaimRewardPacket> {
     override fun handle(packet: ClaimRewardPacket, server: MinecraftServer, player: ServerPlayerEntity) {
@@ -50,7 +49,7 @@ object ClaimRewardPacketHandler: IServerNetworkPacketHandler<ClaimRewardPacket> 
             return
         }
 
-        val identifier = Identifier(targetReward.itemId)
+        val identifier = Identifier.parse(targetReward.itemId)
         val item = Registries.ITEM.get(identifier)
         val itemStack = ItemStack(item, targetReward.quantity)
 
@@ -58,12 +57,12 @@ object ClaimRewardPacketHandler: IServerNetworkPacketHandler<ClaimRewardPacket> 
         player.giveOrDropItemStack(itemStack)
         val itemNameBuilder = mutableListOf(
             "${targetReward.quantity}x".text().bold(),
-            MutableText.of(item.name.content).bold()
+            itemStack.hoverName.copy().bold()
         ).appendWithSeparator(" ")
 
         val message = cobbledexTextTranslation("reward_received", itemNameBuilder, targetReward.pokemonCaught.toString().text().bold())
         // Send a message telling our player that they got a reward
-        player.sendMessage(message)
+        player.sendSystemMessage(message)
 
         // Add to player history
         playerHistory.received.add(targetReward.id)

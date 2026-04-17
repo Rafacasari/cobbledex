@@ -2,8 +2,8 @@ package com.rafacasari.mod.cobbledex.network.client.packets
 
 import com.rafacasari.mod.cobbledex.CobbledexConfig
 import com.rafacasari.mod.cobbledex.network.INetworkPacket
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.util.Identifier
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
+import net.minecraft.resources.ResourceLocation as Identifier
 
 class SyncServerSettingsPacket internal constructor(val config: CobbledexConfig): INetworkPacket<SyncServerSettingsPacket> {
     override val id = ID
@@ -13,7 +13,7 @@ class SyncServerSettingsPacket internal constructor(val config: CobbledexConfig)
     }
 
     companion object {
-        val ID = Identifier("cobbledex", "sync_server_settings")
+        val ID = Identifier.fromNamespaceAndPath("cobbledex", "sync_server_settings")
         fun decode(reader: PacketByteBuf): SyncServerSettingsPacket {
 
             return SyncServerSettingsPacket(CobbledexConfig.decode(reader))

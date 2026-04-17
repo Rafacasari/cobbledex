@@ -12,12 +12,12 @@ import com.cobblemon.mod.common.client.render.drawScaledText
 import com.cobblemon.mod.common.pokemon.FormData
 import com.cobblemon.mod.common.pokemon.RenderablePokemon
 import com.cobblemon.mod.common.pokemon.Species
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.sound.PositionedSoundInstance
-import net.minecraft.sound.SoundEvent
-import net.minecraft.util.Identifier
+import net.minecraft.client.Minecraft as MinecraftClient
+import net.minecraft.client.gui.GuiGraphics as DrawContext
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.resources.sounds.SimpleSoundInstance as PositionedSoundInstance
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.resources.ResourceLocation as Identifier
 import com.rafacasari.mod.cobbledex.client.gui.menus.BattleMenu
 import com.rafacasari.mod.cobbledex.client.gui.menus.EvolutionMenu
 import com.rafacasari.mod.cobbledex.client.gui.menus.InfoMenu
@@ -68,7 +68,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
 
         fun playSound(soundEvent: SoundEvent) {
-            MinecraftClient.getInstance().soundManager.play(PositionedSoundInstance.master(soundEvent, 1f))
+            MinecraftClient.getInstance().soundManager.play(PositionedSoundInstance.forUI(soundEvent, 1f))
         }
 
         var previewForm: FormData? = null
@@ -105,7 +105,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         val x = (width - BASE_WIDTH) / 2
         val y = (height - BASE_HEIGHT) / 2
 
-        this.addDrawableChild(ExitButton(pX = x + 315, pY = y + 172) {
+        this.addRenderableWidget(ExitButton(pX = x + 315, pY = y + 172) {
             CobbledexCollectionGUI.show(true)
             previewForm = null
         })
@@ -127,15 +127,15 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         }
 
         // Add our tabs as a drawable child
-        addDrawableChild(infoTabButton)
-        addDrawableChild(battleTabButton)
-        addDrawableChild(evolveTabButton)
+        addRenderableWidget(infoTabButton)
+        addRenderableWidget(battleTabButton)
+        addRenderableWidget(evolveTabButton)
 
         evolutionDisplay = PokemonEvolutionDisplay(x + 260, y + 37)
-        addDrawableChild(evolutionDisplay)
+        addRenderableWidget(requireNotNull(evolutionDisplay))
 
-        longTextDisplay = LongTextDisplay(x + 79, y + 18, 179, 158, 2)
-        addDrawableChild(longTextDisplay)
+        longTextDisplay = LongTextDisplay(x + 82, y + 18, 176, 158, 2)
+        addRenderableWidget(requireNotNull(longTextDisplay))
 
         typeWidget = TypeIconTooltip(
             x = x + 42, y = y + 111,
@@ -145,7 +145,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             small = false,
             centeredX = true
         )
-        addDrawableChild(typeWidget)
+        addRenderableWidget(typeWidget)
 
         super.init()
 
@@ -162,7 +162,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             this.setPreviewPokemon(selectedPokemon, selectedAspects)
         }
 
-        addDrawableChild(ArrowButton(true, x + 262, y + 28) {
+        addRenderableWidget(ArrowButton(true, x + 262, y + 28) {
             playSound(CobblemonSounds.GUI_CLICK)
 
             val newTab = selectedRelatedTab.ordinal - 1
@@ -172,7 +172,7 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             evolutionDisplay?.resetScrollPosition()
         })
 
-        addDrawableChild(ArrowButton(false, x + 339, y + 28) {
+        addRenderableWidget(ArrowButton(false, x + 339, y + 28) {
             playSound(CobblemonSounds.GUI_CLICK)
 
             val newTab = selectedRelatedTab.ordinal + 1
@@ -221,8 +221,8 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
 
-        val matrices = context.matrices
-        renderBackground(context)
+        val matrices = context.pose()
+        renderBackground(context, mouseX, mouseY, delta)
 
         val x = (width - BASE_WIDTH) / 2
         val y = (height - BASE_HEIGHT) / 2
@@ -353,16 +353,20 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
         }
 
         super.render(context, mouseX, mouseY, delta)
-        typeWidget.drawTooltip(context, mouseX, mouseY)
+        typeWidget.renderTooltip(context, mouseX, mouseY)
     }
 
-    override fun shouldPause(): Boolean = false
+    override fun renderBlurredBackground(delta: Float) {}
+
+    override fun renderMenuBackground(context: DrawContext) {}
+
+    override fun isPauseScreen(): Boolean = false
     override fun shouldCloseOnEsc(): Boolean = true
 
-    override fun close() {
+    override fun onClose() {
         Instance = null
         playSound(CobblemonSounds.PC_OFF)
-        super.close()
+        super.onClose()
     }
 
     fun setPreviewPokemon(pokemon: FormData?, formAspects: Set<String>? = null) {

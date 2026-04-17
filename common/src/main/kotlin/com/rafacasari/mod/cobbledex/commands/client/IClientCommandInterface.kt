@@ -4,7 +4,7 @@ import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.ArgumentType
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.builder.RequiredArgumentBuilder
-import net.minecraft.command.CommandSource
+import net.minecraft.commands.SharedSuggestionProvider as CommandSource
 
 interface IClientCommandInterface {
 

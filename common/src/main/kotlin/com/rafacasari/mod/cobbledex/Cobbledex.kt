@@ -15,8 +15,8 @@ import com.rafacasari.mod.cobbledex.api.*
 import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexCollectionGUI
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
-import net.minecraft.item.ItemStack
-import net.minecraft.util.ActionResult
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.InteractionResult as ActionResult
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import com.rafacasari.mod.cobbledex.network.client.packets.OpenCobbledexPacket
@@ -24,10 +24,10 @@ import com.rafacasari.mod.cobbledex.network.client.packets.AddToCollectionPacket
 import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCollectionDataPacket
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.logInfo
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.util.WorldSavePath
+import net.minecraft.server.level.ServerPlayer as ServerPlayerEntity
+import net.minecraft.network.chat.Component as Text
+import net.minecraft.ChatFormatting as Formatting
+import net.minecraft.world.level.storage.LevelResource as WorldSavePath
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
@@ -66,7 +66,7 @@ object Cobbledex {
             logInfo("Server initialized...")
 
             // Initialize CO-OP Discovery. Save inside world-root path to work on LAN servers without overlaps
-            val serverPath = serverEvent.server.getSavePath(WorldSavePath.ROOT).toAbsolutePath()
+            val serverPath = serverEvent.server.getWorldPath(WorldSavePath.ROOT).toAbsolutePath()
             CobbledexCoopDiscovery.load(Paths.get(serverPath.toString(), "cobbledex-coop.json").toString())
 
             serverInitialized = true
@@ -95,7 +95,7 @@ object Cobbledex {
             }
         }
 
-        CobblemonEvents.TRADE_COMPLETED.subscribe(Priority.LOW) {
+        CobblemonEvents.TRADE_EVENT_POST.subscribe(Priority.LOW) {
             it.tradeParticipant1Pokemon.getOwnerPlayer()?.let { player ->
                 val pokemon = it.tradeParticipant1Pokemon
                 registerPlayerDiscovery(player, pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
@@ -168,23 +168,23 @@ object Cobbledex {
         }
 
         if(isANewCoopDiscovery && config.CoopMode) {
-            val translation = cobbledexTextTranslation("new_pokemon_discovered_coop", Text.literal(player.gameProfile.name).bold(), formData.species.translatedName.bold().formatted(Formatting.GREEN).onClick {
+            val translation = cobbledexTextTranslation("new_pokemon_discovered_coop", Text.literal(player.gameProfile.name).bold(), formData.species.translatedName.bold().withStyle(Formatting.GREEN).onClick {
                 OpenCobbledexPacket(formData).sendToPlayer(it)
             }.onHover(cobbledexTextTranslation("click_to_open_cobbledex")))
 
             server()?.let { server ->
-                server.playerManager.playerList.forEach { serverPlayer ->
-                    serverPlayer.sendMessage(translation)
+                server.playerList.players.forEach { serverPlayer ->
+                    serverPlayer.sendSystemMessage(translation)
                 }
             }
         }
 
         if(isANewDiscovery && !config.CoopMode) {
-            val translation = cobbledexTextTranslation("new_pokemon_discovered", formData.species.translatedName.bold().formatted(Formatting.GREEN).onClick {
+            val translation = cobbledexTextTranslation("new_pokemon_discovered", formData.species.translatedName.bold().withStyle(Formatting.GREEN).onClick {
                 OpenCobbledexPacket(formData).sendToPlayer(it)
             }.onHover(cobbledexTextTranslation("click_to_open_cobbledex")))
 
-            player.sendMessage(translation)
+            player.sendSystemMessage(translation)
         }
 
         return ActionResult.SUCCESS

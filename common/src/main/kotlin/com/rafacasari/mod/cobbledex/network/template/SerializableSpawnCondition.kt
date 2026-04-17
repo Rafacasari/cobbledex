@@ -14,11 +14,11 @@ import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableBool
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableFloat
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableInt
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.logError
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.registry.tag.TagKey
-import net.minecraft.util.Identifier
-import net.minecraft.world.biome.Biome
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
+import net.minecraft.core.registries.Registries as RegistryKeys
+import net.minecraft.tags.TagKey
+import net.minecraft.resources.ResourceLocation as Identifier
+import net.minecraft.world.level.biome.Biome
 
 class SerializableSpawnCondition() : IEncodable {
 
@@ -49,7 +49,7 @@ class SerializableSpawnCondition() : IEncodable {
             var identifier: Identifier? = null
             try {
                 structure.ifLeft { id -> identifier = id }
-                structure.ifRight { tag -> identifier = tag.id }
+                structure.ifRight { tag -> identifier = tag.location() }
             }
             catch (e: Exception) {
                 logError("Error while trying to parse structure list")
@@ -85,17 +85,17 @@ class SerializableSpawnCondition() : IEncodable {
 
         val dimensionList = dimensions ?: listOf()
         buffer.writeCollection(dimensionList) {
-                pbb, value -> pbb.writeIdentifier(value)
+                pbb, value -> pbb.writeResourceLocation(value)
         }
 
         val biomeList = biomes?.mapNotNull { biome ->
             if (biome is RegistryLikeTagCondition<Biome>)
-                biome.tag.id
+                biome.tag.location()
             else null
         } ?: listOf()
 
         buffer.writeCollection(biomeList) {
-                pbb, value -> pbb.writeIdentifier(value)
+                pbb, value -> pbb.writeResourceLocation(value)
         }
 
         val moonPhaseRanges = moonPhase ?: mutableListOf()
@@ -125,7 +125,7 @@ class SerializableSpawnCondition() : IEncodable {
         val structureList = structures ?: listOf()
 
         buffer.writeCollection(structureList) {
-                pbb, value -> pbb.writeIdentifier(value)
+                pbb, value -> pbb.writeResourceLocation(value)
         }
     }
 
@@ -134,9 +134,9 @@ class SerializableSpawnCondition() : IEncodable {
             val value = SerializableSpawnCondition()
 
 
-            value.dimensions = buffer.readList{  reader -> reader.readIdentifier() }
+            value.dimensions = buffer.readList{  reader -> reader.readResourceLocation() }
             value.biomes = buffer.readList { reader ->
-                val tag = TagKey.of(RegistryKeys.BIOME, reader.readIdentifier())
+                val tag = TagKey.create(RegistryKeys.BIOME, reader.readResourceLocation())
                 RegistryLikeTagCondition<Biome>(tag)
             }.toMutableSet()
 
@@ -164,7 +164,7 @@ class SerializableSpawnCondition() : IEncodable {
             }
 
             value.structures = buffer.readList { reader ->
-                reader.readIdentifier()
+                reader.readResourceLocation()
             }
 
             return value

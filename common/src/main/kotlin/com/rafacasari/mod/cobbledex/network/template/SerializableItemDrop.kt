@@ -4,8 +4,8 @@ import com.cobblemon.mod.common.api.drop.ItemDropEntry
 import com.rafacasari.mod.cobbledex.network.IEncodable
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeIntRange
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.util.Identifier
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
+import net.minecraft.resources.ResourceLocation as Identifier
 
 class SerializableItemDrop() : IEncodable {
 
@@ -23,8 +23,8 @@ class SerializableItemDrop() : IEncodable {
     }
 
     override fun encode(buffer: PacketByteBuf) {
-        buffer.writeIdentifier(item)
-        buffer.writeString(dropMethod)
+        buffer.writeResourceLocation(item)
+        buffer.writeUtf(dropMethod)
         buffer.writeIntRange(quantityRange)
         buffer.writeFloat(percentage)
     }
@@ -33,8 +33,8 @@ class SerializableItemDrop() : IEncodable {
         fun decode(buffer: PacketByteBuf) : SerializableItemDrop {
 
             val itemDrop = SerializableItemDrop()
-            itemDrop.item = buffer.readIdentifier()
-            itemDrop.dropMethod = buffer.readString()
+            itemDrop.item = buffer.readResourceLocation()
+            itemDrop.dropMethod = buffer.readUtf()
             itemDrop.quantityRange = buffer.readIntRange()
             itemDrop.percentage = buffer.readFloat()
 

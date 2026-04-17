@@ -29,14 +29,15 @@ import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.logError
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.openUrl
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.toMutableText
-import net.minecraft.command.argument.EntityArgumentType
-import net.minecraft.server.command.CommandManager
-import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.text.MutableText
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import kotlin.reflect.*
+import net.minecraft.ChatFormatting as Formatting
+import net.minecraft.commands.Commands as CommandManager
+import net.minecraft.commands.CommandSourceStack as ServerCommandSource
+import net.minecraft.commands.arguments.EntityArgument as EntityArgumentType
+import net.minecraft.network.chat.Component as Text
+import net.minecraft.network.chat.MutableComponent as MutableText
+import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.typeOf
 
 object CobbledexCommand : IServerCommandInterface {
 
@@ -48,45 +49,30 @@ object CobbledexCommand : IServerCommandInterface {
     override fun register(dispatcher: CommandDispatcher<ServerCommandSource>) {
         try {
             val pokemonProperty = dispatcher.createArgument("properties", PokemonPropertiesArgumentType.properties())
-            val propertyName =
-                dispatcher.createArgument("option", StringArgumentType.word()).suggests(SettingArgumentSuggestion())
-            val propertyValue =
-                dispatcher.createArgument("value", StringArgumentType.word()).suggests(SettingArgumentSuggestion())
-
+            val propertyName = dispatcher.createArgument("option", StringArgumentType.word()).suggests(SettingArgumentSuggestion())
+            val propertyValue = dispatcher.createArgument("value", StringArgumentType.word()).suggests(SettingArgumentSuggestion())
             val playersArgument = CommandManager.argument("players", EntityArgumentType.players())
 
             val command = createLiteralArgument("cobbledex")
-                .executes {
-                    ctx -> executeCreditCommand(ctx)
-                }
-                // Add config options here
+                .executes { ctx -> executeCreditCommand(ctx) }
                 .then(
                     CommandManager.literal("config").permission(CONFIG_COBBLEDEX_PERMISSION)
-                        .then(propertyName.executes { ctx -> getSetting(ctx) }
-                            .then(propertyValue.executes { ctx ->
-                                applySetting(ctx)
-                            }))
+                        .then(
+                            propertyName.executes { ctx -> getSetting(ctx) }
+                                .then(propertyValue.executes { ctx -> applySetting(ctx) })
+                        )
                 )
-                // Show Collection
-                .then(CommandManager.literal("collection").permission(OPEN_COLLECTION_PERMISSION).executes { ctx ->
-                    openCollection(ctx)
-                })
-
-                // Show Cobbledex
+                .then(
+                    CommandManager.literal("collection").permission(OPEN_COLLECTION_PERMISSION)
+                        .executes { ctx -> openCollection(ctx) }
+                )
                 .then(
                     CommandManager.literal("show").permission(OPEN_COBBLEDEX_PERMISSION)
-                        .then(pokemonProperty.executes { ctx ->
-                            showCobbledexCommand(ctx)
-                        })
+                        .then(pokemonProperty.executes { ctx -> showCobbledexCommand(ctx) })
                 )
-
-                // Auto get commands
                 .then(
-                    CommandManager.literal("auto")
-                        .permission(AUTO_PERMISSION)
-                        .then(playersArgument.executes { ctx ->
-                            executeAuto(ctx)
-                        })
+                    CommandManager.literal("auto").permission(AUTO_PERMISSION)
+                        .then(playersArgument.executes { ctx -> executeAuto(ctx) })
                 )
 
             dispatcher.register(command)
@@ -98,15 +84,18 @@ object CobbledexCommand : IServerCommandInterface {
 
     private fun executeCreditCommand(ctx: CommandContext<ServerCommandSource>): Int {
         val creditsMessage: MutableList<MutableText> = mutableListOf()
-        creditsMessage.add("Cobblemon Pokedex ".text().formatted(Formatting.BOLD, Formatting.RED) + "v${CobbledexBuildDetails.VERSION}".text().formatted(Formatting.WHITE, Formatting.BOLD))
+        creditsMessage.add(
+            "Cobblemon Pokedex ".text().withStyle(Formatting.BOLD, Formatting.RED) +
+                "v${CobbledexBuildDetails.VERSION}".text().withStyle(Formatting.WHITE, Formatting.BOLD)
+        )
 
         val creditBuilder: MutableList<MutableText> = mutableListOf()
         creditBuilder.add(Text.literal("Made with"))
-        creditBuilder.add(Text.literal("❤").formatted(Formatting.RED))
+        creditBuilder.add(Text.literal("<3").withStyle(Formatting.RED))
         creditBuilder.add(Text.literal("by"))
-        creditBuilder.add(Text.literal("Rafa").formatted(Formatting.RED, Formatting.BOLD))
+        creditBuilder.add(Text.literal("Rafa").withStyle(Formatting.RED, Formatting.BOLD))
         creditBuilder.add(Text.literal("and"))
-        creditBuilder.add(Text.literal("Cobblemon Community").formatted(Formatting.RED, Formatting.BOLD))
+        creditBuilder.add(Text.literal("Cobblemon Community").withStyle(Formatting.RED, Formatting.BOLD))
         creditsMessage.add(creditBuilder.appendWithSeparator(" "))
 
         val downloadLine: MutableList<MutableText> = mutableListOf()
@@ -118,7 +107,7 @@ object CobbledexCommand : IServerCommandInterface {
         downloadLine.add(Text.literal("CurseForge").bold().aqua().openUrl("https://curseforge.com/minecraft/mc-mods/cobbledex"))
         creditsMessage.add(downloadLine.appendWithSeparator(" "))
 
-        ctx.source.sendMessage(creditsMessage.toMutableText())
+        ctx.source.sendSystemMessage(creditsMessage.toMutableText())
         return Command.SINGLE_SUCCESS
     }
 
@@ -134,8 +123,7 @@ object CobbledexCommand : IServerCommandInterface {
                     }
                 }
 
-                val pc = player.pc()
-                pc.forEach { pokemon ->
+                player.pc().forEach { pokemon ->
                     discovery.addOrUpdate(
                         player,
                         pokemon.form,
@@ -146,8 +134,7 @@ object CobbledexCommand : IServerCommandInterface {
                     CobbledexCoopDiscovery.addOrUpdateCoopWithoutSaving(pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
                 }
 
-                val party = player.party()
-                party.forEach { pokemon ->
+                player.party().forEach { pokemon ->
                     discovery.addOrUpdate(
                         player,
                         pokemon.form,
@@ -158,12 +145,13 @@ object CobbledexCommand : IServerCommandInterface {
                     CobbledexCoopDiscovery.addOrUpdateCoopWithoutSaving(pokemon.form, pokemon.shiny, DiscoveryRegister.RegisterType.CAUGHT)
                 }
 
-                if (Cobbledex.getConfig().CoopMode)
+                if (Cobbledex.getConfig().CoopMode) {
                     CobbledexCoopDiscovery.getDiscovery()?.registers?.let {
                         ReceiveCollectionDataPacket(it).sendToPlayer(player)
                     }
-                else
+                } else {
                     ReceiveCollectionDataPacket(discovery.registers).sendToPlayer(player)
+                }
             } catch (_: Exception) {
                 // Suppress any error
             }
@@ -172,7 +160,7 @@ object CobbledexCommand : IServerCommandInterface {
         }
 
         CobbledexCoopDiscovery.save()
-        ctx.source.sendMessage(Text.literal("Successfully updated player(s)").bold().green())
+        ctx.source.sendSystemMessage(Text.literal("Successfully updated player(s)").bold().green())
         return Command.SINGLE_SUCCESS
     }
 
@@ -181,38 +169,39 @@ object CobbledexCommand : IServerCommandInterface {
 
     private fun getSetting(ctx: CommandContext<ServerCommandSource>): Int {
         val option = StringArgumentType.getString(ctx, "option")
+        val property = CobbledexConfig::class.memberProperties.find { it.name.lowercase() == option.lowercase() }
+            ?: throw UNKNOWN_PROPERTY_EXCEPTION.create()
 
-        val property = CobbledexConfig::class.memberProperties.find { it.name.lowercase() == option.lowercase() } ?: throw UNKNOWN_PROPERTY_EXCEPTION.create()
         val getValue = property.get(Cobbledex.getConfig()).toString()
-        ctx.source.sendMessage(cobbledexTextTranslation("commands.current_setting", option.text().bold(), getValue.text().bold()))
-
+        ctx.source.sendSystemMessage(cobbledexTextTranslation("commands.current_setting", option.text().bold(), getValue.text().bold()))
         return Command.SINGLE_SUCCESS
     }
 
-
     private fun applySetting(ctx: CommandContext<ServerCommandSource>): Int {
-
         val option = StringArgumentType.getString(ctx, "option")
         val value = StringArgumentType.getString(ctx, "value").lowercase()
-
-        val property = CobbledexConfig::class.memberProperties.find { it.name.lowercase() == option.lowercase() } ?: throw UNKNOWN_PROPERTY_EXCEPTION.create()
+        val property = CobbledexConfig::class.memberProperties.find { it.name.lowercase() == option.lowercase() }
+            ?: throw UNKNOWN_PROPERTY_EXCEPTION.create()
 
         val config = Cobbledex.getConfig()
-        if (property is KMutableProperty1 && property.returnType == typeOf<Boolean>()) {
+        if (property is KMutableProperty1<*, *> && property.returnType == typeOf<Boolean>()) {
             if (value != "true" && value != "false") throw WRONG_VALUE_EXCEPTION.create()
 
-            property.setter.call(config, value.toBoolean())
-            val getValue = property.get(config).toString()
-            ctx.source.sendMessage(cobbledexTextTranslation("commands.successfully_applied", option.text().bold(), getValue.text().bold()))
+            @Suppress("UNCHECKED_CAST")
+            val mutableProperty = property as KMutableProperty1<CobbledexConfig, Boolean>
+
+            mutableProperty.set(config, value.toBoolean())
+            val getValue = mutableProperty.get(config).toString()
+            ctx.source.sendSystemMessage(cobbledexTextTranslation("commands.successfully_applied", option.text().bold(), getValue.text().bold()))
             Cobbledex.saveConfig()
 
-            if (property.name == CobbledexConfig::CoopMode.name) {
-                ctx.source.server.playerManager.playerList.forEach { player ->
-                    if (config.CoopMode)
+            if (mutableProperty.name == CobbledexConfig::CoopMode.name) {
+                ctx.source.server.playerList.players.forEach { player ->
+                    if (config.CoopMode) {
                         CobbledexCoopDiscovery.getDiscovery()?.registers?.let {
                             ReceiveCollectionDataPacket(it).sendToPlayer(player)
                         }
-                    else {
+                    } else {
                         val discovery = CobbledexDiscovery.getPlayerData(player)
                         ReceiveCollectionDataPacket(discovery.registers).sendToPlayer(player)
                     }
@@ -221,6 +210,7 @@ object CobbledexCommand : IServerCommandInterface {
 
             config.syncEveryone()
         }
+
         return Command.SINGLE_SUCCESS
     }
 
@@ -232,7 +222,7 @@ object CobbledexCommand : IServerCommandInterface {
         return Command.SINGLE_SUCCESS
     }
 
-    private val NO_POKEMON_EXCEPTION = SimpleCommandExceptionType("Please provide a Pokémon!".text().red())
+    private val NO_POKEMON_EXCEPTION = SimpleCommandExceptionType("Please provide a Pokemon!".text().red())
 
     private fun showCobbledexCommand(context: CommandContext<ServerCommandSource>): Int {
         val properties = PokemonPropertiesArgumentType.getPokemonProperties(context, "properties")
@@ -242,8 +232,9 @@ object CobbledexCommand : IServerCommandInterface {
 
         context.source.player?.let { player ->
             val species = PokemonSpecies.getByName(properties.species!!)
-            if (species != null)
+            if (species != null) {
                 OpenCobbledexPacket(species.getForm(properties.aspects)).sendToPlayer(player)
+            }
         }
 
         return Command.SINGLE_SUCCESS

@@ -6,12 +6,13 @@ import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.client.CobblemonResources
 import com.cobblemon.mod.common.client.gui.summary.SummaryButton
 import com.cobblemon.mod.common.client.render.drawScaledText
-import com.cobblemon.mod.common.client.render.models.blockbench.repository.PokemonModelRepository
 import com.cobblemon.mod.common.pokemon.Species
 import com.rafacasari.mod.cobbledex.CobbledexConstants.Client.discoveredList
 import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.Minecraft as MinecraftClient
+import net.minecraft.client.gui.GuiGraphics as DrawContext
+import net.minecraft.client.gui.components.events.GuiEventListener
+import net.minecraft.client.gui.narration.NarratableEntry
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI
 import com.rafacasari.mod.cobbledex.client.gui.CobbledexGUI.CobbledexRelatedMenu
 import com.rafacasari.mod.cobbledex.network.client.handlers.SyncServerSettingsHandler
@@ -49,14 +50,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
 
         clearEntries()
 
-        pokemonList?.filter {
-
-            val filteredVariations = PokemonModelRepository.variations[it.first.resourceIdentifier]?.variations?.any {
-                x -> x.model != null && x.aspects == it.second
-            }
-
-            it.second.isEmpty() || (filteredVariations != null && filteredVariations)
-        }?.map {
+        pokemonList?.map {
             EvolveSlot(it.first, it.second, this)
         }?.forEach { entry ->
             this.addEntry(entry)
@@ -105,7 +99,9 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
             textScale = 0.5F
         )
 
-        override fun getNarration() = evolution.translatedName
+        override fun children(): List<GuiEventListener> = listOf(selectButton)
+
+        override fun narratables(): List<NarratableEntry> = listOf(selectButton)
 
         override fun render(
             context: DrawContext,
@@ -120,7 +116,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
             partialTicks: Float
         ) {
             val x = rowLeft - 2
-            val matrices = context.matrices
+            val matrices = context.pose()
 
 
             blitk(
@@ -139,7 +135,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
                 y + PORTRAIT_OFFSET_Y + PORTRAIT_DIAMETER
             )
 
-            matrices.push()
+            matrices.pushPose()
             matrices.translate(
                 x + PORTRAIT_OFFSET_X + PORTRAIT_DIAMETER / 2.0 - 1.0,
                 y.toDouble() - 8,
@@ -148,7 +144,7 @@ class PokemonEvolutionDisplay(x: Int, y: Int): CobbledexScrollList<PokemonEvolut
 
             CobblemonUtils.drawPortraitPokemon(evolution, aspects, matrices, blackSilhouette = !isEnabled)
 
-            matrices.pop()
+            matrices.popPose()
             context.disableScissor()
 
 

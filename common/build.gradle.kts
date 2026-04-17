@@ -7,21 +7,21 @@ plugins {
 }
 
 architectury {
-    common("forge", "fabric")
+    common("fabric", "neoforge")
     platformSetupLoomIde()
 }
 
 dependencies {
     minecraft("com.mojang:minecraft:${property("minecraft_version")}")
-    mappings("net.fabricmc:yarn:${property("yarn_mappings")}:v2")
+    mappings(loom.officialMojangMappings())
 
-    modCompileOnly("org.graalvm.js:js:22.3.0")
-    modCompileOnly("com.cobblemon:mod:${property("cobblemon_version")}")
+    implementation(kotlin("reflect"))
+
+    modCompileOnly("com.cobblemon:mod:${property("cobblemon_version")}") { isTransitive = false }
 
     // alL fabric dependencies:
     modCompileOnly("net.fabricmc:fabric-loader:${property("fabric_loader_version")}")
     modCompileOnly("net.fabricmc.fabric-api:fabric-api:${property("fabric_version")}")
-    implementation(kotlin("reflect"))
 }
 
 sourceSets {

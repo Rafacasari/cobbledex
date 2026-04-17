@@ -5,52 +5,26 @@ import com.cobblemon.mod.common.api.gui.blitk
 import com.cobblemon.mod.common.client.gui.summary.widgets.SoundlessWidget
 import com.cobblemon.mod.common.client.render.drawScaledText
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.DiffuseLighting
-import net.minecraft.client.render.OverlayTexture
-import net.minecraft.client.render.model.BakedModel
-import net.minecraft.client.render.model.json.ModelTransformationMode
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import org.joml.Matrix4f
+import net.minecraft.client.gui.GuiGraphics as DrawContext
+import net.minecraft.client.gui.narration.NarrationElementOutput as NarrationMessageBuilder
+import net.minecraft.network.chat.Component as Text
+import net.minecraft.resources.ResourceLocation as Identifier
+import net.minecraft.world.item.ItemStack
 
-class DiscoveryRewardWidget(x: Int, y: Int): SoundlessWidget(x, y, 74, 26, Text.literal("Rewards")) {
+class DiscoveryRewardWidget(x: Int, y: Int) : SoundlessWidget(x, y, 74, 26, Text.literal("Rewards")) {
     companion object {
         private val ITEM_REWARD: Identifier = cobbledexResource("textures/gui/collection/item_reward.png")
     }
 
     private fun drawItem(context: DrawContext, stack: ItemStack, x: Int, y: Int, itemSize: Float) {
         if (!stack.isEmpty) {
-            val bakedModel: BakedModel =  MinecraftClient.getInstance().itemRenderer.getModel(stack, null, null, 0)
-            context.matrices.push()
-            context.matrices.translate(x.toFloat(), y.toFloat(), 0f)
-
-            try {
-                context.matrices.multiplyPositionMatrix(Matrix4f().scaling(1.0f, -1.0f, 1.0f))
-                context.matrices.scale(itemSize, itemSize, itemSize)
-                val bl = !bakedModel.isSideLit
-                if (bl) DiffuseLighting.disableGuiDepthLighting()
-
-                MinecraftClient.getInstance().itemRenderer.renderItem(
-                    stack, ModelTransformationMode.GUI, false,
-                    context.matrices,
-                    context.vertexConsumers, 15728880, OverlayTexture.DEFAULT_UV, bakedModel
-                )
-                context.draw()
-                if (bl) DiffuseLighting.enableGuiDepthLighting()
-
-            } catch (_: Exception) {
-
-            }
-
-            context.matrices.pop()
+            val halfSize = (itemSize / 2f).toInt()
+            context.renderItem(stack, x - halfSize, y - halfSize)
         }
     }
 
-    override fun renderButton(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val matrices = context.matrices
+    override fun renderWidget(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        val matrices = context.pose()
 
         context.enableScissor(x, y, x + 74, y + 26)
 
@@ -64,7 +38,6 @@ class DiscoveryRewardWidget(x: Int, y: Int): SoundlessWidget(x, y, 74, 26, Text.
             alpha = 0.5f
         )
 
-
         blitk(
             matrixStack = matrices,
             texture = ITEM_REWARD,
@@ -75,7 +48,6 @@ class DiscoveryRewardWidget(x: Int, y: Int): SoundlessWidget(x, y, 74, 26, Text.
             alpha = 0.5f
         )
 
-
         blitk(
             matrixStack = matrices,
             texture = ITEM_REWARD,
@@ -85,15 +57,14 @@ class DiscoveryRewardWidget(x: Int, y: Int): SoundlessWidget(x, y, 74, 26, Text.
             height = 26
         )
 
-
-
         drawScaledText(
             context = context,
             text = Text.literal("Claim"),
             x = x + 24 + (26 / 2),
             y = y + 20,
             centered = true,
-            scale = 0.5F, maxCharacterWidth = 26 * 2
+            scale = 0.5F,
+            maxCharacterWidth = 26 * 2
         )
 
         val shinyStone = ItemStack(CobblemonItems.SHINY_STONE, 1)
@@ -101,13 +72,13 @@ class DiscoveryRewardWidget(x: Int, y: Int): SoundlessWidget(x, y, 74, 26, Text.
         val fireStone = ItemStack(CobblemonItems.FIRE_STONE, 1)
 
         drawItem(context, shinyStone, x + 24 + (26 / 2), y + (26 / 2) - 2, 16f)
-
         drawItem(context, iceStone, x - 7 + (26 / 2), y + (26 / 2), 16f)
         drawItem(context, fireStone, x + width - 26 + 7 + (26 / 2), y + (26 / 2), 16f)
 
-
         context.disableScissor()
+    }
 
-
+    override fun updateWidgetNarration(builder: NarrationMessageBuilder) {
+        defaultButtonNarrationText(builder)
     }
 }

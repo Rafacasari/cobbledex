@@ -2,8 +2,9 @@
 
 package com.rafacasari.mod.cobbledex.api
 
-import com.cobblemon.mod.common.Cobblemon.playerData
+import com.cobblemon.mod.common.Cobblemon
 import com.cobblemon.mod.common.api.storage.player.PlayerDataExtension
+import com.cobblemon.mod.common.api.storage.player.PlayerInstancedDataStoreTypes
 import com.cobblemon.mod.common.pokemon.FormData
 import com.cobblemon.mod.common.util.party
 import com.cobblemon.mod.common.util.pc
@@ -14,7 +15,7 @@ import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
 import com.rafacasari.mod.cobbledex.api.events.DiscoveryEvent
 import com.rafacasari.mod.cobbledex.network.client.packets.ReceiveCollectionDataPacket
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.logInfo
-import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.level.ServerPlayer as ServerPlayerEntity
 
 @Suppress("unused")
 /**
@@ -36,7 +37,7 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
          * Get [CobbledexDiscovery] for [player]
          */
         fun getPlayerData(player: ServerPlayerEntity): CobbledexDiscovery {
-            val data = playerData.get(player)
+            val data = Cobblemon.playerDataManager.getGenericData(player)
 
             val cobbledexData = data.extraData.getOrPut(NAME_KEY) {
                 val discovery = CobbledexDiscovery()
@@ -66,7 +67,7 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
                 }
 
                 ReceiveCollectionDataPacket(discovery.registers).sendToPlayer(player)
-                logInfo("Added ${discovery.registers.size} entries in ${player.entityName}'s Cobbledex")
+                logInfo("Added ${discovery.registers.size} entries in ${player.name.string}'s Cobbledex")
                 return@getOrPut discovery
             } as CobbledexDiscovery
 
@@ -74,7 +75,7 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
         }
 
         fun addOrUpdatePlayer(player: ServerPlayerEntity, form: FormData, isShiny: Boolean, status: DiscoveryRegister.RegisterType, update: (DiscoveryRegister) -> (Unit)): Boolean {
-            val data = playerData.get(player)
+            val data = Cobblemon.playerDataManager.getGenericData(player)
 
             val cobbledexData = getPlayerData(player)
 
@@ -86,7 +87,7 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
                 update
             )
 
-            playerData.saveSingle(data)
+            Cobblemon.playerDataManager.saveSingle(data, PlayerInstancedDataStoreTypes.GENERAL)
             return isNewRegister
         }
     }

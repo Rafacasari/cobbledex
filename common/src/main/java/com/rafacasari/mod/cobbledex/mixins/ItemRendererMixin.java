@@ -1,61 +1,42 @@
 package com.rafacasari.mod.cobbledex.mixins;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.rafacasari.mod.cobbledex.items.CobbledexItem;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.item.ItemModels;
-import net.minecraft.client.render.item.ItemRenderer;
-import net.minecraft.client.render.model.BakedModel;
-import net.minecraft.client.render.model.json.ModelTransformationMode;
-import net.minecraft.client.util.ModelIdentifier;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
-import org.spongepowered.asm.mixin.Final;
+import com.rafacasari.mod.cobbledex.utils.MiscUtils;
+import net.minecraft.client.renderer.ItemModelShaper;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.rafacasari.mod.cobbledex.utils.MiscUtils;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-
 @Mixin(ItemRenderer.class)
 public abstract class ItemRendererMixin {
 
-    @Shadow @Final private ItemModels models;
-    @Shadow public abstract void renderItem(ItemStack stack, ModelTransformationMode renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, BakedModel model);
+    @Shadow
+    public abstract ItemModelShaper getItemModelShaper();
 
-    @Inject(method = "getModel", at = @At("HEAD"), cancellable = true)
-    private void cobbledex$bakeCobbledexItem(ItemStack stack, World world, LivingEntity entity, int seed, CallbackInfoReturnable<BakedModel> cir) {
-        if (stack.getItem() instanceof CobbledexItem) {
-            Identifier identifier = MiscUtils.INSTANCE.cobbledexResource("cobbledex_model");
-            BakedModel model = this.models.getModelManager().getModel(new ModelIdentifier(identifier, "inventory"));
-            ClientWorld clientWorld = world instanceof ClientWorld ? (ClientWorld) world : null;
-            BakedModel overriddenModel = model.getOverrides().apply(model, stack, clientWorld, entity, seed);
-            cir.setReturnValue(overriddenModel == null ? this.models.getModelManager().getMissingModel() : overriddenModel);
-        }
-    }
+    @Shadow
+    public abstract void render(ItemStack stack, ItemDisplayContext renderMode, boolean leftHanded, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay, BakedModel model);
 
-
-    @Inject(
-            method = "renderItem(Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/render/model/json/ModelTransformationMode;ZLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;IILnet/minecraft/client/render/model/BakedModel;)V",
-            at = @At("HEAD"),
-            cancellable = true
-    )
-    private void cobbledex$determineCobbledexModel(ItemStack stack, ModelTransformationMode renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, BakedModel model, CallbackInfo ci) {
-        boolean shouldBe2d = renderMode == ModelTransformationMode.GUI || renderMode == ModelTransformationMode.FIXED;
+    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    private void cobbledex$determineCobbledexModel(ItemStack stack, ItemDisplayContext renderMode, boolean leftHanded, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay, BakedModel model, CallbackInfo ci) {
+        boolean shouldBe2d = renderMode == ItemDisplayContext.GUI || renderMode == ItemDisplayContext.FIXED;
         if (shouldBe2d && stack.getItem() instanceof CobbledexItem) {
-            BakedModel replacementModel = this.models.getModelManager().getModel(new ModelIdentifier(MiscUtils.INSTANCE.cobbledexResource("cobbledex_item"), "inventory"));
-            if (!model.equals(replacementModel)) {
+            BakedModel replacementModel = this.getItemModelShaper().getModelManager().getModel(
+                ModelResourceLocation.inventory(MiscUtils.INSTANCE.cobbledexResource("cobbledex_item_2d"))
+            );
+            BakedModel missingModel = this.getItemModelShaper().getModelManager().getMissingModel();
+            if (!model.equals(replacementModel) && !replacementModel.equals(missingModel)) {
                 ci.cancel();
-                renderItem(stack, renderMode, leftHanded, matrices, vertexConsumers, light, overlay, replacementModel);
+                render(stack, renderMode, leftHanded, matrices, vertexConsumers, light, overlay, replacementModel);
             }
         }
     }
-
 }

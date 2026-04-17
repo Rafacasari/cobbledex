@@ -7,12 +7,12 @@ import com.rafacasari.mod.cobbledex.network.client.IClientNetworkPacketHandler
 import com.rafacasari.mod.cobbledex.network.server.IServerNetworkPacketHandler
 import com.rafacasari.mod.cobbledex.network.server.handlers.*
 import com.rafacasari.mod.cobbledex.network.server.packets.*
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.util.Identifier
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
+import net.minecraft.server.level.ServerPlayer as ServerPlayerEntity
+import net.minecraft.resources.ResourceLocation as Identifier
 
 object CobbledexNetwork {
-    fun sendToAllPlayers(packet: INetworkPacket<*>) = sendPacketToPlayers(Cobbledex.implementation.server()!!.playerManager.playerList, packet)
+    fun sendToAllPlayers(packet: INetworkPacket<*>) = sendPacketToPlayers(Cobbledex.implementation.server()!!.playerList.players, packet)
     fun sendPacketToPlayers(players: Iterable<ServerPlayerEntity>, packet: INetworkPacket<*>) = players.forEach { sendPacketToPlayer(it, packet) }
     fun sendPacketToPlayer(player: ServerPlayerEntity, packet: INetworkPacket<*>) = Cobbledex.implementation.networkManager.sendPacketToPlayer(player, packet)
     fun sendPacketToServer(packet: INetworkPacket<*>) = Cobbledex.implementation.networkManager.sendPacketToServer(packet)

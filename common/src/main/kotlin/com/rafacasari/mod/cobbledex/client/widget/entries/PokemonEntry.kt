@@ -1,13 +1,13 @@
 package com.rafacasari.mod.cobbledex.client.widget.entries
 
 import com.cobblemon.mod.common.api.gui.blitk
-import com.cobblemon.mod.common.api.gui.drawPortraitPokemon
 import com.cobblemon.mod.common.client.render.drawScaledText
 import com.cobblemon.mod.common.pokemon.Species
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
+import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.drawPortraitPokemon
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.text.OrderedText
+import net.minecraft.client.gui.GuiGraphics as DrawContext
+import net.minecraft.util.FormattedCharSequence as OrderedText
 
 class PokemonEntry(val species: Species, val aspects: Set<String>, val text: OrderedText) : LongTextDisplay.TextDisplayEntry() {
     companion object
@@ -21,7 +21,7 @@ class PokemonEntry(val species: Species, val aspects: Set<String>, val text: Ord
 
 
     override fun render(
-        context: DrawContext?,
+        context: DrawContext,
         index: Int,
         y: Int,
         x: Int,
@@ -32,8 +32,7 @@ class PokemonEntry(val species: Species, val aspects: Set<String>, val text: Ord
         hovered: Boolean,
         tickDelta: Float
     ) {
-        if (context == null) return
-        val matrices = context.matrices
+        val matrices = context.pose()
 
 
         blitk(
@@ -52,7 +51,7 @@ class PokemonEntry(val species: Species, val aspects: Set<String>, val text: Ord
             y + Y_OFFSET + IMAGE_SIZE
         )
 
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(
             x + 10.0 + X_OFFSET,
             y.toDouble() - 3 + Y_OFFSET,
@@ -60,9 +59,9 @@ class PokemonEntry(val species: Species, val aspects: Set<String>, val text: Ord
         )
         matrices.scale(0.5f, 0.5f,1f)
 
-        drawPortraitPokemon(species, aspects, matrices, partialTicks = tickDelta)
+        drawPortraitPokemon(species, aspects, matrices, blackSilhouette = false)
 
-        matrices.pop()
+        matrices.popPose()
         context.disableScissor()
 
 

@@ -1,6 +1,11 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "cobbledex:item/cobbledex2d"
-  }
+  "parent": "cobbledex:cobbledex_model",
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 1
+      },
+      "model": "cobbledex:item/cobbledex_item_2d"
+    }
+  ]
 }

@@ -4,15 +4,14 @@ import com.cobblemon.mod.common.api.conditional.RegistryLikeTagCondition
 import com.cobblemon.mod.common.api.moves.Moves
 import com.cobblemon.mod.common.api.pokemon.PokemonProperties
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
-import com.cobblemon.mod.common.api.pokemon.evolution.requirement.EvolutionRequirement
+import com.cobblemon.mod.common.api.pokemon.requirement.Requirement
 import com.cobblemon.mod.common.api.pokemon.stats.Stats
 import com.cobblemon.mod.common.api.spawning.TimeRange
 import com.cobblemon.mod.common.api.spawning.condition.MoonPhase
 import com.cobblemon.mod.common.api.text.bold
 import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.api.types.ElementalTypes
-import com.cobblemon.mod.common.pokemon.evolution.requirements.*
-import com.cobblemon.mod.common.registry.ItemIdentifierCondition
+import com.cobblemon.mod.common.pokemon.requirements.*
 import com.cobblemon.mod.common.util.asTranslated
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.network.IEncodable
@@ -31,16 +30,16 @@ import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIntRange
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableString
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.logInfo
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.toTranslationKey
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.withRGBColor
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.text.MutableText
-import net.minecraft.text.Text
-import net.minecraft.text.TextContent
-import net.minecraft.util.Identifier
-import net.minecraft.world.biome.Biome
-import net.minecraft.world.gen.structure.Structure
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
+import net.minecraft.core.registries.BuiltInRegistries as Registries
+import net.minecraft.network.chat.MutableComponent as MutableText
+import net.minecraft.network.chat.Component as Text
+import net.minecraft.resources.ResourceLocation as Identifier
+import net.minecraft.world.level.biome.Biome
+import net.minecraft.world.level.levelgen.structure.Structure
 
 class SerializableEvolutionRequirement(): IEncodable {
 
@@ -56,7 +55,7 @@ class SerializableEvolutionRequirement(): IEncodable {
             EvolutionRequirementType.HELD_ITEM -> {
                if (identifier != null) {
                    val itemStack = ItemStack(Registries.ITEM.get(identifier))
-                   longTextDisplay.addItemEntry(itemStack, Text.translatable("cobbledex.evolution.held_item", itemStack.translationKey.asTranslated().bold()), false)
+                   longTextDisplay.addItemEntry(itemStack, Text.translatable("cobbledex.evolution.held_item", itemStack.descriptionId.asTranslated().bold()), false)
                } else {
                    longTextDisplay.addText( Text.translatable("cobbledex.evolution.held_item", "UNKNOWN".text().bold()), false)
                }
@@ -243,8 +242,8 @@ class SerializableEvolutionRequirement(): IEncodable {
                 val statTwo = extraStringValue?.let { stat -> Stats.getStat(stat) }
 
                 if (statOne != null && statTwo != null) {
-                    val stat1 = MutableText.of(TextContent.EMPTY).append(statOne.displayName).bold()
-                    val stat2 = MutableText.of(TextContent.EMPTY).append(statTwo.displayName).bold()
+                    val stat1 = Text.empty().append(statOne.displayName).copy().bold()
+                    val stat2 = Text.empty().append(statTwo.displayName).copy().bold()
                     longTextDisplay.addText(Text.translatable("cobbledex.evolution.stat_equal", stat1, stat2), false)
                 }
             }
@@ -254,8 +253,8 @@ class SerializableEvolutionRequirement(): IEncodable {
                 val statTwo = extraStringValue?.let { stat -> Stats.getStat(stat) }
 
                 if (statOne != null && statTwo != null) {
-                    val statLow = MutableText.of(TextContent.EMPTY).append(statOne.displayName).bold()
-                    val statHigher = MutableText.of(TextContent.EMPTY).append(statTwo.displayName).bold()
+                    val statLow = Text.empty().append(statOne.displayName).copy().bold()
+                    val statHigher = Text.empty().append(statTwo.displayName).copy().bold()
                     longTextDisplay.addText(Text.translatable("cobbledex.evolution.stat_compare", statHigher, statLow), false)
                 }
             }
@@ -267,7 +266,7 @@ class SerializableEvolutionRequirement(): IEncodable {
                         if(time.value.ranges == ranges) time.key else null
                     }
 
-                    val item = Registries.ITEM.get(Identifier("minecraft", "clock"))
+                    val item = Registries.ITEM.get(Identifier.fromNamespaceAndPath("minecraft", "clock"))
                     val itemStack = ItemStack(item)
                     times.forEach { time ->
                         val translation = Text.translatable("cobbledex.evolution.time_range", time.text().bold())
@@ -418,7 +417,7 @@ class SerializableEvolutionRequirement(): IEncodable {
             return@lazy null
     }
 
-    constructor (requirement: EvolutionRequirement) : this() {
+    constructor (requirement: Requirement) : this() {
 
 
         when(requirement)
@@ -430,10 +429,13 @@ class SerializableEvolutionRequirement(): IEncodable {
 
             is HeldItemRequirement -> {
                 type = EvolutionRequirementType.HELD_ITEM
-                val item = requirement.itemCondition.item
-                if (item is ItemIdentifierCondition)
-                    identifier = item.identifier
-
+                identifier = requirement.itemCondition.items()
+                    .orElse(null)
+                    ?.iterator()
+                    ?.asSequence()
+                    ?.firstOrNull()
+                    ?.value()
+                    ?.let { item -> Registries.ITEM.getKey(item) }
             }
 
             is FriendshipRequirement -> {
@@ -489,7 +491,7 @@ class SerializableEvolutionRequirement(): IEncodable {
                 stringValue = requirement.target.originalString
             }
 
-            is PlayerHasAdvancementRequirement -> {
+            is AdvancementRequirement -> {
                 type = EvolutionRequirementType.PLAYER_HAS_ADVANCEMENT
                 identifier = requirement.requiredAdvancement
             }
@@ -549,12 +551,12 @@ class SerializableEvolutionRequirement(): IEncodable {
                 type = EvolutionRequirementType.BIOME
                 requirement.biomeCondition?.let { biomeCondition ->
                     if (biomeCondition is RegistryLikeTagCondition<Biome>)
-                        identifier = biomeCondition.tag.id
+                        identifier = biomeCondition.tag.location()
                 }
 
                 requirement.biomeAnticondition?.let { biomeAntiCondition ->
                     if (biomeAntiCondition is RegistryLikeTagCondition<Biome>)
-                        negativeIdentifier = biomeAntiCondition.tag.id
+                        negativeIdentifier = biomeAntiCondition.tag.location()
                 }
             }
 
@@ -572,12 +574,12 @@ class SerializableEvolutionRequirement(): IEncodable {
                 type = EvolutionRequirementType.STRUCTURE
                 requirement.structureCondition?.let { structure ->
                     if(structure is RegistryLikeTagCondition<Structure>)
-                        identifier = structure.tag.id
+                        identifier = structure.tag.location()
                 }
 
                 requirement.structureAnticondition?.let { antiStructure ->
                     if(antiStructure is RegistryLikeTagCondition<Structure>)
-                        negativeIdentifier = antiStructure.tag.id
+                        negativeIdentifier = antiStructure.tag.location()
                 }
             }
 
@@ -592,7 +594,7 @@ class SerializableEvolutionRequirement(): IEncodable {
 
     override fun encode(buffer: PacketByteBuf) {
 
-        buffer.writeEnumConstant(type)
+        buffer.writeEnum(type)
         buffer.writeNullableInt(value)
         buffer.writeNullableIntRange(intRange)
         buffer.writeNullableString(stringValue)
@@ -623,7 +625,7 @@ class SerializableEvolutionRequirement(): IEncodable {
         fun decode(reader: PacketByteBuf) : SerializableEvolutionRequirement {
             val requirement = SerializableEvolutionRequirement()
 
-            requirement.type = reader.readEnumConstant(EvolutionRequirementType::class.java)
+            requirement.type = reader.readEnum(EvolutionRequirementType::class.java)
             requirement.value = reader.readNullableInt()
             requirement.intRange = reader.readNullableIntRange()
             requirement.stringValue = reader.readNullableString()

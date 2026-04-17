@@ -1,67 +1,64 @@
 package com.rafacasari.mod.cobbledex.client.widget
 
 import com.cobblemon.mod.common.api.gui.blitk
-import com.cobblemon.mod.common.api.text.text
-import com.cobblemon.mod.common.client.CobblemonResources
-import com.cobblemon.mod.common.client.render.drawScaledText
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.widget.TextFieldWidget
-import net.minecraft.text.Text
+import net.minecraft.client.Minecraft as MinecraftClient
+import net.minecraft.client.gui.GuiGraphics as DrawContext
+import net.minecraft.client.gui.components.EditBox as TextFieldWidget
+import net.minecraft.network.chat.Component as Text
 
-class SearchWidget(val posX: Number, val posY: Number, val callback: (() -> Unit)?): TextFieldWidget(MinecraftClient.getInstance().textRenderer,
-    posX.toInt(), posY.toInt(), 76, 16, Text.of("Search Widget")) {
+class SearchWidget(posX: Number, posY: Number, callback: (() -> Unit)?) : TextFieldWidget(
+    MinecraftClient.getInstance().font,
+    posX.toInt() + HORIZONTAL_PADDING,
+    posY.toInt() + VERTICAL_PADDING,
+    TEXT_FIELD_WIDTH,
+    TEXT_FIELD_HEIGHT,
+    Text.literal("Search Widget")
+) {
 
     companion object {
+        private const val BACKGROUND_WIDTH = 76
+        private const val BACKGROUND_HEIGHT = 16
+        private const val HORIZONTAL_PADDING = 5
+        private const val VERTICAL_PADDING = 4
+        private const val TEXT_FIELD_WIDTH = BACKGROUND_WIDTH - (HORIZONTAL_PADDING * 2)
+        private const val TEXT_FIELD_HEIGHT = 10
         private val SEARCH_BAR = cobbledexResource("textures/gui/collection/search_bar.png")
     }
 
+    private val backgroundX = posX.toInt()
+    private val backgroundY = posY.toInt()
+
     init {
-        this.setMaxLength(16)
-        this.setChangedListener {
+        setMaxLength(16)
+        setBordered(false)
+        setHint(cobbledexTextTranslation("search"))
+        setResponder {
             callback?.invoke()
         }
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        return if (mouseX.toInt() in x..(x + width) && mouseY.toInt() in y..(y + height)) {
-            isFocused = true
-            true
-        } else {
-            false
+    override fun renderWidget(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        blitk(
+            matrixStack = context.pose(),
+            texture = SEARCH_BAR,
+            x = backgroundX,
+            y = backgroundY,
+            width = BACKGROUND_WIDTH,
+            height = BACKGROUND_HEIGHT
+        )
+
+        if (cursorPosition != value.length) {
+            moveCursorToEnd(false)
         }
+
+        super.renderWidget(context, mouseX, mouseY, delta)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val matrices = context.matrices
-
-        blitk(
-            matrixStack = matrices,
-            texture = SEARCH_BAR,
-            x = posX, y = posY,
-            width = this.width,
-            height = this.height
-        )
-
-        if (cursor != text.length) setCursorToEnd()
-
-        val input = if (text.isEmpty() || (!isFocused && text.isEmpty())) cobbledexTextTranslation("search") else text.text()
-
-        matrices.push()
-        matrices.translate(0.5f, 0.5f, 0f)
-
-        drawScaledText(
-            context = context,
-            font = CobblemonResources.DEFAULT_LARGE,
-            text = input,
-            x = posX.toFloat() + 11f,
-            y = posY.toFloat() + 3f,
-            shadow = false,
-            opacity = if (text.isEmpty() || (!isFocused && text.isEmpty())) 0.15f else 1f
-        )
-
-        matrices.pop()
+    override fun isMouseOver(mouseX: Double, mouseY: Double): Boolean {
+        return active && visible &&
+            mouseX >= backgroundX && mouseX < backgroundX + BACKGROUND_WIDTH &&
+            mouseY >= backgroundY && mouseY < backgroundY + BACKGROUND_HEIGHT
     }
 }

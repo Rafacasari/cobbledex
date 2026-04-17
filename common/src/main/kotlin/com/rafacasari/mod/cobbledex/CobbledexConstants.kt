@@ -2,8 +2,8 @@ package com.rafacasari.mod.cobbledex
 
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.rafacasari.mod.cobbledex.api.classes.DiscoveryRegister
-import net.minecraft.item.Item
-import net.minecraft.util.Rarity
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Rarity
 import com.rafacasari.mod.cobbledex.items.CobbledexItem
 
 object CobbledexConstants {
@@ -23,5 +23,5 @@ object CobbledexConstants {
             get() = PokemonSpecies.implemented.size
     }
 
-    val COBBLEDEX_ITEM = CobbledexItem(Item.Settings().maxCount(1).rarity(Rarity.COMMON))
+    val COBBLEDEX_ITEM = CobbledexItem(Item.Properties().stacksTo(1).rarity(Rarity.COMMON))
 }

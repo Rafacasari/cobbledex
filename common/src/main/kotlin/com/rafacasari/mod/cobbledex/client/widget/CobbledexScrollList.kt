@@ -1,95 +1,68 @@
 package com.rafacasari.mod.cobbledex.client.widget
 
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget
+import net.minecraft.client.Minecraft as MinecraftClient
+import net.minecraft.client.gui.GuiGraphics as DrawContext
+import net.minecraft.client.gui.components.ContainerObjectSelectionList as AlwaysSelectedEntryListWidget
 
 abstract class CobbledexScrollList<T : AlwaysSelectedEntryListWidget.Entry<T>>(
-    private val x: Int,
-    private val y: Int,
+    private val listX: Int,
+    private val listY: Int,
     slotHeight: Int
 ) : AlwaysSelectedEntryListWidget<T>(
     MinecraftClient.getInstance(),
-    WIDTH, // width
-    HEIGHT, // height
-    0, // top
-    HEIGHT, // bottom
+    WIDTH,
+    HEIGHT,
+    listY + 1,
     slotHeight
 ) {
     companion object {
-        const val WIDTH = 82 + 3
-        const val HEIGHT = 119 + 11
+        const val WIDTH = 85
+        const val HEIGHT = 128
         const val SLOT_WIDTH = 80
-
-//        private val backgroundResource = cobblemonResource("textures/gui/summary/summary_scroll_background.png")
     }
 
-    private var scrolling = false
+    init {
+        correctSize()
+    }
 
     override fun getRowWidth(): Int {
         return SLOT_WIDTH
     }
 
-    init {
-        correctSize()
-        super.setRenderHorizontalShadows(false)
-        super.setRenderBackground(false)
-        super.setRenderSelection(false)
+    override fun getScrollbarPosition(): Int {
+        return listX + width - 1
     }
 
-    override fun getScrollbarPositionX(): Int {
-        return left + width - 1
-    }
+    override fun renderListBackground(context: DrawContext) {}
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, partialTicks: Float) {
+    override fun renderSelection(
+        context: DrawContext,
+        top: Int,
+        width: Int,
+        height: Int,
+        outerColor: Int,
+        innerColor: Int
+    ) = Unit
+
+    override fun renderListSeparators(context: DrawContext) = Unit
+
+    override fun renderWidget(context: DrawContext, mouseX: Int, mouseY: Int, partialTicks: Float) {
         correctSize()
 
         context.enableScissor(
-            left,
-            top + 1,
-            left + width,
-            top + 1 + height
+            listX,
+            listY + 2,
+            listX + width,
+            listY + 2 + height
         )
-        super.render(context, mouseX, mouseY, partialTicks)
+        super.renderWidget(context, mouseX, mouseY, partialTicks)
         context.disableScissor()
-
-    }
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        updateScrollingState(mouseX, mouseY)
-        if (scrolling) {
-            focused = getEntryAtPosition(mouseX, mouseY)
-            isDragging = true
-        }
-        return super.mouseClicked(mouseX, mouseY, button)
-    }
-
-    override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
-        if (scrolling) {
-            if (mouseY < top) {
-                setScrollAmount(0.0)
-            } else if (mouseY > bottom) {
-                setScrollAmount(maxScroll.toDouble())
-            } else {
-                setScrollAmount(scrollAmount + deltaY)
-            }
-        }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
-    }
-
-    private fun updateScrollingState(mouseX: Double, mouseY: Double) {
-        scrolling = mouseX >= this.scrollbarPositionX.toDouble()
-                && mouseX < (this.scrollbarPositionX + 3).toDouble()
-                && mouseY >= top
-                && mouseY < bottom
     }
 
     private fun correctSize() {
-        updateSize(WIDTH, HEIGHT, y + 1, (y + 1) + (HEIGHT - 2))
-        setLeftPos(x)
+        x = listX
+        y = listY + 1
+        setRectangle(WIDTH, HEIGHT, listX, listY + 1)
+        clampScrollAmount()
     }
-
-//    private fun scaleIt(i: Int): Int {
-//        return (client.window.scaleFactor * i).toInt()
-//    }
 }

@@ -10,6 +10,7 @@ import com.cobblemon.mod.common.client.gui.ExitButton
 import com.cobblemon.mod.common.client.gui.TypeIcon
 import com.cobblemon.mod.common.client.gui.drawProfilePokemon
 import com.cobblemon.mod.common.client.render.drawScaledText
+import com.cobblemon.mod.common.client.render.models.blockbench.FloatingState
 import com.cobblemon.mod.common.pokemon.FormData
 import com.cobblemon.mod.common.pokemon.RenderablePokemon
 import com.cobblemon.mod.common.pokemon.Species
@@ -30,14 +31,14 @@ import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.validForms
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.emptyLine
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.sound.PositionedSoundInstance
-import net.minecraft.sound.SoundEvent
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
+import net.minecraft.client.Minecraft as MinecraftClient
+import net.minecraft.client.gui.GuiGraphics as DrawContext
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.resources.sounds.SimpleSoundInstance as PositionedSoundInstance
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.network.chat.Component as Text
+import net.minecraft.ChatFormatting as Formatting
+import net.minecraft.resources.ResourceLocation as Identifier
 import org.joml.Quaternionf
 import org.joml.Vector3f
 
@@ -80,7 +81,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         }
 
         fun playSound(soundEvent: SoundEvent) {
-            MinecraftClient.getInstance().soundManager.play(PositionedSoundInstance.master(soundEvent, 1f))
+            MinecraftClient.getInstance().soundManager.play(PositionedSoundInstance.forUI(soundEvent, 1f))
         }
 
         private var currentPage = 1
@@ -122,38 +123,38 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         val x = (width - CobbledexGUI.BASE_WIDTH) / 2
         val y = (height - CobbledexGUI.BASE_HEIGHT) / 2
 
-        this.addDrawableChild(ExitButton(pX = x + 313, pY = y + 175) { this.close() })
+        this.addRenderableWidget(ExitButton(pX = x + 313, pY = y + 175) { this.onClose() })
         searchWidget = SearchWidget(x + 85, y + 172) {
             updateSearch()
         }
 
-        searchWidget.text = lastSearch
-        this.addDrawableChild(searchWidget)
+        searchWidget.value = lastSearch
+        this.addRenderableWidget(searchWidget)
 
         setInitialFocus(searchWidget)
 
-        addDrawableChild(ImageButton(DOUBLE_LEFT_ARROW, 14, 11, x + 170, y + 175) {
+        addRenderableWidget(ImageButton(DOUBLE_LEFT_ARROW, 14, 11, x + 170, y + 175) {
             currentPage = 1
         })
 
-        addDrawableChild(ImageButton(LEFT_ARROW, 8, 11, x + 188, y + 175) {
+        addRenderableWidget(ImageButton(LEFT_ARROW, 8, 11, x + 188, y + 175) {
             if (currentPage <= 1)
                 currentPage = maxPages
             else currentPage--
         })
 
-        addDrawableChild(ImageButton(RIGHT_ARROW, 8, 11, x + 268, y + 175) {
+        addRenderableWidget(ImageButton(RIGHT_ARROW, 8, 11, x + 268, y + 175) {
             if (currentPage >= maxPages)
                 currentPage = 1
             else currentPage++
         })
 
-        addDrawableChild(ImageButton(DOUBLE_RIGHT_ARROW, 14, 11, x + 280, y + 175) {
+        addRenderableWidget(ImageButton(DOUBLE_RIGHT_ARROW, 14, 11, x + 280, y + 175) {
             currentPage = maxPages
         })
 
 //        rewardWidget = DiscoveryRewardWidget(x + 5, y + 170)
-//        addDrawableChild(rewardWidget)
+//        addRenderableWidget(rewardWidget)
 
 //        val totalItems = (COLUMN_SIZE * LINES_SIZE)
 //        // Get total items
@@ -172,7 +173,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
     private fun updateSearch() {
         if (!this::searchWidget.isInitialized) return
 
-        lastSearch = searchWidget.text
+        lastSearch = searchWidget.value
 
         filteredSpecies = if(lastSearch.isNotEmpty())
             implementedSpecies.filter {  it.translatedName.string.lowercase().contains(lastSearch.lowercase()) }.toMutableList()
@@ -188,9 +189,9 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
 
-        val matrices = context.matrices
+        val matrices = context.pose()
         val x = (width - BASE_WIDTH) / 2
         val y = (height - BASE_HEIGHT) / 2
 
@@ -296,12 +297,12 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         )
 
 
-        lastHoveredForm?.let { hoveredEntry ->
-            val isDiscovered =  discoveredList.contains(hoveredEntry.species.showdownId())
+        lastHoveredForm?.let { hovered ->
+            val isDiscovered =  discoveredList.contains(hovered.species.showdownId())
             drawScaledText(
                 context = context,
                 font = CobblemonResources.DEFAULT_LARGE,
-                text = if (isDiscovered) hoveredEntry.species.translatedName.bold() else "???".text().bold(),
+                text = if (isDiscovered) hovered.species.translatedName.bold() else "???".text().bold(),
                 x = x + 13,
                 y = y + 28.3F,
                 shadow = false
@@ -310,7 +311,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
             if (isDiscovered) {
                 blitk(
                     matrixStack = matrices,
-                    texture = if (hoveredEntry.secondaryType == null) TYPE_SPACER else TYPE_SPACER_DOUBLE,
+                    texture = if (hovered.secondaryType == null) TYPE_SPACER else TYPE_SPACER_DOUBLE,
                     x = (x + 5.5 + 3) / SCALE,
                     y = (y + 100 + 14) / SCALE,
                     width = 134,
@@ -338,7 +339,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         val tooltip: MutableList<Text> = mutableListOf()
 
         var currentEntry: Species? = null
-        val textRenderer = MinecraftClient.getInstance().textRenderer
+        val textRenderer = MinecraftClient.getInstance().font
         var currentIndex = 1
         val linesSize = LINES_SIZE - 1
         val columnsSize = COLUMN_SIZE - 1
@@ -388,23 +389,24 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                     )
 
 
-                    matrices.push()
-                    matrices.translate(entryX + (ENTRY_SIZE / 2.0), entryY, 0.0)
+                    matrices.pushPose()
+                    matrices.translate(entryX + (ENTRY_SIZE / 2.0), entryY + 1.0, 0.0)
+                    matrices.scale(2.5F, 2.5F, 1F)
 
                     val rotation = Quaternionf().fromEulerXYZDegrees(Vector3f(10f, 35f, 0F))
 
                     val aspects = selectedForm.aspects.toMutableSet()
                     if (isShiny) aspects.add("shiny")
+                    val state = FloatingState().also { it.currentAspects = aspects }
 
                     if (isDiscovered || SyncServerSettingsHandler.config.Collection_DisableBlackSilhouette) {
                         drawProfilePokemon(
-                            species = species.resourceIdentifier,
-                            aspects = aspects,
+                            renderablePokemon = RenderablePokemon(species, aspects),
                             matrixStack = matrices,
                             rotation = rotation,
-                            state = null,
-                            partialTicks = delta,
-                            scale = (ENTRY_SIZE / 2).toFloat()
+                            state = state,
+                            partialTicks = 0F,
+                            scale = 4.5F
                         )
                     } else {
                         drawBlackSilhouettePokemon(
@@ -412,12 +414,15 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                             aspects = aspects,
                             matrixStack = matrices,
                             rotation = rotation,
-                            scale = (ENTRY_SIZE / 2).toFloat()
+                            scale = 4.5F
                         )
                     }
-                    matrices.pop()
+                    matrices.popPose()
 
                     context.disableScissor()
+
+                    matrices.pushPose()
+                    matrices.translate(0.0, 0.0, 100.0)
 
                     if (isCaught) {
                         blitk(
@@ -454,20 +459,20 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
 
                     if (isMouseOver) {
                         //val formName = if (entryForm != null) selectedForm.name else "???"
-                        tooltip.add(cobbledexTextTranslation("discover.selected_form", selectedForm.name.text().bold()).formatted(Formatting.GRAY))
+                        tooltip.add(cobbledexTextTranslation("discover.selected_form", selectedForm.name.text().bold()).withStyle(Formatting.GRAY))
 
                         val currentStatusTranslation =
                             if (register == null)
-                                Text.literal("?????").formatted(Formatting.GRAY)
+                                Text.literal("?????").withStyle(Formatting.GRAY)
                             else if (register.status == DiscoveryRegister.RegisterType.CAUGHT)
-                                cobbledexTextTranslation("discovery_status.caught").formatted(Formatting.GREEN)
+                                cobbledexTextTranslation("discovery_status.caught").withStyle(Formatting.GREEN)
                             else
-                                cobbledexTextTranslation("discovery_status.discovered").formatted(Formatting.GRAY)
+                                cobbledexTextTranslation("discovery_status.discovered").withStyle(Formatting.GRAY)
 
                         tooltip.add(cobbledexTextTranslation("discovery_status", currentStatusTranslation))
 
                         if (register?.isShiny == true)
-                            tooltip.add(cobbledexTextTranslation("shiny").formatted(Formatting.YELLOW, Formatting.BOLD))
+                            tooltip.add(cobbledexTextTranslation("shiny").withStyle(Formatting.YELLOW, Formatting.BOLD))
 
                         if (register != null && hasShiftDown()) {
                             register.getDiscoveredTimestamp()?.let { timestamp ->
@@ -481,9 +486,11 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
                             }
                         } else if (register != null) {
                             tooltip.emptyLine()
-                            tooltip.add(cobbledexTextTranslation("tooltip.hold_shift_timestamp").formatted(Formatting.GREEN))
+                        tooltip.add(cobbledexTextTranslation("tooltip.hold_shift_timestamp").withStyle(Formatting.GREEN))
                         }
                     }
+
+                    matrices.popPose()
 
                 }
 
@@ -494,17 +501,21 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
         currentHoveredEntry = currentEntry
 
         if (tooltip.isNotEmpty())
-            context.drawTooltip(textRenderer, tooltip, mouseX, mouseY)
+            context.renderComponentTooltip(textRenderer, tooltip, mouseX, mouseY)
     }
 
-    override fun shouldPause() = false
+    override fun isPauseScreen() = false
 
-    override fun mouseScrolled(mouseX: Double, mouseY: Double, amount: Double): Boolean {
+    override fun renderBlurredBackground(delta: Float) {}
+
+    override fun renderMenuBackground(context: DrawContext) {}
+
+    override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
         currentHoveredEntry?.let {
             val validForms = it.validForms
             if (validForms.isNotEmpty()) {
                 var current = selectedFormMap[it.resourceIdentifier] ?: 0
-                if (amount > 0) {
+                if (verticalAmount > 0) {
                     current++
                     if (current >= validForms.size)
                         selectedFormMap.remove(it.resourceIdentifier)
@@ -519,7 +530,7 @@ class CobbledexCollectionGUI : Screen(cobbledexTextTranslation("cobbledex")) {
             return true
         }
 
-        return super.mouseScrolled(mouseX, mouseY, amount)
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {

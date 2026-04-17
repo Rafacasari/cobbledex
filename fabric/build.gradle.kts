@@ -1,7 +1,7 @@
 plugins {
     id("dev.architectury.loom")
     id("architectury-plugin")
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "8.3.9"
 }
 
 architectury {
@@ -21,21 +21,19 @@ loom {
     enableTransitiveAccessWideners.set(true)
     silentMojangMappingsLicense()
 
-
+    mixin {
+        defaultRefmapName.set("mixins.${project.name}.refmap.json")
+    }
 }
 
 dependencies {
     minecraft("net.minecraft:minecraft:${property("minecraft_version")}")
-    mappings("net.fabricmc:yarn:${property("yarn_mappings")}:v2")
+    mappings(loom.officialMojangMappings())
 
-    modImplementation("com.cobblemon:fabric:${property("cobblemon_version")}")
     modImplementation("net.fabricmc:fabric-loader:${property("fabric_loader_version")}")
+    modImplementation("net.fabricmc:fabric-language-kotlin:${property("fabric_kotlin")}")
+    modImplementation("com.cobblemon:fabric:${property("cobblemon_version")}") { isTransitive = false }
     modApi("net.fabricmc.fabric-api:fabric-api:${property("fabric_version")}")
-
-
-//    modImplementation(fabricApi.module("fabric-command-api-v2", "0.89.3+1.20.1"))
-
-
     "common"(project(":common", "namedElements")) { isTransitive = false }
     "shadowCommon"(project(":common", "transformProductionFabric")) { isTransitive = false }
 
@@ -62,14 +60,14 @@ tasks {
     processResources {
         inputs.property("version", project.version)
 
-        filesMatching("META-INF/mods.toml") {
+        filesMatching("fabric.mod.json") {
             expand(mapOf("version" to project.version))
         }
     }
 
     shadowJar {
         exclude("generations/gg/generations/core/generationscore/fabric/datagen/**")
-        exclude("data/forge/**")
+        exclude("data/neoforge/**")
         configurations = listOf(project.configurations.getByName("shadowCommon"))
         archiveClassifier.set("dev-shadow")
     }

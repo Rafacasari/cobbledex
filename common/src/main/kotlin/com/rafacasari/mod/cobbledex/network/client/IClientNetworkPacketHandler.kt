@@ -1,7 +1,7 @@
 package com.rafacasari.mod.cobbledex.network.client
 
 import com.rafacasari.mod.cobbledex.network.INetworkPacket
-import net.minecraft.client.MinecraftClient
+import net.minecraft.client.Minecraft as MinecraftClient
 
 interface IClientNetworkPacketHandler<T: INetworkPacket<T>> {
 

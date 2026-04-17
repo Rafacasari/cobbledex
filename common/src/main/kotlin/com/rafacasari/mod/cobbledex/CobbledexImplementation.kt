@@ -3,12 +3,11 @@ package com.rafacasari.mod.cobbledex
 import com.rafacasari.mod.cobbledex.network.client.IClientNetworkPacketHandler
 import com.rafacasari.mod.cobbledex.network.INetworkPacket
 import com.rafacasari.mod.cobbledex.network.server.IServerNetworkPacketHandler
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.listener.ClientPlayPacketListener
-import net.minecraft.network.packet.Packet
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
+import net.minecraft.network.protocol.Packet
 import net.minecraft.server.MinecraftServer
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.util.Identifier
+import net.minecraft.server.level.ServerPlayer as ServerPlayerEntity
+import net.minecraft.resources.ResourceLocation as Identifier
 import kotlin.reflect.KClass
 
 interface CobbledexImplementation {
@@ -21,7 +20,7 @@ interface CobbledexImplementation {
 
 enum class ModAPI {
     FABRIC,
-    FORGE
+    NEOFORGE
 }
 
 enum class Environment {
@@ -43,5 +42,5 @@ interface INetworkManager {
 
     fun sendPacketToServer(packet: INetworkPacket<*>)
 
-    fun <T : INetworkPacket<*>> asVanillaClientBound(packet: T): Packet<ClientPlayPacketListener>
+    fun <T : INetworkPacket<*>> asVanillaClientBound(packet: T): Packet<*>
 }

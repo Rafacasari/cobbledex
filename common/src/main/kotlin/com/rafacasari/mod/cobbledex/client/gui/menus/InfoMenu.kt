@@ -14,14 +14,17 @@ import com.rafacasari.mod.cobbledex.utils.BiomeUtils
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.addEmptyLine
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.format
+import com.rafacasari.mod.cobbledex.utils.MiscUtils.toTranslationKey
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.toMutableText
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.world.ClientWorld
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.text.*
-import net.minecraft.text.Text
-import net.minecraft.world.biome.Biome
+import net.minecraft.client.Minecraft as MinecraftClient
+import net.minecraft.client.multiplayer.ClientLevel as ClientWorld
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries as Registries
+import net.minecraft.network.chat.Component as Text
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.MutableComponent as MutableText
+import net.minecraft.network.chat.Style
+import net.minecraft.world.level.biome.Biome
 
 object InfoMenu {
 
@@ -61,7 +64,7 @@ object InfoMenu {
 
                 val translation = Text.translatable(
                     "cobbledex.texts.drops.item",
-                    itemStack.name,
+                    itemStack.hoverName,
                     itemDrop.percentage.format(),
                     quantity
                 )
@@ -80,7 +83,7 @@ object InfoMenu {
         else if (config.HowToFind_NeedCatch && !hasCaught)
             longTextDisplay.addText(cobbledexTextTranslation("need_catch", cobbledexTextTranslation("need.view_spawns")), true)
         else {
-            val world: ClientWorld? = MinecraftClient.getInstance().world
+            val world: ClientWorld? = MinecraftClient.getInstance().level
             if (world != null && !spawnDetails.isNullOrEmpty() && (!config.HowToFind_NeedSeen || hasSeen) && (!config.HowToFind_NeedCatch || hasCaught)) {
                 longTextDisplay.addText(cobbledexTextTranslation("biomes").bold())
 
@@ -91,8 +94,8 @@ object InfoMenu {
                         cond.biomes?.forEach { biomeCondition ->
                             if (biomeCondition is RegistryLikeTagCondition<Biome>) {
                                 val tooltipText = mutableListOf<MutableText>()
-                                tooltipText.add(biomeCondition.tag.id.toTranslationKey().asTranslated().bold())
-                                val condition = biomeCondition.tag.id.toTranslationKey()
+                                tooltipText.add(biomeCondition.tag.location().toTranslationKey().asTranslated().bold())
+                                val condition = biomeCondition.tag.location().toTranslationKey()
                                 tooltipText.add(
                                     "Weight: ${spawn.weight}".text()
                                 )
@@ -186,7 +189,7 @@ object InfoMenu {
                                         tooltipText.add("Blacklisted Biomes:".text().bold().darkRed())
                                         antiConditionBiomes.forEach { b ->
 
-                                            tooltipText.add(b.tag.id.toTranslationKey().asTranslated().darkRed())
+                                            tooltipText.add(b.tag.location().toTranslationKey().asTranslated().darkRed())
 
                                         }
                                     }

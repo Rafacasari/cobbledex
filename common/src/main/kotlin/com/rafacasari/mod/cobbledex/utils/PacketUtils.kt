@@ -1,7 +1,7 @@
 package com.rafacasari.mod.cobbledex.utils
 
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.util.Identifier
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
+import net.minecraft.resources.ResourceLocation as Identifier
 
 object PacketUtils {
     fun PacketByteBuf.writeNullableIntRange(range: IntRange?) {
@@ -16,7 +16,7 @@ object PacketUtils {
         return if(this.readBoolean()) {
             val start = this.readInt()
             val endInclusive = this.readInt()
-            return IntRange(start, endInclusive)
+            IntRange(start, endInclusive)
         } else null
     }
 
@@ -77,26 +77,26 @@ object PacketUtils {
     fun PacketByteBuf.writeNullableString(string: String?) {
         this.writeBoolean(string != null)
         string?.let {
-            this.writeString(it)
+            this.writeUtf(it)
         }
     }
 
     fun PacketByteBuf.readNullableString() : String? {
         return if(this.readBoolean())
-            this.readString()
+            this.readUtf()
         else null
     }
 
     fun PacketByteBuf.writeNullableIdentifier(identifier: Identifier?) {
         this.writeBoolean(identifier != null)
         identifier?.let {
-            this.writeIdentifier(it)
+            this.writeResourceLocation(it)
         }
     }
 
     fun PacketByteBuf.readNullableIdentifier() : Identifier? {
         return if(this.readBoolean())
-            this.readIdentifier()
+            this.readResourceLocation()
         else null
     }
 

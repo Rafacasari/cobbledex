@@ -3,7 +3,7 @@ package com.rafacasari.mod.cobbledex.network.client.handlers
 import com.rafacasari.mod.cobbledex.CobbledexConstants.Client.discoveredList
 import com.rafacasari.mod.cobbledex.network.client.packets.AddToCollectionPacket
 import com.rafacasari.mod.cobbledex.network.client.IClientNetworkPacketHandler
-import net.minecraft.client.MinecraftClient
+import net.minecraft.client.Minecraft as MinecraftClient
 
 object AddToCollectionHandler : IClientNetworkPacketHandler<AddToCollectionPacket> {
     override fun handle(packet: AddToCollectionPacket, client: MinecraftClient) {

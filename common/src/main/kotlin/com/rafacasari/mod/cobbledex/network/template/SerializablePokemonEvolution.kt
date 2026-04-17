@@ -1,6 +1,5 @@
 package com.rafacasari.mod.cobbledex.network.template
 
-import com.cobblemon.mod.common.api.conditional.RegistryLikeCondition
 import com.cobblemon.mod.common.api.conditional.RegistryLikeTagCondition
 import com.cobblemon.mod.common.api.pokemon.PokemonProperties
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
@@ -12,12 +11,10 @@ import com.cobblemon.mod.common.pokemon.evolution.variants.BlockClickEvolution
 import com.cobblemon.mod.common.pokemon.evolution.variants.ItemInteractionEvolution
 import com.cobblemon.mod.common.pokemon.evolution.variants.LevelUpEvolution
 import com.cobblemon.mod.common.pokemon.evolution.variants.TradeEvolution
-import com.cobblemon.mod.common.registry.ItemIdentifierCondition
 import com.cobblemon.mod.common.util.asTranslated
 import com.rafacasari.mod.cobbledex.client.widget.LongTextDisplay
 import com.rafacasari.mod.cobbledex.network.IEncodable
 import com.rafacasari.mod.cobbledex.network.template.SerializablePokemonEvolution.PokemonEvolutionType.*
-import com.rafacasari.mod.cobbledex.utils.CobblemonUtils.getFormByName
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableIdentifier
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.readNullableString
 import com.rafacasari.mod.cobbledex.utils.PacketUtils.writeNullableIdentifier
@@ -26,13 +23,12 @@ import com.rafacasari.mod.cobbledex.utils.MiscUtils.bold
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexResource
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.logInfo
 import com.rafacasari.mod.cobbledex.utils.MiscUtils.logWarn
-import net.minecraft.block.Block
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf as PacketByteBuf
+import net.minecraft.core.registries.BuiltInRegistries as Registries
+import net.minecraft.network.chat.Component as Text
+import net.minecraft.resources.ResourceLocation as Identifier
 
 class SerializablePokemonEvolution() : IEncodable {
 
@@ -55,7 +51,7 @@ class SerializablePokemonEvolution() : IEncodable {
                     requiredContextIdentifier?.let { itemIdentifier ->
                         val item = Registries.BLOCK.get(itemIdentifier)
                         val itemStack = ItemStack(item)
-                        longTextDisplay.addItemEntry(itemStack, "Right click a ".text() + item.translationKey.asTranslated().bold())
+                        longTextDisplay.addItemEntry(itemStack, "Right click a ".text() + item.descriptionId.asTranslated().bold())
                     }
                 }
                 ItemInteraction -> {
@@ -63,7 +59,7 @@ class SerializablePokemonEvolution() : IEncodable {
                         val item = Registries.ITEM.get(itemIdentifier)
 
                         val itemStack = ItemStack(item)
-                        val translation = Text.translatable("cobbledex.evolution.use_item", itemStack.name.bold())
+                        val translation = Text.translatable("cobbledex.evolution.use_item", itemStack.hoverName.bold())
                         longTextDisplay.addItemEntry(itemStack, translation, false)
                     }
                 }
@@ -74,15 +70,17 @@ class SerializablePokemonEvolution() : IEncodable {
 
                 Trade -> {
 
-                    val item = Registries.ITEM.get(Identifier("cobblemon", "link_cable"))
+                    val item = Registries.ITEM.get(Identifier.fromNamespaceAndPath("cobblemon", "link_cable"))
                     val itemStack = ItemStack(item)
 
-                    val translation =  tradePokemon?.species?.let { speciesName ->
+                    val translation = tradePokemon?.species?.let { speciesName ->
                         val tradeSpecies = PokemonSpecies.getByName(speciesName)
-                        if (tradeSpecies != null)
-                            Text.translatable("cobbledex.evolution.trade_specific", tradeSpecies.translatedName.bold(), itemStack.name.bold())
-                        Text.translatable("cobbledex.evolution.trade_specific", speciesName.text().bold(), itemStack.name.bold())
-                    } ?: Text.translatable("cobbledex.evolution.trade_any", itemStack.name.bold())
+                        if (tradeSpecies != null) {
+                            Text.translatable("cobbledex.evolution.trade_specific", tradeSpecies.translatedName.bold(), itemStack.hoverName.bold())
+                        } else {
+                            Text.translatable("cobbledex.evolution.trade_specific", speciesName.text().bold(), itemStack.hoverName.bold())
+                        }
+                    } ?: Text.translatable("cobbledex.evolution.trade_any", itemStack.hoverName.bold())
 
                     longTextDisplay.addIcon(TRADE_ICON, translation, 16, 16, xOffset = -3.5f, yOffset = -2.5f, scale = 0.65f, breakLine = false)
                     //longTextDisplay.addItemEntry(itemStack, translation, false, disableTooltip = false)
@@ -146,16 +144,19 @@ class SerializablePokemonEvolution() : IEncodable {
                 evolutionType = BlockClick
                 val block = evolution.requiredContext
                 if (block is RegistryLikeTagCondition<Block>)
-                    requiredContextIdentifier = block.tag.id
+                    requiredContextIdentifier = block.tag.location()
                 else logWarn("Is not a RegistryLikeTagCondition")
             }
 
             is ItemInteractionEvolution -> {
                 evolutionType = ItemInteraction
-                val item: RegistryLikeCondition<Item> = evolution.requiredContext.item
-                if (item is ItemIdentifierCondition)
-                    requiredContextIdentifier = item.identifier
-
+                requiredContextIdentifier = evolution.requiredContext.items()
+                    .orElse(null)
+                    ?.iterator()
+                    ?.asSequence()
+                    ?.firstOrNull()
+                    ?.value()
+                    ?.let { item -> Registries.ITEM.getKey(item) }
             }
 
             is LevelUpEvolution -> {
@@ -178,12 +179,12 @@ class SerializablePokemonEvolution() : IEncodable {
 
     override fun encode(buffer: PacketByteBuf) {
 
-        buffer.writeEnumConstant(evolutionType)
+        buffer.writeEnum(evolutionType)
         buffer.writeNullableIdentifier(speciesIdentifier)
         buffer.writeCollection(resultAspects) {
-                buff, value -> buff.writeString(value)
+                buff, value -> buff.writeUtf(value)
         }
-        buffer.writeString(formName)
+        buffer.writeUtf(formName)
 
         buffer.writeBoolean(consumeHeldItem)
         buffer.writeNullableIdentifier(requiredContextIdentifier)
@@ -200,10 +201,10 @@ class SerializablePokemonEvolution() : IEncodable {
         fun decode(reader: PacketByteBuf) : SerializablePokemonEvolution
         {
             val evolution = SerializablePokemonEvolution()
-            evolution.evolutionType = reader.readEnumConstant(PokemonEvolutionType::class.java)
+            evolution.evolutionType = reader.readEnum(PokemonEvolutionType::class.java)
             evolution.speciesIdentifier = reader.readNullableIdentifier()
-            evolution.resultAspects = reader.readList { it.readString() }.toSet()
-            evolution.formName = reader.readString()
+            evolution.resultAspects = reader.readList { it.readUtf() }.toSet()
+            evolution.formName = reader.readUtf()
 
             evolution.consumeHeldItem = reader.readBoolean()
             evolution.requiredContextIdentifier = reader.readNullableIdentifier()

@@ -1,51 +1,50 @@
 package com.rafacasari.mod.cobbledex.client.widget
 
-import com.cobblemon.mod.common.api.text.text
 import com.cobblemon.mod.common.pokemon.Species
-import com.rafacasari.mod.cobbledex.client.widget.entries.*
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget
-import net.minecraft.item.ItemStack
-import net.minecraft.text.MutableText
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.Language
+import com.rafacasari.mod.cobbledex.client.widget.entries.EmptyEntry
+import com.rafacasari.mod.cobbledex.client.widget.entries.IconEntry
+import com.rafacasari.mod.cobbledex.client.widget.entries.ItemEntry
+import com.rafacasari.mod.cobbledex.client.widget.entries.PokemonEntry
+import com.rafacasari.mod.cobbledex.client.widget.entries.TextEntry
+import net.minecraft.client.Minecraft as MinecraftClient
+import net.minecraft.client.gui.GuiGraphics as DrawContext
+import net.minecraft.client.gui.components.ContainerObjectSelectionList as AlwaysSelectedEntryListWidget
+import net.minecraft.client.gui.components.events.GuiEventListener
+import net.minecraft.client.gui.narration.NarratableEntry
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.chat.MutableComponent as MutableText
+import net.minecraft.network.chat.Component as Text
+import net.minecraft.resources.ResourceLocation as Identifier
 
-class LongTextDisplay (
-    private val x: Int = 0,
-    private val y: Int = 0,
+class LongTextDisplay(
+    private val frameX: Int = 0,
+    private val frameY: Int = 0,
     private val frameWidth: Int,
     private val frameHeight: Int,
-    private val padding : Int = 3,
+    private val padding: Int = 3,
     private val scrollbarSize: Int = 2
-): AlwaysSelectedEntryListWidget<LongTextDisplay.TextDisplayEntry>(
+) : AlwaysSelectedEntryListWidget<LongTextDisplay.TextDisplayEntry>(
     MinecraftClient.getInstance(),
     frameWidth,
-    frameHeight, // height
-    0, // top
-    frameHeight, // bottom
+    frameHeight,
+    frameY,
     LINE_HEIGHT
 ) {
-
-    private var scrolling = false
-
-    init {
-        correctSize()
-        setRenderHorizontalShadows(false)
-        setRenderBackground(false)
-        setRenderSelection(false)
-    }
-
-    private fun correctSize() {
-        updateSize(frameWidth, frameHeight, y, y + frameHeight)
-        setLeftPos(x + padding)
-    }
 
     companion object {
         const val LINE_HEIGHT = 10
         const val SCROLLBAR_PADDING = 8
-//        const val LINE_WIDTH = 180
+    }
+
+    init {
+        correctSize()
+    }
+
+    private fun correctSize() {
+        x = frameX
+        y = frameY
+        setRectangle(frameWidth, frameHeight, frameX, frameY)
+        clampScrollAmount()
     }
 
     private fun addText(entry: TextEntry): Int {
@@ -53,58 +52,66 @@ class LongTextDisplay (
     }
 
     fun addText(entry: MutableText, breakLine: Boolean = true, shadow: Boolean = false) {
-
-        if (breakLine && super.getEntryCount() > 0) {
+        if (breakLine && super.itemCount > 0) {
             addEmptyEntry()
         }
 
-        val textRenderer = MinecraftClient.getInstance().textRenderer
-        Language.getInstance().reorder(textRenderer.textHandler.wrapLines(entry, rowWidth - SCROLLBAR_PADDING, entry.style)).forEach {
+        val textRenderer = MinecraftClient.getInstance().font
+        textRenderer.split(entry, rowWidth - SCROLLBAR_PADDING).forEach {
             addText(TextEntry(it, shadow))
         }
     }
 
     fun addItemEntry(item: ItemStack, entry: Text, breakLine: Boolean = true, disableTooltip: Boolean = false) {
-
-        if (breakLine && super.getEntryCount() > 0)
+        if (breakLine && super.itemCount > 0) {
             addEmptyEntry()
+        }
 
-        val textRenderer = MinecraftClient.getInstance().textRenderer
-        val reorderedTexts = Language.getInstance()
-            .reorder(textRenderer.textHandler.wrapLines(entry, rowWidth - SCROLLBAR_PADDING - 11, entry.style))
+        val textRenderer = MinecraftClient.getInstance().font
+        val reorderedTexts = textRenderer.split(entry, rowWidth - SCROLLBAR_PADDING - ItemEntry.TEXT_OFFSET_X)
 
         reorderedTexts.forEach {
-            if (reorderedTexts.first() == it)
+            if (reorderedTexts.first() == it) {
                 super.addEntry(ItemEntry(item, it, disableTooltip))
-            else addText(TextEntry(it, false))
+            } else {
+                addText(TextEntry(it, false))
+            }
         }
     }
 
-    fun addIcon(icon: Identifier, entry: Text, width: Int, height: Int, xOffset: Number = 0, yOffset: Number = 0, scale: Float = 1f, breakLine: Boolean = true) {
-
-        if (breakLine && super.getEntryCount() > 0)
+    fun addIcon(
+        icon: Identifier,
+        entry: Text,
+        width: Int,
+        height: Int,
+        xOffset: Number = 0,
+        yOffset: Number = 0,
+        scale: Float = 1f,
+        breakLine: Boolean = true
+    ) {
+        if (breakLine && super.itemCount > 0) {
             addEmptyEntry()
+        }
 
-        val textRenderer = MinecraftClient.getInstance().textRenderer
-        val reorderedTexts = Language.getInstance()
-            .reorder(textRenderer.textHandler.wrapLines(entry, rowWidth - SCROLLBAR_PADDING - 11, entry.style))
+        val textRenderer = MinecraftClient.getInstance().font
+        val reorderedTexts = textRenderer.split(entry, rowWidth - SCROLLBAR_PADDING - 11)
 
         reorderedTexts.forEach {
-            if (reorderedTexts.first() == it)
+            if (reorderedTexts.first() == it) {
                 super.addEntry(IconEntry(icon, it, xOffset, yOffset, width, height, scale))
-            else addText(TextEntry(it, false))
+            } else {
+                addText(TextEntry(it, false))
+            }
         }
     }
-
 
     fun addPokemon(pokemon: Species, aspects: Set<String>, translatedName: MutableText, breakLine: Boolean = false) {
-
-        if (breakLine && super.getEntryCount() > 0)
+        if (breakLine && super.itemCount > 0) {
             addEmptyEntry()
+        }
 
-        super.addEntry(PokemonEntry(pokemon, aspects, translatedName.asOrderedText()))
+        super.addEntry(PokemonEntry(pokemon, aspects, translatedName.visualOrderText))
         super.addEntry(EmptyEntry())
-
     }
 
     fun clear() {
@@ -115,69 +122,52 @@ class LongTextDisplay (
         return frameWidth - (padding * 2)
     }
 
-    override fun getScrollbarPositionX(): Int {
-        return left + width - padding - scrollbarSize
+    override fun getRowLeft(): Int {
+        return frameX + padding
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, partialTicks: Float) {
+    override fun getScrollbarPosition(): Int {
+        return frameX + frameWidth - padding - scrollbarSize
+    }
+
+    override fun renderListBackground(context: DrawContext) {}
+
+    override fun renderSelection(
+        context: DrawContext,
+        top: Int,
+        width: Int,
+        height: Int,
+        outerColor: Int,
+        innerColor: Int
+    ) = Unit
+
+    override fun renderListSeparators(context: DrawContext) = Unit
+
+    override fun renderWidget(context: DrawContext, mouseX: Int, mouseY: Int, partialTicks: Float) {
         correctSize()
 
-        // We need scissor to cut the rest of our scrollbar to make it look prettier ✨
         context.enableScissor(
-            x,
-            y,
-            x + frameWidth,
-            y + frameWidth
+            frameX,
+            frameY,
+            frameX + frameWidth,
+            frameY + frameHeight
         )
-        super.render(context, mouseX, mouseY, partialTicks)
+        super.renderWidget(context, mouseX, mouseY, partialTicks)
         context.disableScissor()
 
-        val currentEntry = hoveredEntry
+        val currentEntry = hovered
         if (currentEntry != null && currentEntry.isMouseOver(mouseX.toDouble(), mouseY.toDouble())) {
-
             currentEntry.drawTooltip(context, mouseX, mouseY)
         }
 
-        if (hoveredEntry != null && hoveredEntry is TextEntry) {
-            val hoveredTextEntry = hoveredEntry as TextEntry
-            if (hoveredTextEntry.pendingHover != null) {
-                val textRenderer = MinecraftClient.getInstance().textRenderer
-                context.drawHoverEvent(textRenderer, hoveredTextEntry.pendingHover, mouseX, mouseY)
-            }
+        if (currentEntry is TextEntry && currentEntry.pendingHover != null) {
+            val textRenderer = MinecraftClient.getInstance().font
+            context.renderComponentHoverEffect(textRenderer, currentEntry.pendingHover, mouseX, mouseY)
         }
-    }
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        updateScrollState(mouseX, mouseY)
-        if (scrolling) {
-            focused = getEntryAtPosition(mouseX, mouseY)
-            isDragging = true
-        }
-        return super.mouseClicked(mouseX, mouseY, button)
-    }
-
-    override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
-        if (scrolling) {
-            if (mouseY < top) {
-                scrollAmount = 0.0
-            } else if (mouseY > bottom) {
-                scrollAmount = maxScroll.toDouble()
-            } else {
-                scrollAmount += deltaY
-            }
-        }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
-    }
-
-    private fun updateScrollState(mouseX: Double, mouseY: Double) {
-        scrolling = mouseX >= (this.scrollbarPositionX - 3).toDouble()
-                && mouseX < (this.scrollbarPositionX + 3).toDouble()
-                && mouseY >= top
-                && mouseY < bottom
     }
 
     fun resetScrollPosition() {
-        scrollAmount = 0.0
+        setScrollAmount(0.0)
     }
 
     fun addEmptyEntry() {
@@ -185,7 +175,8 @@ class LongTextDisplay (
     }
 
     abstract class TextDisplayEntry : Entry<TextDisplayEntry>() {
-        override fun getNarration(): Text = "".text()
+        override fun children(): List<GuiEventListener> = emptyList()
+        override fun narratables(): List<NarratableEntry> = emptyList()
         abstract fun drawTooltip(context: DrawContext, mouseX: Int, mouseY: Int)
     }
 }
