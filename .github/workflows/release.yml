@@ -9,7 +9,7 @@ jobs:
       - name: setup jdk
         uses: actions/setup-java@v4
         with:
-          java-version: 17
+          java-version: 21
           distribution: temurin
           cache: gradle
       - name: gradle setup
@@ -66,7 +66,7 @@ jobs:
               });
             };
 
-            const forgeDir = path.join(process.cwd(), 'forge/build/libs');
+            const forgeDir = path.join(process.cwd(), 'neoforge/build/libs');
             const fabricDir = path.join(process.cwd(), 'fabric/build/libs');
 
             uploadFiles(forgeDir);

@@ -13,7 +13,7 @@ jobs:
       - name: setup jdk
         uses: actions/setup-java@v4
         with:
-          java-version: 17
+          java-version: 21
           distribution: temurin
           cache: gradle
       - name: gradle setup
@@ -31,7 +31,7 @@ jobs:
         with:
           name: Cobbledex-${{env.mod_version}}-${{env.minecraft_version}}_r${{github.run_number}}
           path: |
-            forge/build/libs/*.jar
+            neoforge/build/libs/*.jar
             fabric/build/libs/*.jar
             !**/*-dev.jar
             !**/*-shadow.jar
