@@ -11,6 +11,12 @@ architectury {
     platformSetupLoomIde()
 }
 
+loom {
+    mixin {
+        defaultRefmapName.set("cobbledex-common-refmap.json")
+    }
+}
+
 dependencies {
     minecraft("com.mojang:minecraft:${property("minecraft_version")}")
     mappings(loom.officialMojangMappings())
