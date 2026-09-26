@@ -32,7 +32,7 @@ dependencies {
 
     modImplementation("net.fabricmc:fabric-loader:${property("fabric_loader_version")}")
     modImplementation("net.fabricmc:fabric-language-kotlin:${property("fabric_kotlin")}")
-    modImplementation("com.cobblemon:fabric:${property("cobblemon_version")}") { isTransitive = false }
+    modImplementation("com.cobblemon:fabric:${property("cobblemon_version")}")
     modApi("net.fabricmc.fabric-api:fabric-api:${property("fabric_version")}")
     "common"(project(":common", "namedElements")) { isTransitive = false }
     "shadowCommon"(project(":common", "transformProductionFabric")) { isTransitive = false }

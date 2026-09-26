@@ -112,6 +112,12 @@ class CobbledexCoopDiscovery(val registers: MutableMap<String, MutableMap<String
         return registers[showdownId]
     }
 
+    fun getTotalCaughtSpecies(): Int {
+        return registers.values.count { forms ->
+            forms.values.any { it.status == DiscoveryRegister.RegisterType.CAUGHT }
+        }
+    }
+
     // addOrUpdate(showdownId, onlyFormShowdownId)
         // Returns if it is a new entry (meaning that should display a message in chat)
     //

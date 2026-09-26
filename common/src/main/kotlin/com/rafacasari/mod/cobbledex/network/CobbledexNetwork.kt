@@ -28,6 +28,7 @@ object CobbledexNetwork {
 
     fun registerServerBound() {
         createServerBound(RequestCobbledexPacket.ID, RequestCobbledexPacket::decode, RequestCobbledexPacketHandler)
+        createServerBound(ClaimRewardPacket.ID, ClaimRewardPacket::decode, ClaimRewardPacketHandler)
     }
 
     private inline fun <reified T : INetworkPacket<T>> createClientBound(identifier: Identifier, noinline decoder: (PacketByteBuf) -> T, handler: IClientNetworkPacketHandler<T>) {

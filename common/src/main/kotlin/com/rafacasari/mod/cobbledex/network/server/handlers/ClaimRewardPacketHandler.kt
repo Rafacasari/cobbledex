@@ -2,6 +2,8 @@ package com.rafacasari.mod.cobbledex.network.server.handlers
 
 import com.cobblemon.mod.common.api.text.bold
 import com.cobblemon.mod.common.api.text.text
+import com.cobblemon.mod.common.Cobblemon
+import com.cobblemon.mod.common.api.storage.player.PlayerInstancedDataStoreTypes
 import com.cobblemon.mod.common.util.giveOrDropItemStack
 import com.rafacasari.mod.cobbledex.Cobbledex
 import com.rafacasari.mod.cobbledex.api.CobbledexDiscovery
@@ -42,9 +44,8 @@ object ClaimRewardPacketHandler: IServerNetworkPacketHandler<ClaimRewardPacket> 
             return
         }
 
-        val playerDiscovery = CobbledexDiscovery.getPlayerData(player)
         // Check if player meet the reward requirements
-        if (playerDiscovery.getTotalCaught() < targetReward.pokemonCaught) {
+        if (CobbledexDiscovery.getTotalCaughtSpecies(player) < targetReward.pokemonCaught) {
             logWarn("${player.name.string} tried to claim a reward (${packet.rewardId}) but doesn't meet the requirements!")
             return
         }
@@ -66,5 +67,7 @@ object ClaimRewardPacketHandler: IServerNetworkPacketHandler<ClaimRewardPacket> 
 
         // Add to player history
         playerHistory.received.add(targetReward.id)
+        val playerData = Cobblemon.playerDataManager.getGenericData(player)
+        Cobblemon.playerDataManager.saveSingle(playerData, PlayerInstancedDataStoreTypes.GENERAL)
     }
 }

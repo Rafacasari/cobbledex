@@ -1,6 +1,7 @@
 package com.rafacasari.mod.cobbledex.client.gui.menus
 
 import com.cobblemon.mod.common.api.conditional.RegistryLikeTagCondition
+import com.cobblemon.mod.common.api.conditional.RegistryLikeIdentifierCondition
 import com.cobblemon.mod.common.api.text.*
 import com.cobblemon.mod.common.pokemon.FormData
 import com.cobblemon.mod.common.util.asTranslated
@@ -91,11 +92,22 @@ object InfoMenu {
 
                 spawnDetails.forEach { spawn ->
                     spawn.conditions?.forEach { cond ->
-                        cond.biomes?.forEach { biomeCondition ->
-                            if (biomeCondition is RegistryLikeTagCondition<Biome>) {
+                        cond.biomes?.forEach biomeConditionLoop@ { biomeCondition ->
+                            val biomeId = when (biomeCondition) {
+                                is RegistryLikeTagCondition<*> -> biomeCondition.tag.location()
+                                is RegistryLikeIdentifierCondition<*> -> biomeCondition.identifier
+                                else -> return@biomeConditionLoop
+                            }
+                            val condition = biomeId.toTranslationKey()
+                            val conditionTitle = if (biomeCondition is RegistryLikeTagCondition<*>) {
+                                condition.asTranslated()
+                            } else {
+                                "biome.$condition".asTranslated()
+                            }
+
+                            run {
                                 val tooltipText = mutableListOf<MutableText>()
-                                tooltipText.add(biomeCondition.tag.location().toTranslationKey().asTranslated().bold())
-                                val condition = biomeCondition.tag.location().toTranslationKey()
+                                tooltipText.add(conditionTitle.bold())
                                 tooltipText.add(
                                     "Weight: ${spawn.weight}".text()
                                 )
@@ -163,7 +175,9 @@ object InfoMenu {
                                 }
 
                                 val antiConditionBiomes = spawn.antiConditions?.mapNotNull { x -> x.biomes }?.flatten()
-                                    ?.filterIsInstance<RegistryLikeTagCondition<Biome>>() ?: listOf()
+                                    ?.filter {
+                                        it is RegistryLikeTagCondition<*> || it is RegistryLikeIdentifierCondition<*>
+                                    } ?: listOf()
                                 // Too much stuff to write, we can skip it!
                                 if (!condition.endsWith("is_overworld") && !condition.endsWith("is_nether")) {
 
@@ -188,16 +202,26 @@ object InfoMenu {
                                         tooltipText.addEmptyLine()
                                         tooltipText.add("Blacklisted Biomes:".text().bold().darkRed())
                                         antiConditionBiomes.forEach { b ->
-
-                                            tooltipText.add(b.tag.location().toTranslationKey().asTranslated().darkRed())
-
+                                            val antiId = when (b) {
+                                                is RegistryLikeTagCondition<*> -> b.tag.location()
+                                                is RegistryLikeIdentifierCondition<*> -> b.identifier
+                                                else -> null
+                                            }
+                                            antiId?.let { id ->
+                                                val name = if (b is RegistryLikeTagCondition<*>) {
+                                                    id.toTranslationKey().asTranslated()
+                                                } else {
+                                                    "biome.${id.toTranslationKey()}".asTranslated()
+                                                }
+                                                tooltipText.add(name.darkRed())
+                                            }
                                         }
                                     }
                                 }
 
                                 val hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltipText.toMutableText())
                                 longTextDisplay.addText(
-                                    condition.asTranslated().setStyle(Style.EMPTY.withHoverEvent(hoverEvent)), false
+                                    conditionTitle.setStyle(Style.EMPTY.withHoverEvent(hoverEvent)), false
                                 )
                             }
                         }

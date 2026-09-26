@@ -1,6 +1,7 @@
 package com.rafacasari.mod.cobbledex.network.template
 
 import com.cobblemon.mod.common.api.conditional.RegistryLikeCondition
+import com.cobblemon.mod.common.api.conditional.RegistryLikeIdentifierCondition
 import com.cobblemon.mod.common.api.conditional.RegistryLikeTagCondition
 import com.cobblemon.mod.common.api.spawning.TimeRange
 import com.cobblemon.mod.common.api.spawning.condition.SpawningCondition
@@ -88,14 +89,17 @@ class SerializableSpawnCondition() : IEncodable {
                 pbb, value -> pbb.writeResourceLocation(value)
         }
 
-        val biomeList = biomes?.mapNotNull { biome ->
-            if (biome is RegistryLikeTagCondition<Biome>)
-                biome.tag.location()
-            else null
+        val biomeConditions = biomes?.mapNotNull { biome ->
+            when (biome) {
+                is RegistryLikeTagCondition<*> -> true to biome.tag.location()
+                is RegistryLikeIdentifierCondition<*> -> false to biome.identifier
+                else -> null
+            }
         } ?: listOf()
 
-        buffer.writeCollection(biomeList) {
-                pbb, value -> pbb.writeResourceLocation(value)
+        buffer.writeCollection(biomeConditions) { pbb, (isTag, identifier) ->
+            pbb.writeBoolean(isTag)
+            pbb.writeResourceLocation(identifier)
         }
 
         val moonPhaseRanges = moonPhase ?: mutableListOf()
@@ -136,8 +140,13 @@ class SerializableSpawnCondition() : IEncodable {
 
             value.dimensions = buffer.readList{  reader -> reader.readResourceLocation() }
             value.biomes = buffer.readList { reader ->
-                val tag = TagKey.create(RegistryKeys.BIOME, reader.readResourceLocation())
-                RegistryLikeTagCondition<Biome>(tag)
+                val isTag = reader.readBoolean()
+                val identifier = reader.readResourceLocation()
+                if (isTag) {
+                    RegistryLikeTagCondition<Biome>(TagKey.create(RegistryKeys.BIOME, identifier))
+                } else {
+                    RegistryLikeIdentifierCondition<Biome>(identifier)
+                }
             }.toMutableSet()
 
             value.moonPhase = buffer.readList { reader ->

@@ -10,6 +10,19 @@ import com.rafacasari.mod.cobbledex.utils.MiscUtils.cobbledexTextTranslation
 
 object EvolutionMenu {
 
+    fun canShowRelated(pokemon: FormData?): Boolean {
+        if (pokemon == null) return false
+
+        val config = SyncServerSettingsHandler.config
+        if (!config.ShowEvolutions_IsEnabled) return false
+
+        val registerType = discoveredList[pokemon.species.showdownId()]?.get(pokemon.formOnlyShowdownId())?.status
+        val hasCaught = registerType == DiscoveryRegister.RegisterType.CAUGHT
+        val hasSeen = hasCaught || registerType == DiscoveryRegister.RegisterType.SEEN
+
+        return (!config.ShowEvolutions_NeedSeen || hasSeen) &&
+            (!config.ShowEvolutions_NeedCatch || hasCaught)
+    }
 
     fun drawText(longTextDisplay: LongTextDisplay?, pokemon: FormData?, evolutions: List<SerializablePokemonEvolution>?) {
         if (longTextDisplay == null || pokemon == null || evolutions == null) return

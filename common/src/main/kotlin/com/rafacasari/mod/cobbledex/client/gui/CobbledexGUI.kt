@@ -429,6 +429,11 @@ class CobbledexGUI(var selectedPokemon: FormData?, var selectedAspects: Set<Stri
             return
         }
 
+        if (selectedRelatedTab != CobbledexRelatedMenu.Forms && !EvolutionMenu.canShowRelated(previewForm)) {
+            evolutionDisplay?.clearEvolutions()
+            return
+        }
+
         when (selectedRelatedTab) {
             CobbledexRelatedMenu.Evolutions -> {
                 evolutionDisplay?.selectEvolutions(CobbledexRelatedMenu.Evolutions, lastLoadedEvolutions?.mapNotNull {

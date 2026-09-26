@@ -74,6 +74,15 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
             return cobbledexData
         }
 
+        /** Uses the same personal or shared collection that the player sees in the UI. */
+        fun getTotalCaughtSpecies(player: ServerPlayerEntity): Int {
+            return if (Cobbledex.getConfig().CoopMode) {
+                CobbledexCoopDiscovery.getDiscovery()?.getTotalCaughtSpecies() ?: 0
+            } else {
+                getPlayerData(player).getTotalCaughtSpecies()
+            }
+        }
+
         fun addOrUpdatePlayer(player: ServerPlayerEntity, form: FormData, isShiny: Boolean, status: DiscoveryRegister.RegisterType, update: (DiscoveryRegister) -> (Unit)): Boolean {
             val data = Cobblemon.playerDataManager.getGenericData(player)
 
@@ -118,6 +127,13 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
      */
     fun getTotalCaught(): Int {
         return registers.values.flatMap { it.values }.count { it.status == DiscoveryRegister.RegisterType.CAUGHT }
+    }
+
+    /** Get the number of species with at least one caught form. */
+    fun getTotalCaughtSpecies(): Int {
+        return registers.values.count { forms ->
+            forms.values.any { it.status == DiscoveryRegister.RegisterType.CAUGHT }
+        }
     }
 
     /**
@@ -173,12 +189,14 @@ class CobbledexDiscovery(val registers: MutableMap<String, MutableMap<String, Di
             registers[species] = mutableMapOf(form to newRegister)
             update?.invoke(newRegister)
 
-            CobbledexEvents.NEW_SPECIES_DISCOVERED.post(DiscoveryEvent.OnSpeciesDiscoveryEvent(player, newRegister, formData.species))
-            CobbledexEvents.NEW_FORM_DISCOVERED.post(DiscoveryEvent.OnFormDiscoveryEvent(player, newRegister, formData))
+            if (fireEvents) {
+                CobbledexEvents.NEW_SPECIES_DISCOVERED.post(DiscoveryEvent.OnSpeciesDiscoveryEvent(player, newRegister, formData.species))
+                CobbledexEvents.NEW_FORM_DISCOVERED.post(DiscoveryEvent.OnFormDiscoveryEvent(player, newRegister, formData))
 
-            if (fireEvents && status == DiscoveryRegister.RegisterType.CAUGHT) {
-                CobbledexEvents.NEW_SPECIES_CAUGHT.post(DiscoveryEvent.OnSpeciesDiscoveryEvent(player, newRegister, formData.species))
-                CobbledexEvents.NEW_FORM_CAUGHT.post(DiscoveryEvent.OnFormDiscoveryEvent(player, newRegister, formData))
+                if (status == DiscoveryRegister.RegisterType.CAUGHT) {
+                    CobbledexEvents.NEW_SPECIES_CAUGHT.post(DiscoveryEvent.OnSpeciesDiscoveryEvent(player, newRegister, formData.species))
+                    CobbledexEvents.NEW_FORM_CAUGHT.post(DiscoveryEvent.OnFormDiscoveryEvent(player, newRegister, formData))
+                }
             }
             return true
         }

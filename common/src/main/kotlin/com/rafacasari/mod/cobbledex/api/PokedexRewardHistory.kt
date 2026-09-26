@@ -54,7 +54,7 @@ class PokedexRewardHistory(val received: MutableList<String> = mutableListOf()) 
                 PokedexRewardHistory(mutableListOf())
             } as PokedexRewardHistory
 
-            val totalCaught = CobbledexDiscovery.getPlayerData(player).getTotalCaught()
+            val totalCaught = CobbledexDiscovery.getTotalCaughtSpecies(player)
             val possibleRewards = Cobbledex.getRewardManager().rewards.filter {
                 totalCaught >= it.pokemonCaught
             }
